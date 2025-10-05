@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ระบบจัดการโรงพยาบาล - Hospital Management System">
+    <title>Hospital Management System</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header / Navigation -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>🏥 Hospital MS</h1>
+            </div>
+            <nav class="nav">
+                <button class="nav-toggle" id="navToggle">☰</button>
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="#dashboard" class="nav-link active">Dashboard</a></li>
+                    <li><a href="#patients" class="nav-link">ผู้ป่วย</a></li>
+                    <li><a href="#appointments" class="nav-link">นัดหมาย</a></li>
+                    <li><a href="#doctors" class="nav-link">แพทย์</a></li>
+                    <li><a href="#rooms" class="nav-link">ห้องพัก</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <h2>Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <h3>ผู้ป่วยวันนี้</h3>
+                            <p class="stat-number" id="todayPatients">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-info">
+                            <h3>นัดหมาย</h3>
+                            <p class="stat-number" id="appointments">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👨‍⚕️</div>
+                        <div class="stat-info">
+                            <h3>แพทย์ออกตรวจ</h3>
+                            <p class="stat-number" id="activeDoctors">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🏥</div>
+                        <div class="stat-info">
+                            <h3>ห้องว่าง</h3>
+                            <p class="stat-number" id="availableRooms">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <h3>Quick Actions</h3>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="showSection('patients')">เพิ่มผู้ป่วยใหม่</button>
+                        <button class="btn btn-secondary" onclick="showSection('appointments')">สร้างนัดหมาย</button>
+                        <button class="btn btn-secondary">ดูคิวตรวจ</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Patients Section -->
+            <section id="patients" class="section">
+                <h2>จัดการข้อมูลผู้ป่วย</h2>
+                <div class="section-header">
+                    <button class="btn btn-primary" id="addPatientBtn">+ เพิ่มผู้ป่วยใหม่</button>
+                    <input type="search" class="search-box" placeholder="ค้นหาผู้ป่วย...">
+                </div>
+                <div class="table-container">
+                    <table class="data-table" id="patientsTable">
+                        <thead>
+                            <tr>
+                                <th>HN</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>อายุ</th>
+                                <th>เบอร์โทร</th>
+                                <th>การดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patientsTableBody">
+                            <tr>
+                                <td colspan="5" class="no-data">ยังไม่มีข้อมูลผู้ป่วย</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Appointments Section -->
+            <section id="appointments" class="section">
+                <h2>การนัดหมาย</h2>
+                <div class="section-header">
+                    <button class="btn btn-primary" id="addAppointmentBtn">+ สร้างนัดหมายใหม่</button>
+                    <input type="date" class="date-picker" id="appointmentDate">
+                </div>
+                <div class="appointments-list" id="appointmentsList">
+                    <p class="no-data">ยังไม่มีนัดหมาย</p>
+                </div>
+            </section>
+
+            <!-- Doctors Section -->
+            <section id="doctors" class="section">
+                <h2>แพทย์และบุคลากร</h2>
+                <div class="doctors-grid" id="doctorsGrid">
+                    <p class="no-data">กำลังโหลดข้อมูล...</p>
+                </div>
+            </section>
+
+            <!-- Rooms Section -->
+            <section id="rooms" class="section">
+                <h2>จัดการห้องพัก</h2>
+                <div class="rooms-grid" id="roomsGrid">
+                    <p class="no-data">กำลังโหลดข้อมูล...</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modal Template -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <span class="close" id="modalClose">&times;</span>
+            <div id="modalBody">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Hospital Management System | Built with ❤️</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
