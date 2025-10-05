@@ -6,6 +6,7 @@
   "scripts": {
     "start": "live-server --port=8080 --open=index.html",
     "dev": "live-server --port=8080 --open=index.html --watch=.",
+    "screenshot": "node scripts/capture-screenshots.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -30,7 +31,10 @@
   },
   "homepage": "https://github.com/yosasasutsut/hospital-management-system#readme",
   "devDependencies": {
-    "live-server": "^1.2.2"
+    "@playwright/test": "^1.55.1",
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2",
+    "playwright": "^1.55.1"
   },
   "engines": {
     "node": ">=18.0.0",
