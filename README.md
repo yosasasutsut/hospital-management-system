@@ -31,43 +31,46 @@
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Web Browser (Chrome, Firefox, Safari, Edge)
-- Text Editor (VS Code, Sublime Text, etc.)
+- **Node.js** 18.x or higher ([Download](https://nodejs.org/))
+- **npm** 9.x or higher (comes with Node.js)
+- **Web Browser** (Chrome, Firefox, Safari, Edge)
+- **Text Editor** (VS Code recommended)
 
 ### การติดตั้ง
 
 1. **Clone repository**
 ```bash
-git clone https://github.com/your-username/hospital-management-system.git
+git clone https://github.com/yosasasutsut/hospital-management-system.git
 cd hospital-management-system
 ```
 
-2. **เปิดโปรเจ็กต์**
-   - วิธีที่ 1: เปิดไฟล์ `index.html` ด้วย browser โดยตรง
-   - วิธีที่ 2: ใช้ Live Server (แนะนำ)
-
-### ใช้ Live Server (แนะนำ)
-
-**สำหรับ VS Code:**
+2. **ติดตั้ง dependencies**
 ```bash
-# 1. ติดตั้ง Live Server extension
-# 2. คลิกขวาที่ไฟล์ index.html
-# 3. เลือก "Open with Live Server"
+npm install
 ```
 
-**หรือใช้ Python:**
+3. **รันโปรเจ็กต์**
+
+**วิธีที่ 1: ใช้ npm scripts (แนะนำ)**
 ```bash
-# Python 3
+npm start
+# หรือ
+npm run dev
+```
+เปิดบราวเซอร์อัตโนมัติที่ http://localhost:8080
+
+**วิธีที่ 2: เปิดไฟล์โดยตรง**
+```bash
+# เปิด index.html ด้วย browser
+start index.html  # Windows
+open index.html   # macOS
+xdg-open index.html  # Linux
+```
+
+**วิธีที่ 3: ใช้ Python (ถ้าไม่มี Node.js)**
+```bash
 python -m http.server 8000
-
-# เปิดบราวเซอร์ไปที่ http://localhost:8000
-```
-
-**หรือใช้ Node.js:**
-```bash
-npx http-server
-
-# เปิดบราวเซอร์ไปที่ http://localhost:8080
+# เปิด http://localhost:8000
 ```
 
 ## 📁 โครงสร้างโปรเจ็กต์
@@ -102,10 +105,27 @@ hospital-management-system/
 
 ## 💻 Tech Stack
 
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **Storage**: LocalStorage (Browser-based)
-- **Design**: Mobile-first, Responsive Design
-- **Future**: อาจเพิ่ม Backend (Node.js/Python), Database (MySQL/MongoDB)
+### Core Technologies
+- **HTML5** - Semantic markup with modern meta tags
+- **CSS3** - Mobile-first responsive design with CSS Grid & Flexbox
+- **JavaScript ES6+** - Vanilla JS with modern features
+- **LocalStorage API** - Client-side persistent storage
+
+### Development Tools
+- **Node.js** 18+ - JavaScript runtime
+- **npm** - Package manager
+- **live-server** ^1.2.2 - Development server with auto-reload
+
+### PWA Support
+- **Web App Manifest** - Progressive Web App configuration
+- **Service Worker** ready - For offline support (coming soon)
+
+### Future Enhancements
+- **Backend**: Node.js/Express or Python/Flask
+- **Database**: MySQL, PostgreSQL, or MongoDB
+- **Authentication**: JWT or OAuth 2.0
+- **Real-time**: WebSocket or Socket.io
+- **Testing**: Jest, Cypress
 
 ## 🎨 Screenshots
 
@@ -174,15 +194,28 @@ git commit -m "docs: update README with new features"
 
 ## 📅 Development Log
 
+### Day 3 - 2025-10-05 (Latest)
+- ✅ Modern development setup with npm & package.json
+- ✅ PWA support with manifest.json
+- ✅ Enhanced HTML meta tags (SEO, Open Graph, Twitter)
+- ✅ Updated to latest web standards
+- ✅ Version bumped to 1.1.0
+- ✅ Improved documentation
+
+### Day 2 - 2025-10-05
+- ✅ Enhanced patient registration (gender, birth date, address)
+- ✅ Auto-calculate age from birth date
+- ✅ Form validation with error messages
+- ✅ Patient search functionality
+- ✅ JSDoc documentation
+- ✅ Code quality improvements
+
 ### Day 1 - 2025-10-05
 - ✅ โครงสร้างโปรเจ็กต์
 - ✅ HTML/CSS/JavaScript foundation
 - ✅ Dashboard พื้นฐาน
 - ✅ ระบบผู้ป่วยเบื้องต้น
 - ✅ Responsive design
-
-### Day 2 - TBD
-- ⏳ Coming soon...
 
 ## 🐛 Known Issues
 
