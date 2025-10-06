@@ -142,12 +142,18 @@ function loadDashboard() {
 }
 
 // ===== Patients Functions =====
+/**
+ * Load and display all patients in the table
+ * Also updates the result count display
+ */
 function loadPatients() {
     const patients = storage.get('patients') || [];
     const tbody = document.getElementById('patientsTableBody');
+    const resultCount = document.getElementById('patientResultCount');
 
     if (patients.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="no-data">ยังไม่มีข้อมูลผู้ป่วย</td></tr>';
+        resultCount.innerHTML = '';
         return;
     }
 
@@ -163,6 +169,9 @@ function loadPatients() {
             </td>
         </tr>
     `).join('');
+
+    // Display result count
+    updateResultCount(patients.length, patients.length);
 }
 
 // Add patient button
@@ -365,24 +374,62 @@ document.getElementById('modal')?.addEventListener('click', (e) => {
     }
 });
 
-// ===== Search Function =====
-function searchPatients(query) {
+// ===== Search and Filter Functions =====
+/**
+ * Update result count display
+ * @param {number} showing - Number of results currently displayed
+ * @param {number} total - Total number of patients
+ */
+function updateResultCount(showing, total) {
+    const resultCount = document.getElementById('patientResultCount');
+    if (resultCount) {
+        if (showing === total) {
+            resultCount.innerHTML = `<strong>แสดง ${showing} รายการ</strong> จากทั้งหมด ${total} รายการ`;
+        } else {
+            resultCount.innerHTML = `<strong>พบ ${showing} รายการ</strong> จากทั้งหมด ${total} รายการ`;
+        }
+    }
+}
+
+/**
+ * Search and filter patients by query and age range
+ * @param {string} query - Search query (name, HN, or phone)
+ * @param {number|null} minAge - Minimum age filter
+ * @param {number|null} maxAge - Maximum age filter
+ */
+function searchAndFilterPatients(query = '', minAge = null, maxAge = null) {
     const patients = storage.get('patients') || [];
     const tbody = document.getElementById('patientsTableBody');
+    const totalPatients = patients.length;
 
-    if (!query) {
-        loadPatients();
+    if (patients.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="no-data">ยังไม่มีข้อมูลผู้ป่วย</td></tr>';
+        updateResultCount(0, 0);
         return;
     }
 
-    const filtered = patients.filter(patient =>
-        patient.name.toLowerCase().includes(query.toLowerCase()) ||
-        patient.hn.toLowerCase().includes(query.toLowerCase()) ||
-        patient.phone.includes(query)
-    );
+    // Filter by search query
+    let filtered = patients;
+    if (query) {
+        filtered = filtered.filter(patient =>
+            patient.name.toLowerCase().includes(query.toLowerCase()) ||
+            patient.hn.toLowerCase().includes(query.toLowerCase()) ||
+            patient.phone.includes(query)
+        );
+    }
 
+    // Filter by age range
+    if (minAge !== null && minAge !== '') {
+        filtered = filtered.filter(patient => parseInt(patient.age) >= parseInt(minAge));
+    }
+    if (maxAge !== null && maxAge !== '') {
+        filtered = filtered.filter(patient => parseInt(patient.age) <= parseInt(maxAge));
+    }
+
+    // Display results
     if (filtered.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="no-data">ไม่พบข้อมูลผู้ป่วยที่ค้นหา</td></tr>';
+        updateResultCount(0, totalPatients);
         return;
     }
 
@@ -398,14 +445,55 @@ function searchPatients(query) {
             </td>
         </tr>
     `).join('');
+
+    updateResultCount(filtered.length, totalPatients);
+}
+
+/**
+ * Apply current search and filter settings
+ */
+function applyFilters() {
+    const searchQuery = document.getElementById('patientSearch')?.value || '';
+    const minAge = document.getElementById('minAge')?.value || null;
+    const maxAge = document.getElementById('maxAge')?.value || null;
+    searchAndFilterPatients(searchQuery, minAge, maxAge);
+}
+
+/**
+ * Clear all filters and show all patients
+ */
+function clearFilters() {
+    const searchBox = document.getElementById('patientSearch');
+    const minAgeInput = document.getElementById('minAge');
+    const maxAgeInput = document.getElementById('maxAge');
+
+    if (searchBox) searchBox.value = '';
+    if (minAgeInput) minAgeInput.value = '';
+    if (maxAgeInput) maxAgeInput.value = '';
+
+    loadPatients();
 }
 
 // Add event listener for search box
-const searchBox = document.querySelector('.search-box');
+const searchBox = document.getElementById('patientSearch');
 if (searchBox) {
-    searchBox.addEventListener('input', (e) => {
-        searchPatients(e.target.value);
-    });
+    searchBox.addEventListener('input', applyFilters);
+}
+
+// Add event listeners for age filter inputs
+const minAgeInput = document.getElementById('minAge');
+const maxAgeInput = document.getElementById('maxAge');
+if (minAgeInput) {
+    minAgeInput.addEventListener('input', applyFilters);
+}
+if (maxAgeInput) {
+    maxAgeInput.addEventListener('input', applyFilters);
+}
+
+// Add event listener for clear filter button
+const clearFilterBtn = document.getElementById('clearFilterBtn');
+if (clearFilterBtn) {
+    clearFilterBtn.addEventListener('click', clearFilters);
 }
 
 // ===== Initialize on page load =====

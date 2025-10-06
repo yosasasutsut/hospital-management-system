@@ -112,8 +112,29 @@
                 <h2>จัดการข้อมูลผู้ป่วย</h2>
                 <div class="section-header">
                     <button class="btn btn-primary" id="addPatientBtn">+ เพิ่มผู้ป่วยใหม่</button>
-                    <input type="search" class="search-box" placeholder="ค้นหาผู้ป่วย...">
+                    <input type="search" class="search-box" id="patientSearch" placeholder="ค้นหาผู้ป่วย...">
                 </div>
+
+                <!-- Filter Section -->
+                <div class="filter-section" style="background: var(--light-color); padding: 1rem; border-radius: var(--border-radius); margin-bottom: 1rem;">
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <label style="font-weight: 600;">กรองตามอายุ:</label>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="number" id="minAge" placeholder="อายุต่ำสุด" min="0" max="150"
+                                   style="width: 120px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                            <span>ถึง</span>
+                            <input type="number" id="maxAge" placeholder="อายุสูงสุด" min="0" max="150"
+                                   style="width: 120px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        </div>
+                        <button class="btn btn-secondary" id="clearFilterBtn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">ล้างตัวกรอง</button>
+                    </div>
+                </div>
+
+                <!-- Result Count -->
+                <div id="patientResultCount" style="margin-bottom: 0.5rem; color: #6b7280; font-size: 0.875rem;">
+                    <!-- Result count will be displayed here -->
+                </div>
+
                 <div class="table-container">
                     <table class="data-table" id="patientsTable">
                         <thead>
