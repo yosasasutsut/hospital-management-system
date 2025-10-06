@@ -110,9 +110,10 @@
             <!-- Patients Section -->
             <section id="patients" class="section">
                 <h2>จัดการข้อมูลผู้ป่วย</h2>
-                <div class="section-header">
+                <div class="section-header" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary" id="addPatientBtn">+ เพิ่มผู้ป่วยใหม่</button>
-                    <input type="search" class="search-box" id="patientSearch" placeholder="ค้นหาผู้ป่วย...">
+                    <button class="btn btn-secondary" id="exportCSVBtn">📊 Export CSV</button>
+                    <input type="search" class="search-box" id="patientSearch" placeholder="ค้นหาผู้ป่วย..." style="flex: 1; min-width: 200px;">
                 </div>
 
                 <!-- Filter Section -->

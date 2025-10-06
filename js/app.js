@@ -165,7 +165,9 @@ function loadPatients() {
             <td>${patient.age}</td>
             <td>${patient.phone}</td>
             <td>
-                <button class="btn btn-secondary" onclick="viewPatient('${patient.hn}')" style="padding: 0.5rem 1rem; font-size: 0.875rem;">ดูข้อมูล</button>
+                <button class="btn btn-secondary" onclick="viewPatient('${patient.hn}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; margin-right: 0.25rem;">ดู</button>
+                <button class="btn btn-primary" onclick="editPatient('${patient.hn}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; margin-right: 0.25rem;">แก้ไข</button>
+                <button class="btn" onclick="deletePatient('${patient.hn}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; background-color: #ef4444; color: white;">ลบ</button>
             </td>
         </tr>
     `).join('');
@@ -177,6 +179,11 @@ function loadPatients() {
 // Add patient button
 document.getElementById('addPatientBtn')?.addEventListener('click', () => {
     showAddPatientModal();
+});
+
+// Export CSV button
+document.getElementById('exportCSVBtn')?.addEventListener('click', () => {
+    exportPatientsToCSV();
 });
 
 function showAddPatientModal() {
@@ -311,6 +318,224 @@ function viewPatient(hn) {
     }
 }
 
+/**
+ * Edit patient information
+ * @param {string} hn - Patient HN number
+ */
+function editPatient(hn) {
+    const patients = storage.get('patients') || [];
+    const patient = patients.find(p => p.hn === hn);
+
+    if (!patient) {
+        alert('ไม่พบข้อมูลผู้ป่วย');
+        return;
+    }
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    modalBody.innerHTML = `
+        <h3>แก้ไขข้อมูลผู้ป่วย</h3>
+        <form id="editPatientForm" style="margin-top: 1rem;">
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">HN</label>
+                <input type="text" value="${patient.hn}" disabled style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); background-color: #f3f4f6;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">ชื่อ-นามสกุล <span style="color: red;">*</span></label>
+                <input type="text" id="editPatientName" value="${patient.name}" required minlength="3" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">เพศ <span style="color: red;">*</span></label>
+                <select id="editPatientGender" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="">-- เลือกเพศ --</option>
+                    <option value="ชาย" ${patient.gender === 'ชาย' ? 'selected' : ''}>ชาย</option>
+                    <option value="หญิง" ${patient.gender === 'หญิง' ? 'selected' : ''}>หญิง</option>
+                    <option value="ไม่ระบุ" ${patient.gender === 'ไม่ระบุ' ? 'selected' : ''}>ไม่ระบุ</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">วันเกิด <span style="color: red;">*</span></label>
+                <input type="date" id="editPatientBirthDate" value="${patient.birthDate}" required max="${new Date().toISOString().split('T')[0]}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">อายุ</label>
+                <input type="number" id="editPatientAge" value="${patient.age}" readonly style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); background-color: #f3f4f6;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">เบอร์โทร <span style="color: red;">*</span></label>
+                <input type="tel" id="editPatientPhone" value="${patient.phone}" required pattern="[0-9]{9,10}" placeholder="0812345678" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">ที่อยู่ <span style="color: red;">*</span></label>
+                <textarea id="editPatientAddress" required rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit;">${patient.address}</textarea>
+            </div>
+            <div id="editFormError" style="color: red; margin-bottom: 1rem; display: none;"></div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">บันทึกการแก้ไข</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()" style="flex: 1;">ยกเลิก</button>
+            </div>
+        </form>
+    `;
+
+    modal.classList.add('active');
+
+    // Auto-calculate age from birthdate
+    const birthDateInput = document.getElementById('editPatientBirthDate');
+    const ageInput = document.getElementById('editPatientAge');
+
+    birthDateInput.addEventListener('change', (e) => {
+        const birthDate = new Date(e.target.value);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        ageInput.value = age >= 0 ? age : 0;
+    });
+
+    // Handle form submission
+    document.getElementById('editPatientForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        // Validation
+        const formError = document.getElementById('editFormError');
+        const phone = document.getElementById('editPatientPhone').value;
+
+        if (!/^[0-9]{9,10}$/.test(phone)) {
+            formError.textContent = 'เบอร์โทรศัพท์ไม่ถูกต้อง กรุณากรอกตัวเลข 9-10 หลัก';
+            formError.style.display = 'block';
+            return;
+        }
+
+        formError.style.display = 'none';
+        saveEditedPatient(hn);
+    });
+}
+
+/**
+ * Save edited patient data
+ * @param {string} hn - Patient HN number
+ */
+function saveEditedPatient(hn) {
+    const patients = storage.get('patients') || [];
+    const patientIndex = patients.findIndex(p => p.hn === hn);
+
+    if (patientIndex === -1) {
+        alert('ไม่พบข้อมูลผู้ป่วย');
+        return;
+    }
+
+    // Update patient data
+    patients[patientIndex] = {
+        ...patients[patientIndex],
+        name: document.getElementById('editPatientName').value,
+        gender: document.getElementById('editPatientGender').value,
+        birthDate: document.getElementById('editPatientBirthDate').value,
+        age: document.getElementById('editPatientAge').value,
+        phone: document.getElementById('editPatientPhone').value,
+        address: document.getElementById('editPatientAddress').value
+    };
+
+    storage.set('patients', patients);
+
+    closeModal();
+    applyFilters(); // Refresh the table with current filters
+    loadDashboard(); // Update dashboard stats
+
+    alert('แก้ไขข้อมูลผู้ป่วยสำเร็จ!');
+}
+
+/**
+ * Export patients data to CSV file
+ */
+function exportPatientsToCSV() {
+    const patients = storage.get('patients') || [];
+
+    if (patients.length === 0) {
+        alert('ไม่มีข้อมูลผู้ป่วยให้ Export');
+        return;
+    }
+
+    // CSV header
+    const headers = ['HN', 'ชื่อ-นามสกุล', 'เพศ', 'วันเกิด', 'อายุ', 'เบอร์โทร', 'ที่อยู่', 'วันที่ลงทะเบียน'];
+
+    // CSV rows
+    const rows = patients.map(patient => [
+        patient.hn,
+        patient.name,
+        patient.gender || '-',
+        patient.birthDate || '-',
+        patient.age,
+        patient.phone,
+        `"${(patient.address || '-').replace(/"/g, '""')}"`, // Escape quotes in address
+        patient.registrationDate
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    // Add BOM for Excel to recognize UTF-8
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+
+    // Create download link
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', `patients_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    alert(`Export สำเร็จ! ดาวน์โหลดข้อมูล ${patients.length} รายการ`);
+}
+
+/**
+ * Delete patient with confirmation
+ * @param {string} hn - Patient HN number
+ */
+function deletePatient(hn) {
+    const patients = storage.get('patients') || [];
+    const patient = patients.find(p => p.hn === hn);
+
+    if (!patient) {
+        alert('ไม่พบข้อมูลผู้ป่วย');
+        return;
+    }
+
+    // Show confirmation dialog
+    const confirmed = confirm(
+        `คุณต้องการลบข้อมูลผู้ป่วยนี้ใช่หรือไม่?\n\n` +
+        `HN: ${patient.hn}\n` +
+        `ชื่อ: ${patient.name}\n` +
+        `เบอร์โทร: ${patient.phone}\n\n` +
+        `การลบข้อมูลนี้ไม่สามารถกู้คืนได้`
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    // Delete patient
+    const updatedPatients = patients.filter(p => p.hn !== hn);
+    storage.set('patients', updatedPatients);
+
+    applyFilters(); // Refresh the table with current filters
+    loadDashboard(); // Update dashboard stats
+
+    alert('ลบข้อมูลผู้ป่วยสำเร็จ');
+}
+
 // ===== Appointments Functions =====
 function loadAppointments() {
     const appointments = storage.get('appointments') || [];
@@ -441,7 +666,9 @@ function searchAndFilterPatients(query = '', minAge = null, maxAge = null) {
             <td>${patient.age}</td>
             <td>${patient.phone}</td>
             <td>
-                <button class="btn btn-secondary" onclick="viewPatient('${patient.hn}')" style="padding: 0.5rem 1rem; font-size: 0.875rem;">ดูข้อมูล</button>
+                <button class="btn btn-secondary" onclick="viewPatient('${patient.hn}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; margin-right: 0.25rem;">ดู</button>
+                <button class="btn btn-primary" onclick="editPatient('${patient.hn}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; margin-right: 0.25rem;">แก้ไข</button>
+                <button class="btn" onclick="deletePatient('${patient.hn}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; background-color: #ef4444; color: white;">ลบ</button>
             </td>
         </tr>
     `).join('');
