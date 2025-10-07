@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-10-07
+
+### Added
+- **Patient Statistics Dashboard** (Day 7)
+  - Gender distribution chart (Pie chart)
+  - Age group distribution chart (Bar chart)
+  - Real-time chart updates when patient data changes
+  - Chart.js library integration (v4.4.1)
+  - Statistics calculated by gender (Male/Female/Unspecified)
+  - Age groups categorized: 0-18, 19-30, 31-45, 46-60, 61+
+  - Responsive chart containers with proper styling
+  - JSDoc documentation for statistics functions
+
+### Changed
+- Enhanced dashboard with visual data representation
+- Updated loadDashboard() to include chart rendering
+- Charts automatically refresh on patient add/edit/delete
+
+### Technical
+- Chart.js 4.4.1 via CDN
+- Global chart instances for proper chart updates
+- Color-coded visualizations for better UX
+
+---
+
 ## [1.1.0] - 2025-10-05
 
 ### Added
@@ -100,6 +125,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
+- **1.2.0** (2025-10-07) - Patient statistics dashboard with charts
 - **1.1.0** (2025-10-05) - Modern setup, PWA support, enhanced meta tags
 - **1.0.0** (2025-10-05) - Initial release with patient management
 

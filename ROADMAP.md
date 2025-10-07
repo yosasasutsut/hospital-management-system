@@ -16,40 +16,40 @@
 - [x] Initialize Git repository
 - **Commit message**: `feat: initial project setup with basic structure`
 
-### Day 2: Enhance Patient Registration Form
-- [ ] เพิ่มฟิลด์เพิ่มเติม: เพศ, วันเกิด, ที่อยู่
-- [ ] เพิ่ม form validation
-- [ ] แสดง error messages เมื่อกรอกข้อมูลไม่ครบ
+### Day 2: Enhance Patient Registration Form ✅
+- [x] เพิ่มฟิลด์เพิ่มเติม: เพศ, วันเกิด, ที่อยู่
+- [x] เพิ่ม form validation
+- [x] แสดง error messages เมื่อกรอกข้อมูลไม่ครบ
 - **Commit message**: `feat: enhance patient registration with more fields`
 
-### Day 3: Patient Search & Filter
-- [ ] สร้าง search function ค้นหาผู้ป่วยจากชื่อ/HN
-- [ ] เพิ่ม filter ตามอายุ
-- [ ] แสดงจำนวนผู้ป่วยที่ค้นหาเจอ
+### Day 3: Patient Search & Filter ✅
+- [x] สร้าง search function ค้นหาผู้ป่วยจากชื่อ/HN
+- [x] เพิ่ม filter ตามอายุ
+- [x] แสดงจำนวนผู้ป่วยที่ค้นหาเจอ
 - **Commit message**: `feat: add patient search and filter functionality`
 
-### Day 4: Edit Patient Information
-- [ ] สร้างปุ่ม "แก้ไข" ในตารางผู้ป่วย
-- [ ] Modal form สำหรับแก้ไขข้อมูล
-- [ ] บันทึกการเปลี่ยนแปลงลง localStorage
+### Day 4: Edit Patient Information ✅
+- [x] สร้างปุ่ม "แก้ไข" ในตารางผู้ป่วย
+- [x] Modal form สำหรับแก้ไขข้อมูล
+- [x] บันทึกการเปลี่ยนแปลงลง localStorage
 - **Commit message**: `feat: implement patient edit functionality`
 
-### Day 5: Delete Patient with Confirmation
-- [ ] สร้างปุ่ม "ลบ" ในตารางผู้ป่วย
-- [ ] Confirmation dialog ก่อนลบ
-- [ ] Update ตารางหลังลบ
+### Day 5: Delete Patient with Confirmation ✅
+- [x] สร้างปุ่ม "ลบ" ในตารางผู้ป่วย
+- [x] Confirmation dialog ก่อนลบ
+- [x] Update ตารางหลังลบ
 - **Commit message**: `feat: add delete patient with confirmation`
 
-### Day 6: Patient Export to CSV
-- [ ] สร้างฟังก์ชัน export ข้อมูลผู้ป่วยเป็น CSV
-- [ ] ปุ่ม "Export" ในหน้า Patients
-- [ ] Download ไฟล์ CSV
+### Day 6: Patient Export to CSV ✅
+- [x] สร้างฟังก์ชัน export ข้อมูลผู้ป่วยเป็น CSV
+- [x] ปุ่ม "Export" ในหน้า Patients
+- [x] Download ไฟล์ CSV
 - **Commit message**: `feat: add patient data export to CSV`
 
-### Day 7: Patient Statistics Dashboard
-- [ ] กราฟแสดงจำนวนผู้ป่วยแยกตามเพศ
-- [ ] กราฟแสดงจำนวนผู้ป่วยแยกตามช่วงอายุ
-- [ ] ใช้ Chart.js หรือวาดเอง
+### Day 7: Patient Statistics Dashboard ✅
+- [x] กราฟแสดงจำนวนผู้ป่วยแยกตามเพศ
+- [x] กราฟแสดงจำนวนผู้ป่วยแยกตามช่วงอายุ
+- [x] ใช้ Chart.js หรือวาดเอง
 - **Commit message**: `feat: add patient statistics and charts`
 
 ---

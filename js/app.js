@@ -1,8 +1,8 @@
 // ===== Hospital Management System - Main JavaScript =====
-// Version: 1.1.0
+// Version: 1.2.0
 // Description: Core application logic for hospital management system
 // Author: Hospital MS Team
-// Last Updated: 2025-10-05
+// Last Updated: 2025-10-07
 
 /**
  * Data Storage Module
@@ -139,6 +139,246 @@ function loadDashboard() {
     document.getElementById('appointments').textContent = todayAppointments;
     document.getElementById('activeDoctors').textContent = activeDoctors;
     document.getElementById('availableRooms').textContent = availableRooms;
+
+    // Load patient statistics charts
+    loadPatientStatistics();
+}
+
+/**
+ * Calculate gender statistics from patient data
+ * @returns {Object} Gender statistics with counts for each gender
+ */
+function calculateGenderStatistics() {
+    const patients = storage.get('patients') || [];
+
+    const stats = {
+        'ชาย': 0,
+        'หญิง': 0,
+        'ไม่ระบุ': 0
+    };
+
+    patients.forEach(patient => {
+        const gender = patient.gender || 'ไม่ระบุ';
+        if (stats.hasOwnProperty(gender)) {
+            stats[gender]++;
+        }
+    });
+
+    return stats;
+}
+
+/**
+ * Calculate age group statistics from patient data
+ * @returns {Object} Age group statistics with counts for each age range
+ */
+function calculateAgeGroupStatistics() {
+    const patients = storage.get('patients') || [];
+
+    const ageGroups = {
+        '0-18': 0,
+        '19-30': 0,
+        '31-45': 0,
+        '46-60': 0,
+        '61+': 0
+    };
+
+    patients.forEach(patient => {
+        const age = parseInt(patient.age) || 0;
+
+        if (age >= 0 && age <= 18) {
+            ageGroups['0-18']++;
+        } else if (age >= 19 && age <= 30) {
+            ageGroups['19-30']++;
+        } else if (age >= 31 && age <= 45) {
+            ageGroups['31-45']++;
+        } else if (age >= 46 && age <= 60) {
+            ageGroups['46-60']++;
+        } else if (age >= 61) {
+            ageGroups['61+']++;
+        }
+    });
+
+    return ageGroups;
+}
+
+// Chart instances (global variables to allow chart updates)
+let genderChartInstance = null;
+let ageGroupChartInstance = null;
+
+/**
+ * Load and display patient statistics charts
+ * Creates or updates gender and age group distribution charts
+ */
+function loadPatientStatistics() {
+    const patients = storage.get('patients') || [];
+
+    // If no patients, show empty state
+    if (patients.length === 0) {
+        // Destroy existing charts if they exist
+        if (genderChartInstance) {
+            genderChartInstance.destroy();
+            genderChartInstance = null;
+        }
+        if (ageGroupChartInstance) {
+            ageGroupChartInstance.destroy();
+            ageGroupChartInstance = null;
+        }
+        return;
+    }
+
+    // Get statistics data
+    const genderStats = calculateGenderStatistics();
+    const ageGroupStats = calculateAgeGroupStatistics();
+
+    // Create/Update Gender Chart
+    createGenderChart(genderStats);
+
+    // Create/Update Age Group Chart
+    createAgeGroupChart(ageGroupStats);
+}
+
+/**
+ * Create or update gender distribution chart
+ * @param {Object} genderStats - Gender statistics data
+ */
+function createGenderChart(genderStats) {
+    const ctx = document.getElementById('genderChart');
+    if (!ctx) return;
+
+    // Destroy existing chart
+    if (genderChartInstance) {
+        genderChartInstance.destroy();
+    }
+
+    // Create new chart
+    genderChartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['ชาย', 'หญิง', 'ไม่ระบุ'],
+            datasets: [{
+                label: 'จำนวนผู้ป่วย',
+                data: [
+                    genderStats['ชาย'],
+                    genderStats['หญิง'],
+                    genderStats['ไม่ระบุ']
+                ],
+                backgroundColor: [
+                    '#3b82f6', // Blue for male
+                    '#ec4899', // Pink for female
+                    '#94a3b8'  // Gray for unspecified
+                ],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                            return `${label}: ${value} คน (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Create or update age group distribution chart
+ * @param {Object} ageGroupStats - Age group statistics data
+ */
+function createAgeGroupChart(ageGroupStats) {
+    const ctx = document.getElementById('ageGroupChart');
+    if (!ctx) return;
+
+    // Destroy existing chart
+    if (ageGroupChartInstance) {
+        ageGroupChartInstance.destroy();
+    }
+
+    // Create new chart
+    ageGroupChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['0-18 ปี', '19-30 ปี', '31-45 ปี', '46-60 ปี', '61+ ปี'],
+            datasets: [{
+                label: 'จำนวนผู้ป่วย',
+                data: [
+                    ageGroupStats['0-18'],
+                    ageGroupStats['19-30'],
+                    ageGroupStats['31-45'],
+                    ageGroupStats['46-60'],
+                    ageGroupStats['61+']
+                ],
+                backgroundColor: [
+                    '#10b981', // Green
+                    '#3b82f6', // Blue
+                    '#f59e0b', // Orange
+                    '#ef4444', // Red
+                    '#8b5cf6'  // Purple
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.parsed.y || 0;
+                            return `จำนวน: ${value} คน`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        font: {
+                            size: 11
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: {
+                            size: 11
+                        }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
 }
 
 // ===== Patients Functions =====

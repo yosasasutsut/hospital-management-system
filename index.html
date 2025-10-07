@@ -105,6 +105,23 @@
                         <button class="btn btn-secondary">ดูคิวตรวจ</button>
                     </div>
                 </div>
+
+                <!-- Patient Statistics Section -->
+                <div class="patient-statistics" style="margin-top: 2rem;">
+                    <h3>สถิติผู้ป่วย</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+                        <!-- Gender Distribution Chart -->
+                        <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <h4 style="margin-bottom: 1rem; text-align: center;">แยกตามเพศ</h4>
+                            <canvas id="genderChart"></canvas>
+                        </div>
+                        <!-- Age Group Distribution Chart -->
+                        <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <h4 style="margin-bottom: 1rem; text-align: center;">แยกตามช่วงอายุ</h4>
+                            <canvas id="ageGroupChart"></canvas>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <!-- Patients Section -->
@@ -204,6 +221,8 @@
         </div>
     </footer>
 
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
