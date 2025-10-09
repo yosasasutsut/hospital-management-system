@@ -194,7 +194,16 @@ git commit -m "docs: update README with new features"
 
 ## 📅 Development Log
 
-### Day 7 - 2025-10-07 (Latest)
+### Day 8 - 2025-10-09 (Latest)
+- ✅ Appointment booking system
+- ✅ Create new appointment form with modal
+- ✅ Select patient and doctor from dropdowns
+- ✅ Date and time picker with validation
+- ✅ Optional notes field
+- ✅ Auto-update dashboard after creation
+- ✅ Version bumped to 1.3.0
+
+### Day 7 - 2025-10-07
 - ✅ Patient statistics dashboard with Chart.js
 - ✅ Gender distribution pie chart
 - ✅ Age group distribution bar chart
