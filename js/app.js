@@ -794,6 +794,106 @@ function loadAppointments() {
     `).join('');
 }
 
+/**
+ * Show modal for adding new appointment
+ * Displays form with patient, doctor, date, and time selection
+ */
+function showAddAppointmentModal() {
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    // Get patients and doctors for dropdown
+    const patients = storage.get('patients') || [];
+    const doctors = storage.get('doctors') || [];
+
+    modalBody.innerHTML = `
+        <h3>สร้างนัดหมายใหม่</h3>
+        <form id="addAppointmentForm" style="margin-top: 1rem;">
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">เลือกผู้ป่วย <span style="color: red;">*</span></label>
+                <select id="appointmentPatient" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="">-- เลือกผู้ป่วย --</option>
+                    ${patients.map(p => `<option value="${p.hn}">${p.name} (HN: ${p.hn})</option>`).join('')}
+                </select>
+                ${patients.length === 0 ? '<small style="color: #ef4444;">ยังไม่มีผู้ป่วยในระบบ กรุณาเพิ่มผู้ป่วยก่อน</small>' : ''}
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">เลือกแพทย์ <span style="color: red;">*</span></label>
+                <select id="appointmentDoctor" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="">-- เลือกแพทย์ --</option>
+                    ${doctors.filter(d => d.status === 'active').map(d => `<option value="${d.id}">${d.name} (${d.specialty})</option>`).join('')}
+                </select>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">วันที่นัดหมาย <span style="color: red;">*</span></label>
+                <input type="date" id="appointmentDate" required min="${new Date().toISOString().split('T')[0]}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                <small style="color: #6b7280;">เลือกวันที่ต้องการนัด</small>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">เวลานัดหมาย <span style="color: red;">*</span></label>
+                <input type="time" id="appointmentTime" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                <small style="color: #6b7280;">เลือกเวลาที่ต้องการนัด</small>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">หมายเหตุ</label>
+                <textarea id="appointmentNote" rows="3" placeholder="บันทึกเพิ่มเติม (ถ้ามี)" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit;"></textarea>
+            </div>
+            <div id="formError" style="color: red; margin-bottom: 1rem; display: none;"></div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;" ${patients.length === 0 ? 'disabled' : ''}>บันทึกนัดหมาย</button>
+        </form>
+    `;
+
+    modal.classList.add('active');
+
+    // Form submit handler
+    document.getElementById('addAppointmentForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const patientHN = document.getElementById('appointmentPatient').value;
+        const doctorId = document.getElementById('appointmentDoctor').value;
+        const date = document.getElementById('appointmentDate').value;
+        const time = document.getElementById('appointmentTime').value;
+        const note = document.getElementById('appointmentNote').value;
+
+        // Get patient and doctor names
+        const patient = patients.find(p => p.hn === patientHN);
+        const doctor = doctors.find(d => d.id == doctorId);
+
+        // Create appointment object
+        const appointment = {
+            id: Date.now(),
+            patientHN: patientHN,
+            patientName: patient.name,
+            doctorId: doctorId,
+            doctorName: doctor.name,
+            doctorSpecialty: doctor.specialty,
+            date: date,
+            time: time,
+            note: note,
+            status: 'pending', // pending, confirmed, cancelled
+            createdAt: new Date().toISOString()
+        };
+
+        // Save to storage
+        const appointments = storage.get('appointments') || [];
+        appointments.push(appointment);
+        storage.set('appointments', appointments);
+
+        // Close modal and reload appointments
+        closeModal();
+        loadAppointments();
+        loadDashboard(); // Update dashboard stats
+
+        // Show success message
+        alert('สร้างนัดหมายสำเร็จ!');
+    });
+}
+
+// Add appointment button event listener
+document.getElementById('addAppointmentBtn')?.addEventListener('click', () => {
+    showAddAppointmentModal();
+});
+
 // ===== Doctors Functions =====
 function loadDoctors() {
     const doctors = storage.get('doctors') || [];

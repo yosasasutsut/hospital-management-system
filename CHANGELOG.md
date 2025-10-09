@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-10-09
+
+### Added
+- **Appointment Booking System** (Day 8)
+  - Create new appointment form with modal interface
+  - Select patient from existing patient list
+  - Select doctor from active doctors
+  - Date and time picker for appointment scheduling
+  - Optional notes field for additional information
+  - Appointment status tracking (pending, confirmed, cancelled)
+  - Automatic validation preventing past date selection
+  - Disabled state when no patients exist in system
+  - Auto-update dashboard statistics after appointment creation
+  - JSDoc documentation for appointment functions
+
+### Changed
+- Enhanced appointments section with full CRUD capability
+- Updated loadDashboard() to reflect appointment counts
+- Improved user feedback with success messages
+
+### Technical
+- Appointment data structure includes: id, patient info, doctor info, date/time, notes, status
+- LocalStorage persistence for appointments
+- Form validation with required fields
+- Modal-based user interface for better UX
+
+---
+
 ## [1.2.0] - 2025-10-07
 
 ### Added
