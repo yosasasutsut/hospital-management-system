@@ -425,7 +425,15 @@ function loadPatients() {
     const resultCount = document.getElementById('patientResultCount');
 
     if (patients.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="no-data">ยังไม่มีข้อมูลผู้ป่วย</td></tr>';
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 3rem 1rem; color: #6b7280;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">👥</div>
+                    <h3 style="margin: 0 0 0.5rem 0; color: #374151;">ยังไม่มีข้อมูลผู้ป่วย</h3>
+                    <p style="margin: 0;">เริ่มต้นโดยการเพิ่มผู้ป่วยใหม่</p>
+                </td>
+            </tr>
+        `;
         resultCount.innerHTML = '';
         return;
     }
@@ -819,7 +827,13 @@ function loadAppointments() {
     const list = document.getElementById('appointmentsList');
 
     if (appointments.length === 0) {
-        list.innerHTML = '<p class="no-data">ยังไม่มีนัดหมาย</p>';
+        list.innerHTML = `
+            <div style="text-align: center; padding: 3rem 1rem; color: #6b7280;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">📅</div>
+                <h3 style="margin: 0 0 0.5rem 0; color: #374151;">ยังไม่มีนัดหมาย</h3>
+                <p style="margin: 0;">คลิกปุ่ม "สร้างนัดหมายใหม่" เพื่อเริ่มต้น</p>
+            </div>
+        `;
         return;
     }
 
@@ -1292,7 +1306,15 @@ function searchAndFilterPatients(query = '', minAge = null, maxAge = null) {
 
     // Display results
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="no-data">ไม่พบข้อมูลผู้ป่วยที่ค้นหา</td></tr>';
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 3rem 1rem; color: #6b7280;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+                    <h3 style="margin: 0 0 0.5rem 0; color: #374151;">ไม่พบข้อมูลผู้ป่วยที่ค้นหา</h3>
+                    <p style="margin: 0;">ลองค้นหาด้วยชื่อ, HN หรือเบอร์โทรอื่น</p>
+                </td>
+            </tr>
+        `;
         updateResultCount(0, totalPatients);
         return;
     }
@@ -1430,7 +1452,14 @@ function searchAndFilterAppointments(query = '', statusFilter = '', timeFilter =
 
     // Display results
     if (filtered.length === 0) {
-        list.innerHTML = '<p class="no-data">ไม่พบนัดหมายที่ค้นหา</p>';
+        list.innerHTML = `
+            <div style="text-align: center; padding: 3rem 1rem; color: #6b7280;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🔍</div>
+                <h3 style="margin: 0 0 0.5rem 0; color: #374151;">ไม่พบนัดหมายที่ค้นหา</h3>
+                <p style="margin: 0;">ลองปรับเปลี่ยนคำค้นหาหรือตัวกรองของคุณ</p>
+                <button onclick="clearAppointmentFilters()" class="btn btn-secondary" style="margin-top: 1rem;">ล้างตัวกรอง</button>
+            </div>
+        `;
         updateAppointmentResultCount(0, totalAppointments);
         return;
     }
