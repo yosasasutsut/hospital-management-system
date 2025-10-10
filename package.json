@@ -1,6 +1,6 @@
 {
   "name": "hospital-management-system",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Modern Hospital Management System - Web-based responsive application for managing hospital operations",
   "main": "index.html",
   "scripts": {

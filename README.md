@@ -194,7 +194,18 @@ git commit -m "docs: update README with new features"
 
 ## 📅 Development Log
 
-### Day 8 - 2025-10-09 (Latest)
+### Day 9 - 2025-10-10 (Latest)
+- ✅ Enhanced appointment list view with full details
+- ✅ Sort appointments by date and time (newest first)
+- ✅ Color-coded cards for past/upcoming appointments
+- ✅ Status badges (pending, confirmed, cancelled)
+- ✅ View appointment details modal
+- ✅ Cancel appointment functionality
+- ✅ Thai date formatting for better UX
+- ✅ Responsive appointment cards with modern design
+- ✅ Version bumped to 1.4.0
+
+### Day 8 - 2025-10-09
 - ✅ Appointment booking system
 - ✅ Create new appointment form with modal
 - ✅ Select patient and doctor from dropdowns

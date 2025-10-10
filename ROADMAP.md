@@ -62,11 +62,14 @@
 - [x] บันทึกลง localStorage
 - **Commit message**: `feat: create appointment booking form`
 
-### Day 9: Appointment List View
-- [ ] แสดงรายการนัดหมายทั้งหมด
-- [ ] เรียงตามวันที่และเวลา
-- [ ] แยกสีระหว่างนัดหมายที่ผ่านมาแล้วและยังไม่ถึง
-- **Commit message**: `feat: display appointment list with sorting`
+### Day 9: Appointment List View ✅
+- [x] แสดงรายการนัดหมายทั้งหมด
+- [x] เรียงตามวันที่และเวลา
+- [x] แยกสีระหว่างนัดหมายที่ผ่านมาแล้วและยังไม่ถึง
+- [x] เพิ่ม status badges (pending, confirmed, cancelled)
+- [x] ฟังก์ชันดูรายละเอียดนัดหมาย
+- [x] ฟังก์ชันยกเลิกนัดหมาย
+- **Commit message**: `feat: display appointment list with sorting and status indicators`
 
 ### Day 10: Appointment Calendar View
 - [ ] สร้าง calendar view แบบง่าย

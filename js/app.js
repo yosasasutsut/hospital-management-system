@@ -1,8 +1,8 @@
 // ===== Hospital Management System - Main JavaScript =====
-// Version: 1.2.0
+// Version: 1.4.0
 // Description: Core application logic for hospital management system
 // Author: Hospital MS Team
-// Last Updated: 2025-10-07
+// Last Updated: 2025-10-10
 
 /**
  * Data Storage Module
@@ -777,6 +777,10 @@ function deletePatient(hn) {
 }
 
 // ===== Appointments Functions =====
+/**
+ * Load and display all appointments with sorting and status indicators
+ * Sorts appointments by date and time, shows color-coded status for past/upcoming appointments
+ */
 function loadAppointments() {
     const appointments = storage.get('appointments') || [];
     const list = document.getElementById('appointmentsList');
@@ -786,12 +790,234 @@ function loadAppointments() {
         return;
     }
 
-    list.innerHTML = appointments.map(apt => `
-        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
-            <p><strong>${apt.patientName}</strong> - ${apt.doctorName}</p>
-            <p>วันที่: ${apt.date} เวลา: ${apt.time}</p>
+    // Sort appointments by date and time (newest first for easier viewing)
+    const sortedAppointments = appointments.sort((a, b) => {
+        const dateTimeA = new Date(`${a.date}T${a.time}`);
+        const dateTimeB = new Date(`${b.date}T${b.time}`);
+        return dateTimeB - dateTimeA; // Descending order (newest first)
+    });
+
+    // Get current date and time for comparison
+    const now = new Date();
+
+    list.innerHTML = sortedAppointments.map(apt => {
+        const appointmentDateTime = new Date(`${apt.date}T${apt.time}`);
+        const isPast = appointmentDateTime < now;
+
+        // Determine status colors and text
+        let statusColor, statusText, cardBgColor, cardBorderColor;
+
+        if (isPast) {
+            cardBgColor = '#f3f4f6'; // Light gray for past appointments
+            cardBorderColor = '#9ca3af'; // Gray border
+            statusColor = '#6b7280'; // Gray text
+            statusText = 'ผ่านไปแล้ว';
+        } else {
+            cardBgColor = '#f0f9ff'; // Light blue for upcoming
+            cardBorderColor = '#3b82f6'; // Blue border
+            statusColor = '#10b981'; // Green text
+            statusText = 'กำลังจะถึง';
+        }
+
+        // Status badge colors based on appointment status
+        let statusBadgeColor, statusBadgeText;
+        switch(apt.status) {
+            case 'confirmed':
+                statusBadgeColor = '#10b981'; // Green
+                statusBadgeText = 'ยืนยันแล้ว';
+                break;
+            case 'cancelled':
+                statusBadgeColor = '#ef4444'; // Red
+                statusBadgeText = 'ยกเลิกแล้ว';
+                break;
+            case 'pending':
+            default:
+                statusBadgeColor = '#f59e0b'; // Orange
+                statusBadgeText = 'รอยืนยัน';
+        }
+
+        // Format date in Thai format
+        const dateObj = new Date(apt.date);
+        const thaiDate = dateObj.toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            weekday: 'long'
+        });
+
+        return `
+            <div style="padding: 1.25rem; background-color: ${cardBgColor}; border-left: 4px solid ${cardBorderColor}; border-radius: var(--border-radius); margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                        <h4 style="margin: 0 0 0.25rem 0; color: var(--primary-color); font-size: 1.1rem;">
+                            ${apt.patientName}
+                        </h4>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">HN: ${apt.patientHN}</p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <span style="padding: 0.25rem 0.75rem; background-color: ${statusBadgeColor}; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">
+                            ${statusBadgeText}
+                        </span>
+                        <span style="padding: 0.25rem 0.75rem; background-color: ${isPast ? '#9ca3af' : '#3b82f6'}; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">
+                            ${statusText}
+                        </span>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">👨‍⚕️ แพทย์</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 500;">${apt.doctorName}</p>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">${apt.doctorSpecialty}</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">📅 วันที่</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 500;">${thaiDate}</p>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">เวลา ${apt.time} น.</p>
+                    </div>
+                </div>
+
+                ${apt.note ? `
+                    <div style="padding: 0.75rem; background-color: white; border-radius: 6px; margin-top: 0.75rem;">
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">📝 หมายเหตุ</p>
+                        <p style="margin: 0.25rem 0 0 0; color: #374151;">${apt.note}</p>
+                    </div>
+                ` : ''}
+
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid ${isPast ? '#d1d5db' : '#bfdbfe'}; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" onclick="viewAppointmentDetails('${apt.id}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem;">
+                        ดูรายละเอียด
+                    </button>
+                    ${!isPast && apt.status !== 'cancelled' ? `
+                        <button class="btn btn-primary" onclick="editAppointment('${apt.id}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem;">
+                            แก้ไข
+                        </button>
+                        <button class="btn" onclick="cancelAppointment('${apt.id}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; background-color: #ef4444; color: white;">
+                            ยกเลิก
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+/**
+ * View appointment details in modal
+ * @param {string} appointmentId - Appointment ID
+ */
+function viewAppointmentDetails(appointmentId) {
+    const appointments = storage.get('appointments') || [];
+    const appointment = appointments.find(apt => apt.id == appointmentId);
+
+    if (!appointment) {
+        alert('ไม่พบข้อมูลนัดหมาย');
+        return;
+    }
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    const dateObj = new Date(appointment.date);
+    const thaiDate = dateObj.toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long'
+    });
+
+    let statusText, statusColor;
+    switch(appointment.status) {
+        case 'confirmed':
+            statusText = 'ยืนยันแล้ว';
+            statusColor = '#10b981';
+            break;
+        case 'cancelled':
+            statusText = 'ยกเลิกแล้ว';
+            statusColor = '#ef4444';
+            break;
+        case 'pending':
+        default:
+            statusText = 'รอยืนยัน';
+            statusColor = '#f59e0b';
+    }
+
+    modalBody.innerHTML = `
+        <h3>รายละเอียดนัดหมาย</h3>
+        <div style="margin-top: 1.5rem;">
+            <div style="padding: 1rem; background-color: #f3f4f6; border-radius: 8px; margin-bottom: 1rem;">
+                <p style="margin: 0 0 0.5rem 0;"><strong>รหัสนัดหมาย:</strong> #${appointment.id}</p>
+                <p style="margin: 0;"><strong>สถานะ:</strong> <span style="color: ${statusColor}; font-weight: 600;">${statusText}</span></p>
+            </div>
+
+            <h4 style="margin: 1.5rem 0 0.75rem 0; color: var(--primary-color);">ข้อมูลผู้ป่วย</h4>
+            <p><strong>ชื่อ-นามสกุล:</strong> ${appointment.patientName}</p>
+            <p><strong>HN:</strong> ${appointment.patientHN}</p>
+
+            <h4 style="margin: 1.5rem 0 0.75rem 0; color: var(--primary-color);">ข้อมูลแพทย์</h4>
+            <p><strong>ชื่อ:</strong> ${appointment.doctorName}</p>
+            <p><strong>แผนก:</strong> ${appointment.doctorSpecialty}</p>
+
+            <h4 style="margin: 1.5rem 0 0.75rem 0; color: var(--primary-color);">เวลานัดหมาย</h4>
+            <p><strong>วันที่:</strong> ${thaiDate}</p>
+            <p><strong>เวลา:</strong> ${appointment.time} น.</p>
+
+            ${appointment.note ? `
+                <h4 style="margin: 1.5rem 0 0.75rem 0; color: var(--primary-color);">หมายเหตุ</h4>
+                <p style="padding: 1rem; background-color: #f9fafb; border-radius: 6px;">${appointment.note}</p>
+            ` : ''}
+
+            <p style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 0.875rem;">
+                <strong>วันที่สร้าง:</strong> ${new Date(appointment.createdAt).toLocaleString('th-TH')}
+            </p>
         </div>
-    `).join('');
+    `;
+
+    modal.classList.add('active');
+}
+
+/**
+ * Cancel appointment with confirmation
+ * @param {string} appointmentId - Appointment ID
+ */
+function cancelAppointment(appointmentId) {
+    const appointments = storage.get('appointments') || [];
+    const appointment = appointments.find(apt => apt.id == appointmentId);
+
+    if (!appointment) {
+        alert('ไม่พบข้อมูลนัดหมาย');
+        return;
+    }
+
+    const confirmed = confirm(
+        `คุณต้องการยกเลิกนัดหมายนี้ใช่หรือไม่?\n\n` +
+        `ผู้ป่วย: ${appointment.patientName}\n` +
+        `แพทย์: ${appointment.doctorName}\n` +
+        `วันที่: ${appointment.date} เวลา: ${appointment.time}`
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    // Update appointment status to cancelled
+    const appointmentIndex = appointments.findIndex(apt => apt.id == appointmentId);
+    appointments[appointmentIndex].status = 'cancelled';
+    storage.set('appointments', appointments);
+
+    loadAppointments();
+    loadDashboard();
+
+    alert('ยกเลิกนัดหมายสำเร็จ');
+}
+
+/**
+ * Edit appointment (placeholder for Day 11)
+ * @param {string} appointmentId - Appointment ID
+ */
+function editAppointment(appointmentId) {
+    alert('ฟีเจอร์แก้ไขนัดหมายจะพัฒนาใน Day 11');
+    // TODO: Implement in Day 11
 }
 
 /**

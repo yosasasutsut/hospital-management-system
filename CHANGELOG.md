@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2025-10-10
+
+### Added
+- **Enhanced Appointment List View** (Day 9)
+  - Comprehensive appointment display with full details
+  - Automatic sorting by date and time (newest first)
+  - Color-coded appointment cards:
+    - Past appointments: Gray background with gray border
+    - Upcoming appointments: Blue background with blue border
+  - Status badges with color indicators:
+    - Pending (รอยืนยัน): Orange badge
+    - Confirmed (ยืนยันแล้ว): Green badge
+    - Cancelled (ยกเลิกแล้ว): Red badge
+  - Time-based status indicators (ผ่านไปแล้ว / กำลังจะถึง)
+  - Thai date formatting for better readability
+  - Detailed appointment cards showing:
+    - Patient name and HN
+    - Doctor name and specialty
+    - Date and time with Thai format
+    - Notes/remarks (if available)
+  - Action buttons:
+    - View details modal
+    - Edit (for upcoming appointments)
+    - Cancel with confirmation
+  - Responsive grid layout for appointment information
+  - Shadow effects and modern card design
+
+### Added - Additional Features
+- **Appointment Details Modal**
+  - Full appointment information display
+  - Status visualization with colors
+  - Creation timestamp tracking
+  - Organized sections for patient, doctor, and appointment info
+
+- **Cancel Appointment Functionality**
+  - Confirmation dialog before cancellation
+  - Updates appointment status to 'cancelled'
+  - Auto-refresh dashboard statistics
+  - Preserves appointment history
+
+### Changed
+- Enhanced `loadAppointments()` function with advanced features
+- Improved appointment card UI with modern design
+- Updated version to 1.4.0 in app.js
+- Better visual hierarchy for appointment information
+- Conditional button display based on appointment status and time
+
+### Technical
+- Smart date/time comparison for status determination
+- Efficient sorting algorithm for appointments
+- JSDoc documentation for all new functions
+- Status-based conditional rendering
+- Thai locale date formatting
+
+---
+
 ## [1.3.0] - 2025-10-09
 
 ### Added
