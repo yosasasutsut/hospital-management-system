@@ -299,8 +299,39 @@ function loadDashboard() {
     // Load appointment statistics
     loadAppointmentStatistics(appointments, now);
 
+    // Load room statistics
+    loadRoomStatistics();
+
     // Load patient statistics charts
     loadPatientStatistics();
+}
+
+/**
+ * Load and display room statistics in dashboard
+ * Counts rooms by status and displays in gradient cards
+ */
+function loadRoomStatistics() {
+    const rooms = storage.get('rooms') || [];
+
+    // Count rooms by status
+    const available = rooms.filter(r => r.status === 'available').length;
+    const occupied = rooms.filter(r => r.status === 'occupied').length;
+    const cleaning = rooms.filter(r => r.status === 'cleaning' || r.status === 'dirty').length;
+    const maintenance = rooms.filter(r => r.status === 'maintenance').length;
+    const reserved = rooms.filter(r => r.status === 'reserved').length;
+
+    // Update room statistics elements
+    const availableEl = document.getElementById('availableRoomsCount');
+    const occupiedEl = document.getElementById('occupiedRoomsCount');
+    const cleaningEl = document.getElementById('cleaningRoomsCount');
+    const maintenanceEl = document.getElementById('maintenanceRoomsCount');
+    const reservedEl = document.getElementById('reservedRoomsCount');
+
+    if (availableEl) availableEl.textContent = available;
+    if (occupiedEl) occupiedEl.textContent = occupied;
+    if (cleaningEl) cleaningEl.textContent = cleaning;
+    if (maintenanceEl) maintenanceEl.textContent = maintenance;
+    if (reservedEl) reservedEl.textContent = reserved;
 }
 
 /**

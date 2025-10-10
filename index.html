@@ -149,6 +149,58 @@
                     </div>
                 </div>
 
+                <!-- Room Statistics -->
+                <div class="room-statistics" style="margin-top: 2rem;">
+                    <h3>สถิติห้องพัก</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 1.5rem; border-radius: var(--border-radius); color: white; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="font-size: 2.5rem;">✅</div>
+                                <div>
+                                    <p style="margin: 0; opacity: 0.9; font-size: 0.875rem;">ห้องว่าง</p>
+                                    <p style="margin: 0.25rem 0 0 0; font-size: 2rem; font-weight: 700;" id="availableRoomsCount">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 1.5rem; border-radius: var(--border-radius); color: white; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="font-size: 2.5rem;">🛏️</div>
+                                <div>
+                                    <p style="margin: 0; opacity: 0.9; font-size: 0.875rem;">มีผู้ป่วย</p>
+                                    <p style="margin: 0.25rem 0 0 0; font-size: 2rem; font-weight: 700;" id="occupiedRoomsCount">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 1.5rem; border-radius: var(--border-radius); color: white; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="font-size: 2.5rem;">🧹</div>
+                                <div>
+                                    <p style="margin: 0; opacity: 0.9; font-size: 0.875rem;">ทำความสะอาด</p>
+                                    <p style="margin: 0.25rem 0 0 0; font-size: 2rem; font-weight: 700;" id="cleaningRoomsCount">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 1.5rem; border-radius: var(--border-radius); color: white; box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="font-size: 2.5rem;">🔧</div>
+                                <div>
+                                    <p style="margin: 0; opacity: 0.9; font-size: 0.875rem;">ซ่อมบำรุง</p>
+                                    <p style="margin: 0.25rem 0 0 0; font-size: 2rem; font-weight: 700;" id="maintenanceRoomsCount">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); padding: 1.5rem; border-radius: var(--border-radius); color: white; box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="font-size: 2.5rem;">📋</div>
+                                <div>
+                                    <p style="margin: 0; opacity: 0.9; font-size: 0.875rem;">จองแล้ว</p>
+                                    <p style="margin: 0.25rem 0 0 0; font-size: 2rem; font-weight: 700;" id="reservedRoomsCount">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Patient Statistics Section -->
                 <div class="patient-statistics" style="margin-top: 2rem;">
                     <h3>สถิติผู้ป่วย</h3>
