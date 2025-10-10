@@ -1477,21 +1477,25 @@ function getRoomStatusConfig(status) {
 }
 
 /**
- * Load and display all rooms with comprehensive information
- * Shows room cards with color-coded status, pricing, amenities, and occupancy
+ * Load and display all rooms in table format
+ * Shows room data with color-coded status in easy-to-read table
  */
 function loadRooms() {
     const rooms = storage.get('rooms') || [];
-    const grid = document.getElementById('roomsGrid');
+    const tbody = document.getElementById('roomsTableBody');
+    const resultCount = document.getElementById('roomResultCount');
 
     if (rooms.length === 0) {
-        grid.innerHTML = `
-            <div style="text-align: center; padding: 3rem 1rem; color: #6b7280; grid-column: 1 / -1;">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">🏥</div>
-                <h3 style="margin: 0 0 0.5rem 0; color: #374151;">ยังไม่มีข้อมูลห้องพัก</h3>
-                <p style="margin: 0;">กรุณาเพิ่มข้อมูลห้องพักเข้าสู่ระบบ</p>
-            </div>
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" style="text-align: center; padding: 3rem 1rem; color: #6b7280;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🏥</div>
+                    <h3 style="margin: 0 0 0.5rem 0; color: #374151;">ยังไม่มีข้อมูลห้องพัก</h3>
+                    <p style="margin: 0;">กรุณาเพิ่มข้อมูลห้องพักเข้าสู่ระบบหรือคลิกปุ่มรีเซ็ตข้อมูลห้อง</p>
+                </td>
+            </tr>
         `;
+        resultCount.innerHTML = '';
         return;
     }
 
@@ -1501,130 +1505,73 @@ function loadRooms() {
         return a.roomNumber.localeCompare(b.roomNumber);
     });
 
-    grid.innerHTML = sortedRooms.map(room => {
+    tbody.innerHTML = sortedRooms.map(room => {
         const statusConfig = getRoomStatusConfig(room.status);
         const occupancyPercentage = room.capacity > 0 ? (room.currentOccupancy / room.capacity * 100) : 0;
 
         return `
-            <div style="background-color: white; border-radius: var(--border-radius); box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease; border-left: 4px solid ${statusConfig.borderColor};"
-                 onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.15)';"
-                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)';">
+            <tr>
+                <!-- Status -->
+                <td>
+                    <div style="display: inline-block; padding: 0.375rem 0.75rem; background: ${statusConfig.bgColor}; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: 600; white-space: nowrap;">
+                        ${statusConfig.icon} ${statusConfig.label}
+                    </div>
+                </td>
 
-                <!-- Room Header -->
-                <div style="background: linear-gradient(135deg, ${statusConfig.bgColor} 0%, ${statusConfig.borderColor} 100%); padding: 1.25rem; color: white;">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div>
-                            <h3 style="margin: 0 0 0.25rem 0; font-size: 1.5rem; font-weight: 700;">
-                                ${room.roomNumber}
-                            </h3>
-                            <p style="margin: 0; font-size: 0.875rem; opacity: 0.95;">
-                                ${room.typeName}
-                            </p>
+                <!-- Room Number -->
+                <td style="font-weight: 600; color: var(--primary-color); font-size: 1.1rem;">
+                    ${room.roomNumber}
+                </td>
+
+                <!-- Type -->
+                <td>${room.typeName}</td>
+
+                <!-- Building -->
+                <td>${room.building}</td>
+
+                <!-- Floor -->
+                <td style="text-align: center;">ชั้น ${room.floor}</td>
+
+                <!-- Price -->
+                <td style="font-weight: 600; color: #0369a1; white-space: nowrap;">
+                    ${room.pricePerDay.toLocaleString()} ฿
+                </td>
+
+                <!-- Capacity -->
+                <td style="text-align: center;">${room.capacity} เตียง</td>
+
+                <!-- Occupancy -->
+                <td>
+                    <div style="min-width: 120px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; font-size: 0.75rem;">
+                            <span style="color: #6b7280;">${room.currentOccupancy}/${room.capacity}</span>
+                            <span style="color: #6b7280; font-weight: 600;">${occupancyPercentage.toFixed(0)}%</span>
                         </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 2rem;">${statusConfig.icon}</div>
-                            <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; opacity: 0.9;">
-                                ${statusConfig.label}
-                            </p>
+                        <div style="background-color: #e5e7eb; height: 6px; border-radius: 3px; overflow: hidden;">
+                            <div style="background: ${statusConfig.bgColor}; height: 100%; width: ${occupancyPercentage}%; transition: width 0.3s ease;"></div>
                         </div>
                     </div>
-                </div>
+                </td>
 
-                <!-- Room Body -->
-                <div style="padding: 1.25rem;">
-                    <!-- Building & Floor -->
-                    <div style="margin-bottom: 1rem;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                            <div>
-                                <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">🏢 อาคาร</p>
-                                <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #374151;">${room.building}</p>
-                            </div>
-                            <div>
-                                <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">📍 ชั้น</p>
-                                <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #374151;">ชั้น ${room.floor}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Pricing -->
-                    <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 0.875rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #bae6fd;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: #0369a1; font-size: 0.875rem; font-weight: 500;">💰 ราคาห้องพัก</span>
-                            <span style="color: #0c4a6e; font-size: 1.25rem; font-weight: 700;">
-                                ${room.pricePerDay.toLocaleString()} ฿
-                            </span>
-                        </div>
-                        <p style="margin: 0.25rem 0 0 0; color: #0369a1; font-size: 0.75rem;">ต่อวัน (รวม VAT)</p>
-                    </div>
-
-                    <!-- Capacity & Occupancy -->
-                    <div style="margin-bottom: 1rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                            <span style="color: #6b7280; font-size: 0.875rem;">👥 ความจุ</span>
-                            <span style="color: #374151; font-weight: 600;">
-                                ${room.currentOccupancy} / ${room.capacity} เตียง
-                            </span>
-                        </div>
-                        <div style="background-color: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
-                            <div style="background: linear-gradient(90deg, ${statusConfig.bgColor} 0%, ${statusConfig.borderColor} 100%); height: 100%; width: ${occupancyPercentage}%; transition: width 0.3s ease;"></div>
-                        </div>
-                        <p style="margin: 0.25rem 0 0 0; color: #6b7280; font-size: 0.75rem; text-align: right;">
-                            ${occupancyPercentage.toFixed(0)}% ใช้งาน
-                        </p>
-                    </div>
-
-                    <!-- Amenities Preview -->
-                    <div style="margin-bottom: 1rem;">
-                        <p style="margin: 0 0 0.5rem 0; color: #6b7280; font-size: 0.875rem; font-weight: 600;">🛏️ สิ่งอำนวยความสะดวก</p>
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.375rem;">
-                            ${room.amenities.slice(0, 4).map(amenity => `
-                                <span style="background-color: #f3f4f6; color: #374151; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">
-                                    ${amenity}
-                                </span>
-                            `).join('')}
-                            ${room.amenities.length > 4 ? `
-                                <span style="background-color: #e5e7eb; color: #6b7280; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
-                                    +${room.amenities.length - 4}
-                                </span>
-                            ` : ''}
-                        </div>
-                    </div>
-
-                    <!-- Last Cleaned -->
-                    <div style="padding: 0.75rem; background-color: #f9fafb; border-radius: 6px; margin-bottom: 1rem;">
-                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">🧹 ทำความสะอาดล่าสุด</p>
-                        <p style="margin: 0.25rem 0 0 0; color: #374151; font-size: 0.875rem; font-weight: 500;">
-                            ${new Date(room.lastCleaned).toLocaleString('th-TH', {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            })}
-                        </p>
-                    </div>
-
-                    ${room.notes ? `
-                        <div style="padding: 0.75rem; background-color: #fef3c7; border-left: 3px solid #f59e0b; border-radius: 6px; margin-bottom: 1rem;">
-                            <p style="margin: 0; color: #92400e; font-size: 0.75rem; font-weight: 600;">📝 หมายเหตุ</p>
-                            <p style="margin: 0.25rem 0 0 0; color: #78350f; font-size: 0.875rem;">${room.notes}</p>
-                        </div>
-                    ` : ''}
-
-                    <!-- Action Buttons -->
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <!-- Actions -->
+                <td>
+                    <div style="display: flex; gap: 0.25rem; flex-wrap: nowrap;">
                         <button class="btn btn-secondary" onclick="viewRoomDetails('${room.id}')"
-                                style="flex: 1; padding: 0.625rem 1rem; font-size: 0.875rem; min-width: 100px;">
-                            ดูรายละเอียด
+                                style="padding: 0.4rem 0.8rem; font-size: 0.875rem; white-space: nowrap;">
+                            ดู
                         </button>
                         <button class="btn btn-primary" onclick="editRoom('${room.id}')"
-                                style="flex: 1; padding: 0.625rem 1rem; font-size: 0.875rem; min-width: 100px;">
+                                style="padding: 0.4rem 0.8rem; font-size: 0.875rem; white-space: nowrap;">
                             จัดการ
                         </button>
                     </div>
-                </div>
-            </div>
+                </td>
+            </tr>
         `;
     }).join('');
+
+    // Display result count
+    updateRoomResultCount(rooms.length, rooms.length);
 }
 
 /**
@@ -2011,16 +1958,18 @@ function updateRoomResultCount(showing, total) {
  */
 function searchAndFilterRooms(query = '', statusFilter = '', typeFilter = '', floorFilter = '') {
     const rooms = storage.get('rooms') || [];
-    const grid = document.getElementById('roomsGrid');
+    const tbody = document.getElementById('roomsTableBody');
     const totalRooms = rooms.length;
 
     if (rooms.length === 0) {
-        grid.innerHTML = `
-            <div style="text-align: center; padding: 3rem 1rem; color: #6b7280; grid-column: 1 / -1;">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">🏥</div>
-                <h3 style="margin: 0 0 0.5rem 0; color: #374151;">ยังไม่มีข้อมูลห้องพัก</h3>
-                <p style="margin: 0;">กรุณาเพิ่มข้อมูลห้องพักเข้าสู่ระบบ</p>
-            </div>
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" style="text-align: center; padding: 3rem 1rem; color: #6b7280;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🏥</div>
+                    <h3 style="margin: 0 0 0.5rem 0; color: #374151;">ยังไม่มีข้อมูลห้องพัก</h3>
+                    <p style="margin: 0;">กรุณาเพิ่มข้อมูลห้องพักเข้าสู่ระบบหรือคลิกปุ่มรีเซ็ตข้อมูลห้อง</p>
+                </td>
+            </tr>
         `;
         updateRoomResultCount(0, 0);
         return;
@@ -2055,13 +2004,15 @@ function searchAndFilterRooms(query = '', statusFilter = '', typeFilter = '', fl
 
     // Display results
     if (filtered.length === 0) {
-        grid.innerHTML = `
-            <div style="text-align: center; padding: 3rem 1rem; color: #6b7280; grid-column: 1 / -1;">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">🔍</div>
-                <h3 style="margin: 0 0 0.5rem 0; color: #374151;">ไม่พบห้องพักที่ค้นหา</h3>
-                <p style="margin: 0;">ลองปรับเปลี่ยนคำค้นหาหรือตัวกรองของคุณ</p>
-                <button onclick="clearRoomFilters()" class="btn btn-secondary" style="margin-top: 1rem;">ล้างตัวกรอง</button>
-            </div>
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" style="text-align: center; padding: 3rem 1rem; color: #6b7280;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+                    <h3 style="margin: 0 0 0.5rem 0; color: #374151;">ไม่พบห้องพักที่ค้นหา</h3>
+                    <p style="margin: 0;">ลองปรับเปลี่ยนคำค้นหาหรือตัวกรองของคุณ</p>
+                    <button onclick="clearRoomFilters()" class="btn btn-secondary" style="margin-top: 1rem;">ล้างตัวกรอง</button>
+                </td>
+            </tr>
         `;
         updateRoomResultCount(0, totalRooms);
         return;
@@ -2073,121 +2024,69 @@ function searchAndFilterRooms(query = '', statusFilter = '', typeFilter = '', fl
         return a.roomNumber.localeCompare(b.roomNumber);
     });
 
-    // Display room cards
-    grid.innerHTML = sortedRooms.map(room => {
+    // Display room rows
+    tbody.innerHTML = sortedRooms.map(room => {
         const statusConfig = getRoomStatusConfig(room.status);
         const occupancyPercentage = room.capacity > 0 ? (room.currentOccupancy / room.capacity * 100) : 0;
 
         return `
-            <div style="background-color: white; border-radius: var(--border-radius); box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease; border-left: 4px solid ${statusConfig.borderColor};"
-                 onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.15)';"
-                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)';">
+            <tr>
+                <!-- Status -->
+                <td>
+                    <div style="display: inline-block; padding: 0.375rem 0.75rem; background: ${statusConfig.bgColor}; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: 600; white-space: nowrap;">
+                        ${statusConfig.icon} ${statusConfig.label}
+                    </div>
+                </td>
 
-                <div style="background: linear-gradient(135deg, ${statusConfig.bgColor} 0%, ${statusConfig.borderColor} 100%); padding: 1.25rem; color: white;">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div>
-                            <h3 style="margin: 0 0 0.25rem 0; font-size: 1.5rem; font-weight: 700;">
-                                ${room.roomNumber}
-                            </h3>
-                            <p style="margin: 0; font-size: 0.875rem; opacity: 0.95;">
-                                ${room.typeName}
-                            </p>
+                <!-- Room Number -->
+                <td style="font-weight: 600; color: var(--primary-color); font-size: 1.1rem;">
+                    ${room.roomNumber}
+                </td>
+
+                <!-- Type -->
+                <td>${room.typeName}</td>
+
+                <!-- Building -->
+                <td>${room.building}</td>
+
+                <!-- Floor -->
+                <td style="text-align: center;">ชั้น ${room.floor}</td>
+
+                <!-- Price -->
+                <td style="font-weight: 600; color: #0369a1; white-space: nowrap;">
+                    ${room.pricePerDay.toLocaleString()} ฿
+                </td>
+
+                <!-- Capacity -->
+                <td style="text-align: center;">${room.capacity} เตียง</td>
+
+                <!-- Occupancy -->
+                <td>
+                    <div style="min-width: 120px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; font-size: 0.75rem;">
+                            <span style="color: #6b7280;">${room.currentOccupancy}/${room.capacity}</span>
+                            <span style="color: #6b7280; font-weight: 600;">${occupancyPercentage.toFixed(0)}%</span>
                         </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 2rem;">${statusConfig.icon}</div>
-                            <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; opacity: 0.9;">
-                                ${statusConfig.label}
-                            </p>
+                        <div style="background-color: #e5e7eb; height: 6px; border-radius: 3px; overflow: hidden;">
+                            <div style="background: ${statusConfig.bgColor}; height: 100%; width: ${occupancyPercentage}%; transition: width 0.3s ease;"></div>
                         </div>
                     </div>
-                </div>
+                </td>
 
-                <div style="padding: 1.25rem;">
-                    <div style="margin-bottom: 1rem;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                            <div>
-                                <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">🏢 อาคาร</p>
-                                <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #374151;">${room.building}</p>
-                            </div>
-                            <div>
-                                <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">📍 ชั้น</p>
-                                <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #374151;">ชั้น ${room.floor}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 0.875rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #bae6fd;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: #0369a1; font-size: 0.875rem; font-weight: 500;">💰 ราคาห้องพัก</span>
-                            <span style="color: #0c4a6e; font-size: 1.25rem; font-weight: 700;">
-                                ${room.pricePerDay.toLocaleString()} ฿
-                            </span>
-                        </div>
-                        <p style="margin: 0.25rem 0 0 0; color: #0369a1; font-size: 0.75rem;">ต่อวัน (รวม VAT)</p>
-                    </div>
-
-                    <div style="margin-bottom: 1rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                            <span style="color: #6b7280; font-size: 0.875rem;">👥 ความจุ</span>
-                            <span style="color: #374151; font-weight: 600;">
-                                ${room.currentOccupancy} / ${room.capacity} เตียง
-                            </span>
-                        </div>
-                        <div style="background-color: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
-                            <div style="background: linear-gradient(90deg, ${statusConfig.bgColor} 0%, ${statusConfig.borderColor} 100%); height: 100%; width: ${occupancyPercentage}%; transition: width 0.3s ease;"></div>
-                        </div>
-                        <p style="margin: 0.25rem 0 0 0; color: #6b7280; font-size: 0.75rem; text-align: right;">
-                            ${occupancyPercentage.toFixed(0)}% ใช้งาน
-                        </p>
-                    </div>
-
-                    <div style="margin-bottom: 1rem;">
-                        <p style="margin: 0 0 0.5rem 0; color: #6b7280; font-size: 0.875rem; font-weight: 600;">🛏️ สิ่งอำนวยความสะดวก</p>
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.375rem;">
-                            ${room.amenities.slice(0, 4).map(amenity => `
-                                <span style="background-color: #f3f4f6; color: #374151; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">
-                                    ${amenity}
-                                </span>
-                            `).join('')}
-                            ${room.amenities.length > 4 ? `
-                                <span style="background-color: #e5e7eb; color: #6b7280; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
-                                    +${room.amenities.length - 4}
-                                </span>
-                            ` : ''}
-                        </div>
-                    </div>
-
-                    <div style="padding: 0.75rem; background-color: #f9fafb; border-radius: 6px; margin-bottom: 1rem;">
-                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">🧹 ทำความสะอาดล่าสุด</p>
-                        <p style="margin: 0.25rem 0 0 0; color: #374151; font-size: 0.875rem; font-weight: 500;">
-                            ${new Date(room.lastCleaned).toLocaleString('th-TH', {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            })}
-                        </p>
-                    </div>
-
-                    ${room.notes ? `
-                        <div style="padding: 0.75rem; background-color: #fef3c7; border-left: 3px solid #f59e0b; border-radius: 6px; margin-bottom: 1rem;">
-                            <p style="margin: 0; color: #92400e; font-size: 0.75rem; font-weight: 600;">📝 หมายเหตุ</p>
-                            <p style="margin: 0.25rem 0 0 0; color: #78350f; font-size: 0.875rem;">${room.notes}</p>
-                        </div>
-                    ` : ''}
-
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <!-- Actions -->
+                <td>
+                    <div style="display: flex; gap: 0.25rem; flex-wrap: nowrap;">
                         <button class="btn btn-secondary" onclick="viewRoomDetails('${room.id}')"
-                                style="flex: 1; padding: 0.625rem 1rem; font-size: 0.875rem; min-width: 100px;">
-                            ดูรายละเอียด
+                                style="padding: 0.4rem 0.8rem; font-size: 0.875rem; white-space: nowrap;">
+                            ดู
                         </button>
                         <button class="btn btn-primary" onclick="editRoom('${room.id}')"
-                                style="flex: 1; padding: 0.625rem 1rem; font-size: 0.875rem; min-width: 100px;">
+                                style="padding: 0.4rem 0.8rem; font-size: 0.875rem; white-space: nowrap;">
                             จัดการ
                         </button>
                     </div>
-                </div>
-            </div>
+                </td>
+            </tr>
         `;
     }).join('');
 

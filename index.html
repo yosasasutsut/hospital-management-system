@@ -369,12 +369,31 @@
                 </div>
 
                 <!-- Result Count -->
-                <div id="roomResultCount" style="margin-bottom: 1rem; color: #6b7280; font-size: 0.875rem;">
+                <div id="roomResultCount" style="margin-bottom: 0.5rem; color: #6b7280; font-size: 0.875rem;">
                     <!-- Result count will be displayed here -->
                 </div>
 
-                <div class="rooms-grid" id="roomsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
-                    <p class="no-data">กำลังโหลดข้อมูล...</p>
+                <div class="table-container">
+                    <table class="data-table" id="roomsTable">
+                        <thead>
+                            <tr>
+                                <th>สถานะ</th>
+                                <th>ห้อง</th>
+                                <th>ประเภท</th>
+                                <th>อาคาร</th>
+                                <th>ชั้น</th>
+                                <th>ราคา/วัน</th>
+                                <th>ความจุ</th>
+                                <th>ใช้งาน</th>
+                                <th>การดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roomsTableBody">
+                            <tr>
+                                <td colspan="9" class="no-data">กำลังโหลดข้อมูล...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </section>
         </div>
