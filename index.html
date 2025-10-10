@@ -266,6 +266,56 @@
             <!-- Rooms Section -->
             <section id="rooms" class="section">
                 <h2>จัดการห้องพัก</h2>
+
+                <!-- Search and Filter Section -->
+                <div class="section-header" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;">
+                    <input type="search" class="search-box" id="roomSearch" placeholder="ค้นหาห้องพัก (หมายเลขห้อง, อาคาร)..." style="flex: 1; min-width: 250px;">
+                </div>
+
+                <!-- Filter Section -->
+                <div class="filter-section" style="background: var(--light-color); padding: 1rem; border-radius: var(--border-radius); margin-bottom: 1rem;">
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <label style="font-weight: 600;">กรองตามสถานะ:</label>
+                        <select id="roomStatusFilter" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); min-width: 150px;">
+                            <option value="">ทั้งหมด</option>
+                            <option value="available">ว่าง</option>
+                            <option value="occupied">มีผู้ป่วย</option>
+                            <option value="cleaning">กำลังทำความสะอาด</option>
+                            <option value="dirty">รอทำความสะอาด</option>
+                            <option value="maintenance">ซ่อมบำรุง</option>
+                            <option value="reserved">จองแล้ว</option>
+                            <option value="blocked">ปิดใช้งาน</option>
+                        </select>
+
+                        <label style="font-weight: 600;">กรองตามประเภท:</label>
+                        <select id="roomTypeFilter" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); min-width: 150px;">
+                            <option value="">ทั้งหมด</option>
+                            <option value="ward">ห้องรวม (Ward)</option>
+                            <option value="semi-private">ห้อง 2 เตียง</option>
+                            <option value="private">ห้องเดี่ยว</option>
+                            <option value="vip">VIP</option>
+                            <option value="suite">Suite</option>
+                        </select>
+
+                        <label style="font-weight: 600;">กรองตามชั้น:</label>
+                        <select id="roomFloorFilter" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); min-width: 120px;">
+                            <option value="">ทั้งหมด</option>
+                            <option value="1">ชั้น 1</option>
+                            <option value="2">ชั้น 2</option>
+                            <option value="3">ชั้น 3</option>
+                            <option value="4">ชั้น 4</option>
+                            <option value="5">ชั้น 5</option>
+                        </select>
+
+                        <button class="btn btn-secondary" id="clearRoomFilterBtn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">ล้างตัวกรอง</button>
+                    </div>
+                </div>
+
+                <!-- Result Count -->
+                <div id="roomResultCount" style="margin-bottom: 1rem; color: #6b7280; font-size: 0.875rem;">
+                    <!-- Result count will be displayed here -->
+                </div>
+
                 <div class="rooms-grid" id="roomsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
                     <p class="no-data">กำลังโหลดข้อมูล...</p>
                 </div>
