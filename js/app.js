@@ -1289,6 +1289,233 @@ if (clearFilterBtn) {
     clearFilterBtn.addEventListener('click', clearFilters);
 }
 
+// ===== Appointment Search and Filter Functions =====
+/**
+ * Update appointment result count display
+ * @param {number} showing - Number of results currently displayed
+ * @param {number} total - Total number of appointments
+ */
+function updateAppointmentResultCount(showing, total) {
+    const resultCount = document.getElementById('appointmentResultCount');
+    if (resultCount) {
+        if (showing === total) {
+            resultCount.innerHTML = `<strong>แสดง ${showing} รายการ</strong> จากทั้งหมด ${total} รายการ`;
+        } else {
+            resultCount.innerHTML = `<strong>พบ ${showing} รายการ</strong> จากทั้งหมด ${total} รายการ`;
+        }
+    }
+}
+
+/**
+ * Search and filter appointments by query, status, and time
+ * @param {string} query - Search query (patient name, HN, or doctor name)
+ * @param {string} statusFilter - Status filter (pending, confirmed, cancelled, or empty for all)
+ * @param {string} timeFilter - Time filter (upcoming, past, or empty for all)
+ */
+function searchAndFilterAppointments(query = '', statusFilter = '', timeFilter = '') {
+    const appointments = storage.get('appointments') || [];
+    const list = document.getElementById('appointmentsList');
+    const totalAppointments = appointments.length;
+
+    if (appointments.length === 0) {
+        list.innerHTML = '<p class="no-data">ยังไม่มีนัดหมาย</p>';
+        updateAppointmentResultCount(0, 0);
+        return;
+    }
+
+    const now = new Date();
+
+    // Filter appointments
+    let filtered = appointments;
+
+    // Filter by search query
+    if (query) {
+        filtered = filtered.filter(apt =>
+            apt.patientName.toLowerCase().includes(query.toLowerCase()) ||
+            apt.patientHN.toLowerCase().includes(query.toLowerCase()) ||
+            apt.doctorName.toLowerCase().includes(query.toLowerCase())
+        );
+    }
+
+    // Filter by status
+    if (statusFilter) {
+        filtered = filtered.filter(apt => apt.status === statusFilter);
+    }
+
+    // Filter by time (upcoming/past)
+    if (timeFilter === 'upcoming') {
+        filtered = filtered.filter(apt => {
+            const appointmentDateTime = new Date(`${apt.date}T${apt.time}`);
+            return appointmentDateTime >= now;
+        });
+    } else if (timeFilter === 'past') {
+        filtered = filtered.filter(apt => {
+            const appointmentDateTime = new Date(`${apt.date}T${apt.time}`);
+            return appointmentDateTime < now;
+        });
+    }
+
+    // Display results
+    if (filtered.length === 0) {
+        list.innerHTML = '<p class="no-data">ไม่พบนัดหมายที่ค้นหา</p>';
+        updateAppointmentResultCount(0, totalAppointments);
+        return;
+    }
+
+    // Sort filtered appointments
+    const sortedAppointments = filtered.sort((a, b) => {
+        const dateTimeA = new Date(`${a.date}T${a.time}`);
+        const dateTimeB = new Date(`${b.date}T${b.time}`);
+        return dateTimeB - dateTimeA;
+    });
+
+    list.innerHTML = sortedAppointments.map(apt => {
+        const appointmentDateTime = new Date(`${apt.date}T${apt.time}`);
+        const isPast = appointmentDateTime < now;
+
+        let statusColor, statusText, cardBgColor, cardBorderColor;
+
+        if (isPast) {
+            cardBgColor = '#f3f4f6';
+            cardBorderColor = '#9ca3af';
+            statusColor = '#6b7280';
+            statusText = 'ผ่านไปแล้ว';
+        } else {
+            cardBgColor = '#f0f9ff';
+            cardBorderColor = '#3b82f6';
+            statusColor = '#10b981';
+            statusText = 'กำลังจะถึง';
+        }
+
+        let statusBadgeColor, statusBadgeText;
+        switch(apt.status) {
+            case 'confirmed':
+                statusBadgeColor = '#10b981';
+                statusBadgeText = 'ยืนยันแล้ว';
+                break;
+            case 'cancelled':
+                statusBadgeColor = '#ef4444';
+                statusBadgeText = 'ยกเลิกแล้ว';
+                break;
+            case 'pending':
+            default:
+                statusBadgeColor = '#f59e0b';
+                statusBadgeText = 'รอยืนยัน';
+        }
+
+        const dateObj = new Date(apt.date);
+        const thaiDate = dateObj.toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            weekday: 'long'
+        });
+
+        return `
+            <div style="padding: 1.25rem; background-color: ${cardBgColor}; border-left: 4px solid ${cardBorderColor}; border-radius: var(--border-radius); margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                        <h4 style="margin: 0 0 0.25rem 0; color: var(--primary-color); font-size: 1.1rem;">
+                            ${apt.patientName}
+                        </h4>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">HN: ${apt.patientHN}</p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <span style="padding: 0.25rem 0.75rem; background-color: ${statusBadgeColor}; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">
+                            ${statusBadgeText}
+                        </span>
+                        <span style="padding: 0.25rem 0.75rem; background-color: ${isPast ? '#9ca3af' : '#3b82f6'}; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: 500;">
+                            ${statusText}
+                        </span>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">👨‍⚕️ แพทย์</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 500;">${apt.doctorName}</p>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">${apt.doctorSpecialty}</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">📅 วันที่</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 500;">${thaiDate}</p>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">เวลา ${apt.time} น.</p>
+                    </div>
+                </div>
+
+                ${apt.note ? `
+                    <div style="padding: 0.75rem; background-color: white; border-radius: 6px; margin-top: 0.75rem;">
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">📝 หมายเหตุ</p>
+                        <p style="margin: 0.25rem 0 0 0; color: #374151;">${apt.note}</p>
+                    </div>
+                ` : ''}
+
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid ${isPast ? '#d1d5db' : '#bfdbfe'}; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" onclick="viewAppointmentDetails('${apt.id}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem;">
+                        ดูรายละเอียด
+                    </button>
+                    ${!isPast && apt.status !== 'cancelled' ? `
+                        <button class="btn btn-primary" onclick="editAppointment('${apt.id}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem;">
+                            แก้ไข
+                        </button>
+                        <button class="btn" onclick="cancelAppointment('${apt.id}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; background-color: #ef4444; color: white;">
+                            ยกเลิก
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    updateAppointmentResultCount(filtered.length, totalAppointments);
+}
+
+/**
+ * Apply current appointment search and filter settings
+ */
+function applyAppointmentFilters() {
+    const searchQuery = document.getElementById('appointmentSearch')?.value || '';
+    const statusFilter = document.getElementById('appointmentStatusFilter')?.value || '';
+    const timeFilter = document.getElementById('appointmentTimeFilter')?.value || '';
+    searchAndFilterAppointments(searchQuery, statusFilter, timeFilter);
+}
+
+/**
+ * Clear all appointment filters and show all appointments
+ */
+function clearAppointmentFilters() {
+    const searchBox = document.getElementById('appointmentSearch');
+    const statusFilter = document.getElementById('appointmentStatusFilter');
+    const timeFilter = document.getElementById('appointmentTimeFilter');
+
+    if (searchBox) searchBox.value = '';
+    if (statusFilter) statusFilter.value = '';
+    if (timeFilter) timeFilter.value = '';
+
+    loadAppointments();
+}
+
+// Add event listeners for appointment search and filters
+const appointmentSearchBox = document.getElementById('appointmentSearch');
+if (appointmentSearchBox) {
+    appointmentSearchBox.addEventListener('input', applyAppointmentFilters);
+}
+
+const appointmentStatusFilter = document.getElementById('appointmentStatusFilter');
+if (appointmentStatusFilter) {
+    appointmentStatusFilter.addEventListener('change', applyAppointmentFilters);
+}
+
+const appointmentTimeFilter = document.getElementById('appointmentTimeFilter');
+if (appointmentTimeFilter) {
+    appointmentTimeFilter.addEventListener('change', applyAppointmentFilters);
+}
+
+const clearAppointmentFilterBtn = document.getElementById('clearAppointmentFilterBtn');
+if (clearAppointmentFilterBtn) {
+    clearAppointmentFilterBtn.addEventListener('click', clearAppointmentFilters);
+}
+
 // ===== Initialize on page load =====
 document.addEventListener('DOMContentLoaded', () => {
     loadDashboard();
