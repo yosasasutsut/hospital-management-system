@@ -119,8 +119,9 @@ function loadDashboard() {
     const doctors = storage.get('doctors') || [];
     const rooms = storage.get('rooms') || [];
 
-    // Get today's date
+    // Get today's date and current time
     const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
 
     // Count today's patients
     const todayPatients = patients.filter(p => p.registrationDate === today).length;
@@ -134,14 +135,46 @@ function loadDashboard() {
     // Count available rooms
     const availableRooms = rooms.filter(r => r.status === 'available').length;
 
-    // Update stats
+    // Update basic stats
     document.getElementById('todayPatients').textContent = todayPatients;
     document.getElementById('appointments').textContent = todayAppointments;
     document.getElementById('activeDoctors').textContent = activeDoctors;
     document.getElementById('availableRooms').textContent = availableRooms;
 
+    // Load appointment statistics
+    loadAppointmentStatistics(appointments, now);
+
     // Load patient statistics charts
     loadPatientStatistics();
+}
+
+/**
+ * Load and display appointment statistics in dashboard
+ * @param {Array} appointments - Array of all appointments
+ * @param {Date} now - Current date/time
+ */
+function loadAppointmentStatistics(appointments, now) {
+    // Count appointments by status
+    const pending = appointments.filter(a => a.status === 'pending').length;
+    const confirmed = appointments.filter(a => a.status === 'confirmed').length;
+    const cancelled = appointments.filter(a => a.status === 'cancelled').length;
+
+    // Count upcoming appointments (future appointments that are not cancelled)
+    const upcoming = appointments.filter(a => {
+        const appointmentDateTime = new Date(`${a.date}T${a.time}`);
+        return appointmentDateTime >= now && a.status !== 'cancelled';
+    }).length;
+
+    // Update appointment statistics
+    const pendingEl = document.getElementById('pendingAppointments');
+    const confirmedEl = document.getElementById('confirmedAppointments');
+    const upcomingEl = document.getElementById('upcomingAppointments');
+    const cancelledEl = document.getElementById('cancelledAppointments');
+
+    if (pendingEl) pendingEl.textContent = pending;
+    if (confirmedEl) confirmedEl.textContent = confirmed;
+    if (upcomingEl) upcomingEl.textContent = upcoming;
+    if (cancelledEl) cancelledEl.textContent = cancelled;
 }
 
 /**

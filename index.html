@@ -77,7 +77,7 @@
                     <div class="stat-card">
                         <div class="stat-icon">📅</div>
                         <div class="stat-info">
-                            <h3>นัดหมาย</h3>
+                            <h3>นัดหมายวันนี้</h3>
                             <p class="stat-number" id="appointments">0</p>
                         </div>
                     </div>
@@ -93,6 +93,49 @@
                         <div class="stat-info">
                             <h3>ห้องว่าง</h3>
                             <p class="stat-number" id="availableRooms">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appointment Statistics -->
+                <div class="appointment-statistics" style="margin-top: 2rem;">
+                    <h3>สถิตินัดหมาย</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        <div style="background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); padding: 1.5rem; border-radius: var(--border-radius); color: white; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="font-size: 2.5rem;">⏳</div>
+                                <div>
+                                    <p style="margin: 0; opacity: 0.9; font-size: 0.875rem;">รอยืนยัน</p>
+                                    <p style="margin: 0.25rem 0 0 0; font-size: 2rem; font-weight: 700;" id="pendingAppointments">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 1.5rem; border-radius: var(--border-radius); color: white; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="font-size: 2.5rem;">✅</div>
+                                <div>
+                                    <p style="margin: 0; opacity: 0.9; font-size: 0.875rem;">ยืนยันแล้ว</p>
+                                    <p style="margin: 0.25rem 0 0 0; font-size: 2rem; font-weight: 700;" id="confirmedAppointments">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 1.5rem; border-radius: var(--border-radius); color: white; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="font-size: 2.5rem;">🕐</div>
+                                <div>
+                                    <p style="margin: 0; opacity: 0.9; font-size: 0.875rem;">กำลังจะถึง</p>
+                                    <p style="margin: 0.25rem 0 0 0; font-size: 2rem; font-weight: 700;" id="upcomingAppointments">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 1.5rem; border-radius: var(--border-radius); color: white; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="font-size: 2.5rem;">❌</div>
+                                <div>
+                                    <p style="margin: 0; opacity: 0.9; font-size: 0.875rem;">ยกเลิกแล้ว</p>
+                                    <p style="margin: 0.25rem 0 0 0; font-size: 2rem; font-weight: 700;" id="cancelledAppointments">0</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
