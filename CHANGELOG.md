@@ -5,6 +5,96 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-10-10
+
+### Added
+- **Comprehensive Room Management System** (Day 10)
+  - Thai hospital-standard room types with realistic pricing:
+    - Ward (ห้องรวม): 1,500 THB/day, 6-bed capacity
+    - Semi-Private (ห้อง 2 เตียง): 3,500 THB/day, 2-bed capacity
+    - Private (ห้องเดี่ยว): 5,000 THB/day, single occupancy
+    - VIP: 12,000 THB/day with premium amenities
+    - Suite: 25,000 THB/day with luxury features
+
+  - 7 color-coded status indicators:
+    - Available (ว่าง): Green gradient
+    - Occupied (มีผู้ป่วย): Red gradient
+    - Cleaning (กำลังทำความสะอาด): Blue gradient
+    - Dirty (รอทำความสะอาด): Orange gradient
+    - Maintenance (ซ่อมบำรุง): Purple gradient
+    - Reserved (จองแล้ว): Cyan gradient
+    - Blocked (ปิดใช้งาน): Gray gradient
+
+- **Enhanced Room Display**
+  - Modern card-based layout with grid system
+  - Gradient headers by room status
+  - Comprehensive room information:
+    - Building and floor
+    - Pricing with Thai Baht formatting
+    - Capacity and occupancy progress bars
+    - Amenities preview (4 items + counter)
+    - Last cleaned timestamp
+    - Notes section (conditional)
+  - Hover effects (lift and shadow)
+  - Responsive design (min 320px cards)
+
+- **Room Search and Filter**
+  - Real-time search by room number, building, type
+  - Advanced filters:
+    - Status filter (7 options)
+    - Room type filter (5 types)
+    - Floor filter (floors 1-5)
+  - Combined filter logic
+  - Result count display
+  - Empty state with clear button
+  - Clear all filters functionality
+
+- **Room Details Modal**
+  - Comprehensive modal with all room information
+  - Status badge with gradient
+  - Pricing and capacity cards
+  - Animated occupancy progress bar
+  - All amenities grid display (responsive)
+  - Cleaning information with time since last cleaned
+  - Notes section (conditional display)
+  - Room summary with bullet points
+
+- **Room Statistics Dashboard**
+  - 5 gradient cards showing room counts:
+    - Available rooms (green)
+    - Occupied rooms (red)
+    - Cleaning rooms (blue)
+    - Maintenance rooms (purple)
+    - Reserved rooms (cyan)
+  - Auto-updates with dashboard
+  - Matches appointment statistics style
+  - Responsive grid layout
+
+### Changed
+- Updated version to 1.5.0
+- Enhanced room data structure with comprehensive fields
+- Improved room management section with filters
+- Expanded dashboard with room statistics
+
+### Technical
+- 10 sample rooms across 5 floors
+- Comprehensive room data model:
+  - Room number, type, and type name in Thai
+  - Building and floor information
+  - Capacity and current occupancy tracking
+  - Price per day
+  - Amenities array
+  - Last cleaned timestamp
+  - Notes field
+  - Status tracking
+- getRoomStatusConfig() helper function
+- searchAndFilterRooms() with multi-criteria filtering
+- loadRoomStatistics() for dashboard integration
+- JSDoc documentation for all functions
+- Event listeners for real-time filtering
+
+---
+
 ## [1.4.0] - 2025-10-10
 
 ### Added
