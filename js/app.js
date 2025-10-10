@@ -1,5 +1,5 @@
 // ===== Hospital Management System - Main JavaScript =====
-// Version: 1.4.0
+// Version: 1.5.0
 // Description: Core application logic for hospital management system
 // Author: Hospital MS Team
 // Last Updated: 2025-10-10
@@ -43,12 +43,167 @@ const storage = {
             { id: 3, name: 'นพ.วิชัย เก่ง', specialty: 'กุมารแพทย์', phone: '083-456-7890', status: 'active' }
         ]);
 
-        // Initialize sample rooms
+        // Initialize comprehensive room data with Thai hospital standards
         if (!storage.get('rooms')) storage.set('rooms', [
-            { id: 101, type: 'ห้องพักเดี่ยว', status: 'available', floor: 1 },
-            { id: 102, type: 'ห้องพักเดี่ยว', status: 'occupied', floor: 1 },
-            { id: 201, type: 'ห้องพักคู่', status: 'available', floor: 2 },
-            { id: 202, type: 'ห้องพักคู่', status: 'available', floor: 2 }
+            // Floor 1 - Ward Rooms (ห้องรวม)
+            {
+                id: '101A',
+                roomNumber: '101A',
+                type: 'ward',
+                typeName: 'ห้องรวม (Ward)',
+                status: 'available',
+                floor: 1,
+                building: 'อาคารผู้ป่วยใน 1',
+                capacity: 6,
+                currentOccupancy: 0,
+                pricePerDay: 1500,
+                amenities: ['เตียงปรับระดับ', 'พัดลม', 'ห้องน้ำรวม', 'ตู้เก็บของส่วนตัว'],
+                lastCleaned: new Date().toISOString(),
+                notes: ''
+            },
+            {
+                id: '101B',
+                roomNumber: '101B',
+                type: 'ward',
+                typeName: 'ห้องรวม (Ward)',
+                status: 'occupied',
+                floor: 1,
+                building: 'อาคารผู้ป่วยใน 1',
+                capacity: 6,
+                currentOccupancy: 4,
+                pricePerDay: 1500,
+                amenities: ['เตียงปรับระดับ', 'พัดลม', 'ห้องน้ำรวม', 'ตู้เก็บของส่วนตัว'],
+                lastCleaned: new Date(Date.now() - 3600000).toISOString(),
+                notes: 'มีผู้ป่วย 4 คน'
+            },
+
+            // Floor 2 - Semi-Private Rooms (ห้อง 2 เตียง)
+            {
+                id: '201',
+                roomNumber: '201',
+                type: 'semi-private',
+                typeName: 'ห้อง 2 เตียง (Semi-Private)',
+                status: 'available',
+                floor: 2,
+                building: 'อาคารผู้ป่วยใน 1',
+                capacity: 2,
+                currentOccupancy: 0,
+                pricePerDay: 3500,
+                amenities: ['เตียงไฟฟ้า', 'แอร์', 'TV', 'ห้องน้ำในตัว', 'ตู้เย็นเล็ก', 'โซฟาญาติ'],
+                lastCleaned: new Date().toISOString(),
+                notes: ''
+            },
+            {
+                id: '202',
+                roomNumber: '202',
+                type: 'semi-private',
+                typeName: 'ห้อง 2 เตียง (Semi-Private)',
+                status: 'cleaning',
+                floor: 2,
+                building: 'อาคารผู้ป่วยใน 1',
+                capacity: 2,
+                currentOccupancy: 0,
+                pricePerDay: 3500,
+                amenities: ['เตียงไฟฟ้า', 'แอร์', 'TV', 'ห้องน้ำในตัว', 'ตู้เย็นเล็ก', 'โซฟาญาติ'],
+                lastCleaned: new Date(Date.now() - 1800000).toISOString(),
+                notes: 'กำลังทำความสะอาด'
+            },
+
+            // Floor 3 - Private Rooms (ห้องเดี่ยว)
+            {
+                id: '301',
+                roomNumber: '301',
+                type: 'private',
+                typeName: 'ห้องเดี่ยว (Private)',
+                status: 'occupied',
+                floor: 3,
+                building: 'อาคารผู้ป่วยใน 1',
+                capacity: 1,
+                currentOccupancy: 1,
+                pricePerDay: 5000,
+                amenities: ['เตียงไฟฟ้า', 'แอร์', 'TV 32"', 'ห้องน้ำในตัว', 'ตู้เย็น', 'โซฟา', 'โต๊ะทำงาน', 'WiFi'],
+                lastCleaned: new Date(Date.now() - 7200000).toISOString(),
+                notes: 'ผู้ป่วยหลังผ่าตัด'
+            },
+            {
+                id: '302',
+                roomNumber: '302',
+                type: 'private',
+                typeName: 'ห้องเดี่ยว (Private)',
+                status: 'available',
+                floor: 3,
+                building: 'อาคารผู้ป่วยใน 1',
+                capacity: 1,
+                currentOccupancy: 0,
+                pricePerDay: 5000,
+                amenities: ['เตียงไฟฟ้า', 'แอร์', 'TV 32"', 'ห้องน้ำในตัว', 'ตู้เย็น', 'โซฟา', 'โต๊ะทำงาน', 'WiFi'],
+                lastCleaned: new Date().toISOString(),
+                notes: ''
+            },
+
+            // Floor 4 - VIP Rooms
+            {
+                id: '401',
+                roomNumber: '401',
+                type: 'vip',
+                typeName: 'ห้อง VIP',
+                status: 'reserved',
+                floor: 4,
+                building: 'อาคารผู้ป่วยใน 2',
+                capacity: 1,
+                currentOccupancy: 0,
+                pricePerDay: 12000,
+                amenities: ['เตียงไฟฟ้าพิเศษ', 'แอร์ 2 ตัว', 'Smart TV 43"', 'ห้องน้ำหรู', 'ตู้เย็น', 'โซฟาเบด', 'โต๊ะทำงาน', 'WiFi', 'ตู้นิรภัย', 'กาแฟเครื่อง'],
+                lastCleaned: new Date().toISOString(),
+                notes: 'จองไว้สำหรับผู้ป่วยพรุ่งนี้'
+            },
+            {
+                id: '402',
+                roomNumber: '402',
+                type: 'vip',
+                typeName: 'ห้อง VIP',
+                status: 'maintenance',
+                floor: 4,
+                building: 'อาคารผู้ป่วยใน 2',
+                capacity: 1,
+                currentOccupancy: 0,
+                pricePerDay: 12000,
+                amenities: ['เตียงไฟฟ้าพิเศษ', 'แอร์ 2 ตัว', 'Smart TV 43"', 'ห้องน้ำหรู', 'ตู้เย็น', 'โซฟาเบด', 'โต๊ะทำงาน', 'WiFi', 'ตู้นิรภัย', 'กาแฟเครื่อง'],
+                lastCleaned: new Date(Date.now() - 86400000).toISOString(),
+                notes: 'ซ่อมแอร์'
+            },
+
+            // Floor 5 - Suite Rooms
+            {
+                id: '501',
+                roomNumber: '501',
+                type: 'suite',
+                typeName: 'ห้องสวีท (Suite)',
+                status: 'available',
+                floor: 5,
+                building: 'อาคารผู้ป่วยใน 2',
+                capacity: 1,
+                currentOccupancy: 0,
+                pricePerDay: 25000,
+                amenities: ['เตียงพิเศษ', 'ห้องนอนแยก', 'ห้องรับแขก', 'แอร์ 3 ตัว', 'Smart TV 55"', 'ห้องน้ำหรูพร้อมอ่างอาบน้ำ', 'ตู้เย็น', 'โซฟาเซ็ท', 'โต๊ะทำงาน', 'WiFi', 'ตู้นิรภัย', 'เครื่องชงกาแฟ', 'ห้องครัวเล็ก', 'ระเบียง'],
+                lastCleaned: new Date().toISOString(),
+                notes: 'ห้องพิเศษสุด พร้อมบริการ'
+            },
+            {
+                id: '502',
+                roomNumber: '502',
+                type: 'suite',
+                typeName: 'ห้องสวีท (Suite)',
+                status: 'occupied',
+                floor: 5,
+                building: 'อาคารผู้ป่วยใน 2',
+                capacity: 1,
+                currentOccupancy: 1,
+                pricePerDay: 25000,
+                amenities: ['เตียงพิเศษ', 'ห้องนอนแยก', 'ห้องรับแขก', 'แอร์ 3 ตัว', 'Smart TV 55"', 'ห้องน้ำหรูพร้อมอ่างอาบน้ำ', 'ตู้เย็น', 'โซฟาเซ็ท', 'โต๊ะทำงาน', 'WiFi', 'ตู้นิรภัย', 'เครื่องชงกาแฟ', 'ห้องครัวเล็ก', 'ระเบียง'],
+                lastCleaned: new Date(Date.now() - 10800000).toISOString(),
+                notes: 'VIP ระดับสูง'
+            }
         ]);
     }
 };
