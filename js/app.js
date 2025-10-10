@@ -922,6 +922,11 @@ function loadAppointments() {
                         ดูรายละเอียด
                     </button>
                     ${!isPast && apt.status !== 'cancelled' ? `
+                        ${apt.status === 'pending' ? `
+                            <button class="btn" onclick="confirmAppointment('${apt.id}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; background-color: #10b981; color: white;">
+                                ยืนยันนัดหมาย
+                            </button>
+                        ` : ''}
                         <button class="btn btn-primary" onclick="editAppointment('${apt.id}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem;">
                             แก้ไข
                         </button>
@@ -1007,6 +1012,41 @@ function viewAppointmentDetails(appointmentId) {
     `;
 
     modal.classList.add('active');
+}
+
+/**
+ * Confirm appointment
+ * @param {string} appointmentId - Appointment ID
+ */
+function confirmAppointment(appointmentId) {
+    const appointments = storage.get('appointments') || [];
+    const appointment = appointments.find(apt => apt.id == appointmentId);
+
+    if (!appointment) {
+        alert('ไม่พบข้อมูลนัดหมาย');
+        return;
+    }
+
+    const confirmed = confirm(
+        `ยืนยันนัดหมายนี้ใช่หรือไม่?\n\n` +
+        `ผู้ป่วย: ${appointment.patientName}\n` +
+        `แพทย์: ${appointment.doctorName}\n` +
+        `วันที่: ${appointment.date} เวลา: ${appointment.time}`
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    // Update appointment status to confirmed
+    const appointmentIndex = appointments.findIndex(apt => apt.id == appointmentId);
+    appointments[appointmentIndex].status = 'confirmed';
+    storage.set('appointments', appointments);
+
+    loadAppointments();
+    loadDashboard();
+
+    alert('ยืนยันนัดหมายสำเร็จ!');
 }
 
 /**
@@ -1488,6 +1528,11 @@ function searchAndFilterAppointments(query = '', statusFilter = '', timeFilter =
                         ดูรายละเอียด
                     </button>
                     ${!isPast && apt.status !== 'cancelled' ? `
+                        ${apt.status === 'pending' ? `
+                            <button class="btn" onclick="confirmAppointment('${apt.id}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; background-color: #10b981; color: white;">
+                                ยืนยันนัดหมาย
+                            </button>
+                        ` : ''}
                         <button class="btn btn-primary" onclick="editAppointment('${apt.id}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem;">
                             แก้ไข
                         </button>
