@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2025-10-11
+
+### Added
+- **Appointment Reminders System** (Day 12)
+  - getTodaysAppointments() - Returns all non-cancelled appointments for today
+  - getUpcomingAppointments(days) - Returns appointments within next N days
+  - updateAppointmentReminders() - Updates reminder badges on dashboard
+  - Visual notification badges with gradient design:
+    - Today's appointments (orange gradient)
+    - Upcoming appointments 3 days (blue gradient)
+  - Dynamic badge indicators that show/hide based on reminder counts
+  - Integrated into dashboard auto-loading
+  - JSDoc documentation for all reminder functions
+
+### Changed
+- Updated version to 1.7.0
+- Enhanced dashboard with appointment reminder section
+- Improved user awareness of upcoming appointments
+
+### Technical
+- Helper functions use proper date comparison logic
+- Automatic badge visibility toggling
+- Filters out cancelled appointments
+- Real-time updates when dashboard loads
+
+---
+
 ## [1.6.0] - 2025-10-11
 
 ### Added
