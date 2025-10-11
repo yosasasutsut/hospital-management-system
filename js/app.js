@@ -304,6 +304,9 @@ function loadDashboard() {
 
     // Load patient statistics charts
     loadPatientStatistics();
+
+    // Update appointment reminders
+    updateAppointmentReminders();
 }
 
 /**
