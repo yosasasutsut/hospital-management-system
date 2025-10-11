@@ -140,7 +140,43 @@
                     </div>
                 </div>
 
-                <div class="quick-actions">
+                <!-- Appointment Reminders Section -->
+                <div class="appointment-reminders" style="margin-top: 2rem;">
+                    <h3>🔔 การแจ้งเตือนนัดหมาย</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        <!-- Today's Appointments -->
+                        <div style="background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); padding: 1.5rem; border-radius: var(--border-radius); color: white; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4); position: relative;">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="font-size: 3rem;">📅</div>
+                                <div>
+                                    <p style="margin: 0; opacity: 0.95; font-size: 0.875rem; font-weight: 600;">นัดหมายวันนี้</p>
+                                    <p style="margin: 0.25rem 0 0 0; font-size: 2.5rem; font-weight: 700;" id="todayReminders">0</p>
+                                    <p style="margin: 0.25rem 0 0 0; opacity: 0.9; font-size: 0.75rem;">รายการที่ต้องดำเนินการ</p>
+                                </div>
+                            </div>
+                            <div id="todayReminderBadge" style="position: absolute; top: 0.5rem; right: 0.5rem; background: white; color: #f59e0b; padding: 0.25rem 0.75rem; border-radius: 999px; font-weight: 700; font-size: 0.75rem; display: none;">
+                                ใหม่!
+                            </div>
+                        </div>
+
+                        <!-- Upcoming Appointments (3 days) -->
+                        <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 1.5rem; border-radius: var(--border-radius); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); position: relative;">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="font-size: 3rem;">⏰</div>
+                                <div>
+                                    <p style="margin: 0; opacity: 0.95; font-size: 0.875rem; font-weight: 600;">ใกล้จะถึง (3 วัน)</p>
+                                    <p style="margin: 0.25rem 0 0 0; font-size: 2.5rem; font-weight: 700;" id="upcomingReminders">0</p>
+                                    <p style="margin: 0.25rem 0 0 0; opacity: 0.9; font-size: 0.75rem;">นัดหมายที่ต้องเตรียมการ</p>
+                                </div>
+                            </div>
+                            <div id="upcomingReminderBadge" style="position: absolute; top: 0.5rem; right: 0.5rem; background: white; color: #3b82f6; padding: 0.25rem 0.75rem; border-radius: 999px; font-weight: 700; font-size: 0.75rem; display: none;">
+                                แจ้งเตือน
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-actions" style="margin-top: 2rem;">
                     <h3>Quick Actions</h3>
                     <div class="action-buttons">
                         <button class="btn btn-primary" onclick="showSection('patients')">เพิ่มผู้ป่วยใหม่</button>
