@@ -1528,6 +1528,50 @@ document.getElementById('addAppointmentBtn')?.addEventListener('click', () => {
     showAddAppointmentModal();
 });
 
+// ===== Appointment Reminders Functions =====
+/**
+ * Get today's appointments
+ * Returns all appointments scheduled for today that are not cancelled
+ * @returns {Array} Array of today's appointments
+ */
+function getTodaysAppointments() {
+    const appointments = storage.get('appointments') || [];
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+
+    return appointments.filter(appointment => {
+        return appointment.date === todayStr && appointment.status !== 'cancelled';
+    });
+}
+
+/**
+ * Get upcoming appointments within specified days
+ * Returns appointments scheduled within the next N days (excluding today)
+ * @param {number} days - Number of days to look ahead (default: 3)
+ * @returns {Array} Array of upcoming appointments
+ */
+function getUpcomingAppointments(days = 3) {
+    const appointments = storage.get('appointments') || [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const futureDate = new Date(today);
+    futureDate.setDate(futureDate.getDate() + days);
+
+    return appointments.filter(appointment => {
+        if (appointment.status === 'cancelled') return false;
+
+        const appointmentDate = new Date(appointment.date);
+        appointmentDate.setHours(0, 0, 0, 0);
+
+        // Check if appointment is between tomorrow and future date
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        return appointmentDate >= tomorrow && appointmentDate <= futureDate;
+    });
+}
+
 // ===== Doctors Functions =====
 function loadDoctors() {
     const doctors = storage.get('doctors') || [];
