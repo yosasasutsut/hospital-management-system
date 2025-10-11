@@ -194,7 +194,17 @@ git commit -m "docs: update README with new features"
 
 ## 📅 Development Log
 
-### Day 10 - 2025-10-10 (Latest)
+### Day 11 - 2025-10-11 (Latest)
+- ✅ Edit appointment functionality with pre-filled modal form
+- ✅ Smart validation preventing edits to past/cancelled appointments
+- ✅ Real-time form validation with error messages
+- ✅ Status change capability (pending ↔ confirmed)
+- ✅ Enhanced appointment data model with updatedAt tracking
+- ✅ Auto-update dashboard after editing
+- ✅ JSDoc documentation for edit functions
+- ✅ Version bumped to 1.6.0
+
+### Day 10 - 2025-10-10
 - ✅ Comprehensive room management system with Thai pricing
 - ✅ 5 room types (Ward, Semi-Private, Private, VIP, Suite)
 - ✅ 7 status indicators with color coding

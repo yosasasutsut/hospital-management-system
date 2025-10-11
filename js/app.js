@@ -1,8 +1,8 @@
 // ===== Hospital Management System - Main JavaScript =====
-// Version: 1.5.0
+// Version: 1.6.0
 // Description: Core application logic for hospital management system
 // Author: Hospital MS Team
-// Last Updated: 2025-10-10
+// Last Updated: 2025-10-11
 
 /**
  * Data Storage Module
@@ -1288,9 +1288,144 @@ function cancelAppointment(appointmentId) {
  * Edit appointment (placeholder for Day 11)
  * @param {string} appointmentId - Appointment ID
  */
+/**
+ * Edit existing appointment
+ * Opens modal with pre-filled form to edit appointment details
+ * @param {number} appointmentId - The ID of the appointment to edit
+ */
 function editAppointment(appointmentId) {
-    alert('ฟีเจอร์แก้ไขนัดหมายจะพัฒนาใน Day 11');
-    // TODO: Implement in Day 11
+    const appointments = storage.get('appointments') || [];
+    const appointment = appointments.find(a => a.id === appointmentId);
+
+    if (!appointment) {
+        alert('ไม่พบข้อมูลนัดหมาย');
+        return;
+    }
+
+    // Check if appointment is in the past
+    const appointmentDateTime = new Date(`${appointment.date}T${appointment.time}`);
+    const now = new Date();
+    if (appointmentDateTime < now) {
+        alert('ไม่สามารถแก้ไขนัดหมายที่ผ่านไปแล้ว');
+        return;
+    }
+
+    // Check if appointment is cancelled
+    if (appointment.status === 'cancelled') {
+        alert('ไม่สามารถแก้ไขนัดหมายที่ถูกยกเลิกแล้ว');
+        return;
+    }
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    // Get patients and doctors for dropdown
+    const patients = storage.get('patients') || [];
+    const doctors = storage.get('doctors') || [];
+
+    modalBody.innerHTML = `
+        <h3>แก้ไขนัดหมาย</h3>
+        <form id="editAppointmentForm" style="margin-top: 1rem;">
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">ผู้ป่วย <span style="color: red;">*</span></label>
+                <select id="editAppointmentPatient" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="">-- เลือกผู้ป่วย --</option>
+                    ${patients.map(p => `<option value="${p.hn}" ${p.hn === appointment.patientHN ? 'selected' : ''}>${p.name} (HN: ${p.hn})</option>`).join('')}
+                </select>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">แพทย์ <span style="color: red;">*</span></label>
+                <select id="editAppointmentDoctor" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="">-- เลือกแพทย์ --</option>
+                    ${doctors.filter(d => d.status === 'active').map(d => `<option value="${d.id}" ${d.id == appointment.doctorId ? 'selected' : ''}>${d.name} (${d.specialty})</option>`).join('')}
+                </select>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">วันที่นัดหมาย <span style="color: red;">*</span></label>
+                <input type="date" id="editAppointmentDate" required value="${appointment.date}" min="${new Date().toISOString().split('T')[0]}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                <small style="color: #6b7280;">เลือกวันที่ต้องการนัด</small>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">เวลานัดหมาย <span style="color: red;">*</span></label>
+                <input type="time" id="editAppointmentTime" required value="${appointment.time}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                <small style="color: #6b7280;">เลือกเวลาที่ต้องการนัด</small>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">สถานะนัดหมาย <span style="color: red;">*</span></label>
+                <select id="editAppointmentStatus" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="pending" ${appointment.status === 'pending' ? 'selected' : ''}>รอยืนยัน</option>
+                    <option value="confirmed" ${appointment.status === 'confirmed' ? 'selected' : ''}>ยืนยันแล้ว</option>
+                </select>
+                <small style="color: #6b7280;">เปลี่ยนสถานะนัดหมาย</small>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem;">หมายเหตุ</label>
+                <textarea id="editAppointmentNote" rows="3" placeholder="บันทึกเพิ่มเติม (ถ้ามี)" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit;">${appointment.note || ''}</textarea>
+            </div>
+            <div id="editFormError" style="color: red; margin-bottom: 1rem; display: none;"></div>
+            <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">บันทึกการแก้ไข</button>
+                <button type="button" class="btn" onclick="closeModal()" style="flex: 1;">ยกเลิก</button>
+            </div>
+        </form>
+    `;
+
+    modal.classList.add('active');
+
+    // Form submit handler
+    document.getElementById('editAppointmentForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const patientHN = document.getElementById('editAppointmentPatient').value;
+        const doctorId = document.getElementById('editAppointmentDoctor').value;
+        const date = document.getElementById('editAppointmentDate').value;
+        const time = document.getElementById('editAppointmentTime').value;
+        const status = document.getElementById('editAppointmentStatus').value;
+        const note = document.getElementById('editAppointmentNote').value;
+
+        // Validate future date/time
+        const selectedDateTime = new Date(`${date}T${time}`);
+        const currentTime = new Date();
+
+        if (selectedDateTime < currentTime) {
+            const errorDiv = document.getElementById('editFormError');
+            errorDiv.textContent = 'ไม่สามารถนัดหมายในเวลาที่ผ่านไปแล้ว';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        // Get patient and doctor names
+        const patient = patients.find(p => p.hn === patientHN);
+        const doctor = doctors.find(d => d.id == doctorId);
+
+        // Update appointment object
+        const updatedAppointment = {
+            ...appointment,
+            patientHN: patientHN,
+            patientName: patient.name,
+            doctorId: doctorId,
+            doctorName: doctor.name,
+            doctorSpecialty: doctor.specialty,
+            date: date,
+            time: time,
+            status: status,
+            note: note,
+            updatedAt: new Date().toISOString()
+        };
+
+        // Update in storage
+        const appointmentIndex = appointments.findIndex(a => a.id === appointmentId);
+        appointments[appointmentIndex] = updatedAppointment;
+        storage.set('appointments', appointments);
+
+        // Close modal and reload
+        closeModal();
+        loadAppointments();
+        loadDashboard();
+
+        // Show success message
+        alert('แก้ไขนัดหมายสำเร็จ!');
+    });
 }
 
 /**

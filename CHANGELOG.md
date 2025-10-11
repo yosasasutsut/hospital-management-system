@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2025-10-11
+
+### Added
+- **Edit Appointment Functionality** (Day 11)
+  - Complete appointment editing with pre-filled modal form
+  - Edit patient, doctor, date, time, status, and notes
+  - Smart validation preventing edits to:
+    - Past appointments
+    - Cancelled appointments
+  - Real-time form validation:
+    - Prevents scheduling in the past
+    - Required field validation
+    - Error messages with visual feedback
+  - Status change capability (pending ↔ confirmed)
+  - Auto-update dashboard after edit
+  - Success/error notifications
+
+- **Enhanced Appointment Data Model**
+  - Added `updatedAt` timestamp tracking
+  - Tracks last modification time for appointments
+
+### Changed
+- Updated version to 1.6.0
+- Improved appointment management workflow
+- Enhanced user experience with better validation messages
+- Updated JSDoc documentation for edit functions
+
+### Technical
+- `editAppointment(appointmentId)` function with full implementation
+- Modal-based edit form with pre-populated values
+- Date/time comparison logic for validation
+- Spread operator for efficient object updates
+- Event handler for form submission with validation
+- LocalStorage update with array index finding
+
+---
+
 ## [1.5.0] - 2025-10-10
 
 ### Added

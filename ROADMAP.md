@@ -82,11 +82,14 @@
 - [x] Amenities display and occupancy tracking
 - **Commit message**: `feat: implement comprehensive room management with Thai pricing (Day 10)`
 
-### Day 11: Edit & Cancel Appointments
-- [ ] แก้ไขนัดหมาย
-- [ ] ยกเลิกนัดหมาย
-- [ ] เพิ่มสถานะ (รอยืนยัน, ยืนยันแล้ว, ยกเลิก)
-- **Commit message**: `feat: implement edit and cancel appointments`
+### Day 11: Edit & Cancel Appointments ✅
+- [x] แก้ไขนัดหมาย
+- [x] ยกเลิกนัดหมาย (มีแล้วจาก Day 9)
+- [x] เพิ่มสถานะ (รอยืนยัน, ยืนยันแล้ว, ยกเลิก) (มีแล้ว)
+- [x] Smart validation (ไม่สามารถแก้ไขนัดหมายที่ผ่านไปแล้วหรือถูกยกเลิก)
+- [x] Modal form พร้อมข้อมูลเดิม (pre-filled)
+- [x] อัพเดท dashboard อัตโนมัติ
+- **Commit message**: `feat: implement edit appointment with validation (Day 11)`
 
 ### Day 12: Appointment Reminders
 - [ ] แสดงการแจ้งเตือนนัดหมายวันนี้
