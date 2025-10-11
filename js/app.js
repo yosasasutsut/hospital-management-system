@@ -1572,6 +1572,39 @@ function getUpcomingAppointments(days = 3) {
     });
 }
 
+/**
+ * Update appointment reminder badges on dashboard
+ * Updates the notification counts for today's and upcoming appointments
+ * Also shows/hides badge indicators based on reminder counts
+ */
+function updateAppointmentReminders() {
+    // Get reminder counts
+    const todayAppointments = getTodaysAppointments();
+    const upcomingAppointments = getUpcomingAppointments(3);
+
+    // Update today's reminders
+    const todayElement = document.getElementById('todayReminders');
+    const todayBadge = document.getElementById('todayReminderBadge');
+    if (todayElement) {
+        todayElement.textContent = todayAppointments.length;
+        // Show badge if there are appointments today
+        if (todayBadge) {
+            todayBadge.style.display = todayAppointments.length > 0 ? 'block' : 'none';
+        }
+    }
+
+    // Update upcoming reminders
+    const upcomingElement = document.getElementById('upcomingReminders');
+    const upcomingBadge = document.getElementById('upcomingReminderBadge');
+    if (upcomingElement) {
+        upcomingElement.textContent = upcomingAppointments.length;
+        // Show badge if there are upcoming appointments
+        if (upcomingBadge) {
+            upcomingBadge.style.display = upcomingAppointments.length > 0 ? 'block' : 'none';
+        }
+    }
+}
+
 // ===== Doctors Functions =====
 function loadDoctors() {
     const doctors = storage.get('doctors') || [];
