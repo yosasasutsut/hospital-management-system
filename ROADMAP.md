@@ -91,11 +91,14 @@
 - [x] อัพเดท dashboard อัตโนมัติ
 - **Commit message**: `feat: implement edit appointment with validation (Day 11)`
 
-### Day 12: Appointment Reminders
-- [ ] แสดงการแจ้งเตือนนัดหมายวันนี้
-- [ ] แสดงนัดหมายที่ใกล้จะถึง (ภายใน 3 วัน)
-- [ ] นับจำนวนแจ้งเตือนใน dashboard
-- **Commit message**: `feat: add appointment reminder notifications`
+### Day 12: Appointment Reminders ✅
+- [x] แสดงการแจ้งเตือนนัดหมายวันนี้
+- [x] แสดงนัดหมายที่ใกล้จะถึง (ภายใน 3 วัน)
+- [x] นับจำนวนแจ้งเตือนใน dashboard
+- [x] Helper functions (getTodaysAppointments, getUpcomingAppointments)
+- [x] Visual notification badges with gradients
+- [x] Auto-update on dashboard load
+- **Commit message**: `feat: add appointment reminder notifications (Day 12)`
 
 ### Day 13: Appointment Notes
 - [ ] เพิ่มช่องบันทึกหมายเหตุในแต่ละนัดหมาย
