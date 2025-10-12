@@ -100,11 +100,14 @@
 - [x] Auto-update on dashboard load
 - **Commit message**: `feat: add appointment reminder notifications (Day 12)`
 
-### Day 13: Appointment Notes
-- [ ] เพิ่มช่องบันทึกหมายเหตุในแต่ละนัดหมาย
-- [ ] แสดงหมายเหตุเมื่อดูรายละเอียด
-- [ ] แก้ไขหมายเหตุได้
-- **Commit message**: `feat: add notes to appointments`
+### Day 13: Appointment Notes ✅
+- [x] เพิ่มช่องบันทึกหมายเหตุในแต่ละนัดหมาย
+- [x] แสดงหมายเหตุเมื่อดูรายละเอียด
+- [x] แก้ไขหมายเหตุได้ (Quick Edit Inline)
+- [x] Character counter (0-500 characters) with color coding
+- [x] Note update timestamp tracking (noteUpdatedAt)
+- [x] Enhanced notes UI with emoji icons and empty states
+- **Commit message**: `feat: add quick edit notes feature for appointments (Day 13)`
 
 ### Day 14: Appointment Statistics
 - [ ] จำนวนนัดหมายแยกตามแพทย์
