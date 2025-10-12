@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2025-10-12
+
+### Added
+- **Quick Edit Appointment Notes** (Day 13)
+  - Inline note editing directly from appointment details modal
+  - Quick Edit Notes button (✏️) in appointment details view
+  - Real-time character counter (0-500 characters) with color coding:
+    - Gray for < 400 characters
+    - Orange for 400-450 characters
+    - Red for > 450 characters
+  - Auto-focus and cursor positioning for better UX
+  - Save and Cancel buttons for edit mode
+  - Enhanced notes display section with emoji icons
+  - Empty state message for appointments without notes
+  - Note update timestamp tracking (noteUpdatedAt field)
+
+### Changed
+- Updated version to 1.8.0
+- Enhanced appointment details modal UI for notes section
+- Improved notes visibility - always shown even when empty
+- Notes display now uses blue-bordered container when has content
+- Character limit enforced at 500 characters
+
+### Technical
+- `quickEditNote(appointmentId)` - Activates inline note editing
+- `updateNoteCharCount(appointmentId)` - Dynamic character counter
+- `saveNote(appointmentId)` - Saves note with timestamp
+- `cancelNoteEdit(appointmentId, originalNote)` - Cancels edit mode
+- Enhanced data model with `noteUpdatedAt` field
+- JSDoc documentation for all new functions
+- Proper error handling and user feedback
+- LocalStorage persistence for all changes
+
+---
+
 ## [1.7.0] - 2025-10-11
 
 ### Added
