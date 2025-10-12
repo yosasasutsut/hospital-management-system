@@ -109,11 +109,15 @@
 - [x] Enhanced notes UI with emoji icons and empty states
 - **Commit message**: `feat: add quick edit notes feature for appointments (Day 13)`
 
-### Day 14: Appointment Statistics
-- [ ] จำนวนนัดหมายแยกตามแพทย์
-- [ ] จำนวนนัดหมายต่อวัน/สัปดาห์/เดือน
-- [ ] แสดงในรูป chart
-- **Commit message**: `feat: add appointment statistics and analytics`
+### Day 14: Appointment Statistics ✅
+- [x] จำนวนนัดหมายแยกตามแพทย์ (Top 5 Doctor Ranking)
+- [x] จำนวนนัดหมายต่อวัน/สัปดาห์/เดือน (Time-based Statistics)
+- [x] แสดงในรูป chart (Weekly Trend Bar Chart)
+- [x] Statistics calculation functions (getAppointmentsByDoctor, getAppointmentsByDateRange, getAppointmentStatistics)
+- [x] Enhanced dashboard analytics section
+- [x] Gradient cards with modern design
+- [x] Doctor breakdown with confirmed/pending counts
+- **Commit message**: `feat: add comprehensive appointment statistics (Day 14)`
 
 ---
 
