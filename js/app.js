@@ -2867,6 +2867,168 @@ function clearAppointmentFilters() {
     loadAppointments();
 }
 
+// ===== Appointment Statistics Functions =====
+
+/**
+ * Get appointment statistics grouped by doctor
+ * @returns {Array} Array of objects with doctor info and appointment count
+ */
+function getAppointmentsByDoctor() {
+    const appointments = storage.get('appointments') || [];
+    const doctors = storage.get('doctors') || [];
+
+    // Count appointments per doctor
+    const doctorStats = {};
+
+    appointments.forEach(apt => {
+        if (apt.status !== 'cancelled') {
+            const doctorId = apt.doctorId || apt.doctorName;
+            if (!doctorStats[doctorId]) {
+                doctorStats[doctorId] = {
+                    doctorName: apt.doctorName,
+                    specialty: apt.doctorSpecialty,
+                    count: 0,
+                    confirmed: 0,
+                    pending: 0
+                };
+            }
+            doctorStats[doctorId].count++;
+            if (apt.status === 'confirmed') {
+                doctorStats[doctorId].confirmed++;
+            } else if (apt.status === 'pending') {
+                doctorStats[doctorId].pending++;
+            }
+        }
+    });
+
+    // Convert to array and sort by count
+    return Object.values(doctorStats).sort((a, b) => b.count - a.count);
+}
+
+/**
+ * Get appointment counts by date range
+ * @param {string} range - 'day', 'week', or 'month'
+ * @returns {Object} Statistics object with counts
+ */
+function getAppointmentsByDateRange(range = 'week') {
+    const appointments = storage.get('appointments') || [];
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    let startDate;
+    switch(range) {
+        case 'day':
+            startDate = today;
+            break;
+        case 'week':
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 7);
+            break;
+        case 'month':
+            startDate = new Date(today);
+            startDate.setMonth(today.getMonth() - 1);
+            break;
+        default:
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 7);
+    }
+
+    const filtered = appointments.filter(apt => {
+        const aptDate = new Date(apt.date);
+        return aptDate >= startDate && aptDate <= now;
+    });
+
+    // Group by date
+    const dateGroups = {};
+    filtered.forEach(apt => {
+        const date = apt.date;
+        if (!dateGroups[date]) {
+            dateGroups[date] = {
+                date: date,
+                total: 0,
+                confirmed: 0,
+                pending: 0,
+                cancelled: 0
+            };
+        }
+        dateGroups[date].total++;
+        dateGroups[date][apt.status]++;
+    });
+
+    return {
+        range: range,
+        startDate: startDate.toISOString(),
+        endDate: now.toISOString(),
+        totalAppointments: filtered.length,
+        dailyStats: Object.values(dateGroups).sort((a, b) =>
+            new Date(a.date) - new Date(b.date)
+        )
+    };
+}
+
+/**
+ * Get comprehensive appointment statistics
+ * @returns {Object} Complete statistics object
+ */
+function getAppointmentStatistics() {
+    const appointments = storage.get('appointments') || [];
+    const now = new Date();
+
+    const stats = {
+        total: appointments.length,
+        confirmed: 0,
+        pending: 0,
+        cancelled: 0,
+        upcoming: 0,
+        past: 0,
+        today: 0,
+        thisWeek: 0,
+        thisMonth: 0,
+        byDoctor: getAppointmentsByDoctor(),
+        weeklyTrend: getAppointmentsByDateRange('week'),
+        monthlyTrend: getAppointmentsByDateRange('month')
+    };
+
+    // Calculate basic counts
+    appointments.forEach(apt => {
+        // Status counts
+        stats[apt.status]++;
+
+        // Time-based counts
+        const aptDateTime = new Date(`${apt.date}T${apt.time}`);
+        if (aptDateTime >= now) {
+            stats.upcoming++;
+        } else {
+            stats.past++;
+        }
+
+        // Today
+        const aptDate = new Date(apt.date);
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if (aptDate.toDateString() === today.toDateString()) {
+            stats.today++;
+        }
+
+        // This week
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        if (aptDate >= weekStart && aptDate <= weekEnd) {
+            stats.thisWeek++;
+        }
+
+        // This month
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        if (aptDate >= monthStart && aptDate <= monthEnd) {
+            stats.thisMonth++;
+        }
+    });
+
+    return stats;
+}
+
 // Add event listeners for appointment search and filters
 const appointmentSearchBox = document.getElementById('appointmentSearch');
 if (appointmentSearchBox) {
