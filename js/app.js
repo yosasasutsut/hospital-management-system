@@ -1,5 +1,5 @@
 // ===== Hospital Management System - Main JavaScript =====
-// Version: 1.8.0
+// Version: 1.9.0
 // Description: Core application logic for hospital management system
 // Author: Hospital MS Team
 // Last Updated: 2025-10-12
