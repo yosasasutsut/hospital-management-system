@@ -1203,10 +1203,22 @@ function viewAppointmentDetails(appointmentId) {
             <p><strong>วันที่:</strong> ${thaiDate}</p>
             <p><strong>เวลา:</strong> ${appointment.time} น.</p>
 
-            ${appointment.note ? `
-                <h4 style="margin: 1.5rem 0 0.75rem 0; color: var(--primary-color);">หมายเหตุ</h4>
-                <p style="padding: 1rem; background-color: #f9fafb; border-radius: 6px;">${appointment.note}</p>
-            ` : ''}
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <h4 style="margin: 0; color: var(--primary-color);">📝 หมายเหตุ</h4>
+                    <button class="btn btn-primary" onclick="quickEditNote('${appointment.id}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem;">
+                        ✏️ แก้ไขหมายเหตุ
+                    </button>
+                </div>
+                <div id="noteDisplay-${appointment.id}" style="padding: 1rem; background-color: ${appointment.note ? '#f0f9ff' : '#f9fafb'}; border-radius: 6px; border: 1px solid ${appointment.note ? '#bfdbfe' : '#e5e7eb'}; min-height: 60px;">
+                    ${appointment.note ? `<p style="margin: 0; white-space: pre-wrap;">${appointment.note}</p>` : '<p style="margin: 0; color: #9ca3af; font-style: italic;">ยังไม่มีหมายเหตุ</p>'}
+                </div>
+                ${appointment.noteUpdatedAt ? `
+                    <p style="margin-top: 0.5rem; font-size: 0.8rem; color: #6b7280;">
+                        <em>แก้ไขล่าสุด: ${new Date(appointment.noteUpdatedAt).toLocaleString('th-TH')}</em>
+                    </p>
+                ` : ''}
+            </div>
 
             <p style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 0.875rem;">
                 <strong>วันที่สร้าง:</strong> ${new Date(appointment.createdAt).toLocaleString('th-TH')}
@@ -1215,6 +1227,134 @@ function viewAppointmentDetails(appointmentId) {
     `;
 
     modal.classList.add('active');
+}
+
+/**
+ * Quick edit appointment note inline
+ * @param {string} appointmentId - Appointment ID
+ */
+function quickEditNote(appointmentId) {
+    const appointments = storage.get('appointments') || [];
+    const appointment = appointments.find(apt => apt.id == appointmentId);
+
+    if (!appointment) {
+        alert('ไม่พบข้อมูลนัดหมาย');
+        return;
+    }
+
+    const noteDisplay = document.getElementById(`noteDisplay-${appointmentId}`);
+    const currentNote = appointment.note || '';
+
+    // Replace display with edit form
+    noteDisplay.innerHTML = `
+        <div>
+            <textarea id="editNoteTextarea-${appointmentId}"
+                rows="4"
+                maxlength="500"
+                placeholder="กรอกหมายเหตุสำหรับนัดหมายนี้ (สูงสุด 500 ตัวอักษร)"
+                style="width: 100%; padding: 0.75rem; border: 2px solid #3b82f6; border-radius: 6px; font-family: inherit; font-size: 1rem; resize: vertical;"
+                oninput="updateNoteCharCount('${appointmentId}')">${currentNote}</textarea>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                <span id="charCount-${appointmentId}" style="font-size: 0.875rem; color: #6b7280;">
+                    ${currentNote.length}/500 ตัวอักษร
+                </span>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn" onclick="cancelNoteEdit('${appointmentId}', \`${currentNote.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"
+                        style="padding: 0.4rem 0.8rem; font-size: 0.875rem; background-color: #6b7280; color: white;">
+                        ยกเลิก
+                    </button>
+                    <button class="btn btn-primary" onclick="saveNote('${appointmentId}')"
+                        style="padding: 0.4rem 0.8rem; font-size: 0.875rem;">
+                        💾 บันทึก
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Focus on textarea
+    setTimeout(() => {
+        const textarea = document.getElementById(`editNoteTextarea-${appointmentId}`);
+        if (textarea) {
+            textarea.focus();
+            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        }
+    }, 100);
+}
+
+/**
+ * Update character count for note textarea
+ * @param {string} appointmentId - Appointment ID
+ */
+function updateNoteCharCount(appointmentId) {
+    const textarea = document.getElementById(`editNoteTextarea-${appointmentId}`);
+    const charCount = document.getElementById(`charCount-${appointmentId}`);
+
+    if (textarea && charCount) {
+        const length = textarea.value.length;
+        charCount.textContent = `${length}/500 ตัวอักษร`;
+
+        // Change color based on character count
+        if (length > 450) {
+            charCount.style.color = '#ef4444'; // Red
+        } else if (length > 400) {
+            charCount.style.color = '#f59e0b'; // Orange
+        } else {
+            charCount.style.color = '#6b7280'; // Gray
+        }
+    }
+}
+
+/**
+ * Save appointment note
+ * @param {string} appointmentId - Appointment ID
+ */
+function saveNote(appointmentId) {
+    const textarea = document.getElementById(`editNoteTextarea-${appointmentId}`);
+
+    if (!textarea) {
+        alert('เกิดข้อผิดพลาด: ไม่พบช่องกรอกข้อมูล');
+        return;
+    }
+
+    const newNote = textarea.value.trim();
+    const appointments = storage.get('appointments') || [];
+    const appointmentIndex = appointments.findIndex(apt => apt.id == appointmentId);
+
+    if (appointmentIndex === -1) {
+        alert('ไม่พบข้อมูลนัดหมาย');
+        return;
+    }
+
+    // Update note and timestamp
+    appointments[appointmentIndex].note = newNote;
+    appointments[appointmentIndex].noteUpdatedAt = new Date().toISOString();
+
+    storage.set('appointments', appointments);
+
+    // Show success message
+    alert('บันทึกหมายเหตุสำเร็จ!');
+
+    // Refresh the modal to show updated note
+    viewAppointmentDetails(appointmentId);
+}
+
+/**
+ * Cancel note editing and restore display
+ * @param {string} appointmentId - Appointment ID
+ * @param {string} originalNote - Original note text
+ */
+function cancelNoteEdit(appointmentId, originalNote) {
+    const noteDisplay = document.getElementById(`noteDisplay-${appointmentId}`);
+
+    if (!noteDisplay) return;
+
+    // Restore original display
+    if (originalNote) {
+        noteDisplay.innerHTML = `<p style="margin: 0; white-space: pre-wrap;">${originalNote}</p>`;
+    } else {
+        noteDisplay.innerHTML = '<p style="margin: 0; color: #9ca3af; font-style: italic;">ยังไม่มีหมายเหตุ</p>';
+    }
 }
 
 /**
