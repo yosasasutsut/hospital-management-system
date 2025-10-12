@@ -339,31 +339,177 @@ function loadRoomStatistics() {
 
 /**
  * Load and display appointment statistics in dashboard
+ * Enhanced to show comprehensive statistics including doctor breakdown
  * @param {Array} appointments - Array of all appointments
  * @param {Date} now - Current date/time
  */
 function loadAppointmentStatistics(appointments, now) {
-    // Count appointments by status
-    const pending = appointments.filter(a => a.status === 'pending').length;
-    const confirmed = appointments.filter(a => a.status === 'confirmed').length;
-    const cancelled = appointments.filter(a => a.status === 'cancelled').length;
+    // Get comprehensive statistics
+    const stats = getAppointmentStatistics();
 
-    // Count upcoming appointments (future appointments that are not cancelled)
-    const upcoming = appointments.filter(a => {
-        const appointmentDateTime = new Date(`${a.date}T${a.time}`);
-        return appointmentDateTime >= now && a.status !== 'cancelled';
-    }).length;
-
-    // Update appointment statistics
+    // Update basic statistics if elements exist
     const pendingEl = document.getElementById('pendingAppointments');
     const confirmedEl = document.getElementById('confirmedAppointments');
     const upcomingEl = document.getElementById('upcomingAppointments');
     const cancelledEl = document.getElementById('cancelledAppointments');
 
-    if (pendingEl) pendingEl.textContent = pending;
-    if (confirmedEl) confirmedEl.textContent = confirmed;
-    if (upcomingEl) upcomingEl.textContent = upcoming;
-    if (cancelledEl) cancelledEl.textContent = cancelled;
+    if (pendingEl) pendingEl.textContent = stats.pending;
+    if (confirmedEl) confirmedEl.textContent = stats.confirmed;
+    if (upcomingEl) upcomingEl.textContent = stats.upcoming;
+    if (cancelledEl) cancelledEl.textContent = stats.cancelled;
+
+    // Create or update appointment analytics section
+    loadAppointmentAnalytics(stats);
+}
+
+/**
+ * Load and display detailed appointment analytics
+ * Shows doctor statistics and time-based breakdowns
+ * @param {Object} stats - Statistics object from getAppointmentStatistics()
+ */
+function loadAppointmentAnalytics(stats) {
+    // Check if analytics section exists, if not create it
+    let analyticsSection = document.getElementById('appointmentAnalytics');
+
+    if (!analyticsSection) {
+        // Find dashboard section to append analytics
+        const dashboardSection = document.getElementById('dashboard');
+        if (!dashboardSection) return;
+
+        // Create analytics container
+        analyticsSection = document.createElement('div');
+        analyticsSection.id = 'appointmentAnalytics';
+        analyticsSection.style.marginTop = '2rem';
+        dashboardSection.appendChild(analyticsSection);
+    }
+
+    // Build analytics HTML
+    analyticsSection.innerHTML = `
+        <h3 style="margin-bottom: 1.5rem; color: var(--primary-color);">📊 สถิตินัดหมายโดยละเอียด</h3>
+
+        <!-- Time-based Statistics -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+            <div style="padding: 1.5rem; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);">
+                <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">วันนี้</div>
+                <div style="font-size: 2rem; font-weight: 700;">${stats.today}</div>
+                <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.5rem;">นัดหมาย</div>
+            </div>
+            <div style="padding: 1.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);">
+                <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">สัปดาห์นี้</div>
+                <div style="font-size: 2rem; font-weight: 700;">${stats.thisWeek}</div>
+                <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.5rem;">นัดหมาย</div>
+            </div>
+            <div style="padding: 1.5rem; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3);">
+                <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">เดือนนี้</div>
+                <div style="font-size: 2rem; font-weight: 700;">${stats.thisMonth}</div>
+                <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.5rem;">นัดหมาย</div>
+            </div>
+            <div style="padding: 1.5rem; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border-radius: 12px; color: white; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.3);">
+                <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">รวมทั้งหมด</div>
+                <div style="font-size: 2rem; font-weight: 700;">${stats.total}</div>
+                <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.5rem;">นัดหมาย</div>
+            </div>
+        </div>
+
+        <!-- Doctor Statistics -->
+        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+            <h4 style="margin: 0 0 1.5rem 0; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                <span>👨‍⚕️</span>
+                <span>สถิตินัดหมายแยกตามแพทย์</span>
+            </h4>
+            ${stats.byDoctor.length > 0 ? `
+                <div style="display: grid; gap: 1rem;">
+                    ${stats.byDoctor.slice(0, 5).map((doctor, index) => `
+                        <div style="padding: 1rem; background: linear-gradient(to right, ${getGradientColor(index)}, transparent); border-radius: 8px; border-left: 4px solid ${getDoctorColor(index)};">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <div>
+                                    <div style="font-weight: 600; color: #1f2937; font-size: 1.1rem;">${doctor.doctorName}</div>
+                                    <div style="font-size: 0.875rem; color: #6b7280;">${doctor.specialty}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: ${getDoctorColor(index)};">${doctor.count}</div>
+                                    <div style="font-size: 0.75rem; color: #9ca3af;">นัดหมาย</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 1rem; font-size: 0.875rem;">
+                                <span style="color: #10b981;">✓ ยืนยัน: ${doctor.confirmed}</span>
+                                <span style="color: #f59e0b;">⏱ รอ: ${doctor.pending}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                ${stats.byDoctor.length > 5 ? `
+                    <div style="text-align: center; margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">
+                        และอีก ${stats.byDoctor.length - 5} แพทย์
+                    </div>
+                ` : ''}
+            ` : `
+                <div style="text-align: center; padding: 2rem; color: #9ca3af;">
+                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">📋</div>
+                    <div>ยังไม่มีข้อมูลนัดหมาย</div>
+                </div>
+            `}
+        </div>
+
+        <!-- Weekly Trend Preview -->
+        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h4 style="margin: 0 0 1rem 0; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                <span>📈</span>
+                <span>แนวโน้มนัดหมาย 7 วันที่ผ่านมา</span>
+            </h4>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; height: 120px; gap: 0.5rem; padding: 1rem 0;">
+                ${stats.weeklyTrend.dailyStats.map((day, index) => {
+                    const maxCount = Math.max(...stats.weeklyTrend.dailyStats.map(d => d.total), 1);
+                    const height = (day.total / maxCount * 100);
+                    const date = new Date(day.date);
+                    const dayName = date.toLocaleDateString('th-TH', { weekday: 'short' });
+
+                    return `
+                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                            <div style="font-size: 0.75rem; font-weight: 600; color: #3b82f6;">${day.total}</div>
+                            <div style="width: 100%; height: ${height}%; min-height: 4px; background: linear-gradient(to top, #3b82f6, #60a5fa); border-radius: 4px 4px 0 0;"></div>
+                            <div style="font-size: 0.75rem; color: #6b7280; white-space: nowrap;">${dayName}</div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+            <div style="text-align: center; margin-top: 1rem; font-size: 0.875rem; color: #6b7280;">
+                รวม: ${stats.weeklyTrend.totalAppointments} นัดหมาย
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Get gradient background color for doctor cards
+ * @param {number} index - Doctor index
+ * @returns {string} Gradient color
+ */
+function getGradientColor(index) {
+    const colors = [
+        'rgba(59, 130, 246, 0.1)',
+        'rgba(16, 185, 129, 0.1)',
+        'rgba(245, 158, 11, 0.1)',
+        'rgba(139, 92, 246, 0.1)',
+        'rgba(236, 72, 153, 0.1)'
+    ];
+    return colors[index % colors.length];
+}
+
+/**
+ * Get solid color for doctor ranking
+ * @param {number} index - Doctor index
+ * @returns {string} Color code
+ */
+function getDoctorColor(index) {
+    const colors = [
+        '#3b82f6', // Blue
+        '#10b981', // Green
+        '#f59e0b', // Orange
+        '#8b5cf6', // Purple
+        '#ec4899'  // Pink
+    ];
+    return colors[index % colors.length];
 }
 
 /**
