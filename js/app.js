@@ -2995,6 +2995,214 @@ function getDoctorStatusConfig(status) {
     return configs[status] || configs.active;
 }
 
+// ===== Department Management & Search Functions (Day 20 & 21) =====
+
+/**
+ * View doctors grouped by department/specialty
+ * Day 20: Department Management
+ */
+function viewDepartments() {
+    const doctors = storage.get('doctors') || [];
+
+    // Group doctors by specialty
+    const departmentGroups = {};
+    doctors.forEach(doctor => {
+        if (!departmentGroups[doctor.specialty]) {
+            departmentGroups[doctor.specialty] = [];
+        }
+        departmentGroups[doctor.specialty].push(doctor);
+    });
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    const sortedDepartments = Object.keys(departmentGroups).sort();
+
+    modalBody.innerHTML = `
+        <h3 style="margin: 0 0 1rem 0;">🏥 แผนกทั้งหมด</h3>
+        <p style="margin: 0 0 1.5rem 0; color: #6b7280; font-size: 0.875rem;">จัดกลุ่มแพทย์ตามความเชี่ยวชาญ</p>
+
+        <div style="display: grid; gap: 1rem; max-height: 70vh; overflow-y: auto;">
+            ${sortedDepartments.map(specialty => {
+                const doctorsInDept = departmentGroups[specialty];
+                const activeCount = doctorsInDept.filter(d => d.status === 'active').length;
+                const totalCount = doctorsInDept.length;
+
+                return `
+                    <div style="background: white; border-radius: 12px; padding: 1.5rem; border: 2px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                            <div>
+                                <h4 style="margin: 0 0 0.25rem 0; color: #1f2937; font-size: 1.125rem;">📋 ${specialty}</h4>
+                                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">
+                                    ${totalCount} แพทย์ |
+                                    <span style="color: #10b981; font-weight: 600;">${activeCount} ออกตรวจ</span>
+                                </p>
+                            </div>
+                            <button onclick="filterDoctorsBySpecialty('${specialty}')" class="btn btn-primary" style="font-size: 0.875rem;">ดูทั้งหมด</button>
+                        </div>
+
+                        <div style="display: grid; gap: 0.5rem; margin-top: 1rem;">
+                            ${doctorsInDept.slice(0, 3).map(doctor => {
+                                const statusConfig = getDoctorStatusConfig(doctor.status);
+                                return `
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: #f9fafb; border-radius: 8px;">
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <div style="width: 8px; height: 8px; border-radius: 50%; background: ${statusConfig.color};"></div>
+                                            <span style="font-weight: 500;">${doctor.name}</span>
+                                        </div>
+                                        <div style="display: inline-block; padding: 0.25rem 0.5rem; background: ${statusConfig.bgColor}; color: ${statusConfig.textColor}; border-radius: 999px; font-size: 0.75rem; font-weight: 600;">
+                                            ${statusConfig.icon} ${statusConfig.label}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                            ${doctorsInDept.length > 3 ? `
+                                <div style="text-align: center; padding: 0.5rem; color: #6b7280; font-size: 0.875rem;">
+                                    และอีก ${doctorsInDept.length - 3} คน
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb;">
+            <button onclick="closeModal()" class="btn btn-secondary">ปิด</button>
+        </div>
+    `;
+
+    modal.classList.add('active');
+}
+
+/**
+ * Filter doctors by specialty and close modal
+ * @param {string} specialty - Specialty to filter
+ */
+function filterDoctorsBySpecialty(specialty) {
+    closeModal();
+    showSection('doctors');
+    loadDoctors();
+    searchAndFilterDoctors('', specialty, 'all');
+}
+
+/**
+ * Search and filter doctors by name, specialty, and status
+ * Day 21: Doctor Search & Filter
+ * @param {string} query - Search query (name)
+ * @param {string} specialtyFilter - Specialty filter
+ * @param {string} statusFilter - Status filter (all, active, busy, on-leave)
+ */
+function searchAndFilterDoctors(query = '', specialtyFilter = 'all', statusFilter = 'all') {
+    const doctors = storage.get('doctors') || [];
+    let filteredDoctors = doctors;
+
+    // Filter by search query (name)
+    if (query) {
+        filteredDoctors = filteredDoctors.filter(d =>
+            d.name.toLowerCase().includes(query.toLowerCase())
+        );
+    }
+
+    // Filter by specialty
+    if (specialtyFilter !== 'all') {
+        filteredDoctors = filteredDoctors.filter(d => d.specialty === specialtyFilter);
+    }
+
+    // Filter by status
+    if (statusFilter !== 'all') {
+        filteredDoctors = filteredDoctors.filter(d => d.status === statusFilter);
+    }
+
+    const grid = document.getElementById('doctorsGrid');
+    const resultCount = document.getElementById('doctorResultCount');
+
+    if (filteredDoctors.length === 0) {
+        grid.innerHTML = `
+            <div style="text-align: center; padding: 3rem 1rem; color: #6b7280; grid-column: 1 / -1;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+                <h3 style="margin: 0 0 0.5rem 0; color: #374151;">ไม่พบแพทย์</h3>
+                <p style="margin: 0;">ไม่มีแพทย์ที่ตรงกับเงื่อนไขที่เลือก</p>
+                <button onclick="clearDoctorFilters()" class="btn btn-primary" style="margin-top: 1rem;">ล้างตัวกรอง</button>
+            </div>
+        `;
+        resultCount.innerHTML = '';
+        return;
+    }
+
+    // Display filtered doctors
+    grid.innerHTML = filteredDoctors.map(doctor => {
+        const statusConfig = getDoctorStatusConfig(doctor.status);
+        return `
+            <div class="doctor-card" style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid ${statusConfig.color};">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div>
+                        <h3 style="margin: 0 0 0.5rem 0; color: #1f2937; font-size: 1.25rem;">${doctor.name}</h3>
+                        <div style="display: inline-block; padding: 0.25rem 0.75rem; background: ${statusConfig.bgColor}; color: ${statusConfig.textColor}; border-radius: 999px; font-size: 0.75rem; font-weight: 600;">
+                            ${statusConfig.icon} ${statusConfig.label}
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem; color: #4b5563;">
+                    <p style="margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600; min-width: 80px;">🏥 แผนก:</span>
+                        <span>${doctor.specialty}</span>
+                    </p>
+                    <p style="margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600; min-width: 80px;">📞 โทร:</span>
+                        <span>${doctor.phone}</span>
+                    </p>
+                    <p style="margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600; min-width: 80px;">📧 Email:</span>
+                        <span style="font-size: 0.875rem;">${doctor.email}</span>
+                    </p>
+                    <p style="margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600; min-width: 80px;">⏰ เวลา:</span>
+                        <span style="font-size: 0.875rem;">${doctor.workingHours}</span>
+                    </p>
+                    <p style="margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600; min-width: 80px;">📚 ประสบการณ์:</span>
+                        <span>${doctor.experience}</span>
+                    </p>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem;">
+                    <button class="btn btn-secondary" onclick="viewDoctor(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem;">ดูรายละเอียด</button>
+                    <button class="btn" onclick="viewDoctorSchedule(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem; background: #8b5cf6; color: white;">📅 ตารางเวลา</button>
+                    <button class="btn" onclick="toggleDoctorStatus(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem; background: ${statusConfig.color}; color: white;">🔄 สถานะ</button>
+                    <button class="btn btn-primary" onclick="editDoctor(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem;">แก้ไข</button>
+                    <button class="btn" onclick="deleteDoctor(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem; background-color: #ef4444; color: white; grid-column: span 2;">ลบ</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Update result count with filters info
+    let filterText = '';
+    if (query) filterText += ` "${query}"`;
+    if (specialtyFilter !== 'all') filterText += ` ใน${specialtyFilter}`;
+    if (statusFilter !== 'all') {
+        const statusLabels = { 'active': 'ออกตรวจ', 'busy': 'ไม่ว่าง', 'on-leave': 'ลาพัก' };
+        filterText += ` สถานะ${statusLabels[statusFilter]}`;
+    }
+
+    resultCount.innerHTML = `พบแพทย์${filterText} <strong>${filteredDoctors.length}</strong> คน`;
+}
+
+/**
+ * Clear all doctor filters and reload
+ */
+function clearDoctorFilters() {
+    const searchBox = document.getElementById('doctorSearch');
+    const specialtyFilter = document.getElementById('doctorSpecialtyFilter');
+    const statusFilter = document.getElementById('doctorStatusFilter');
+
+    if (searchBox) searchBox.value = '';
+    if (specialtyFilter) specialtyFilter.value = 'all';
+    if (statusFilter) statusFilter.value = 'all';
+
+    loadDoctors();
+}
+
 // Add Doctor button event listener
 document.getElementById('addDoctorBtn')?.addEventListener('click', () => {
     showAddDoctorModal();
