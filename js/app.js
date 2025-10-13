@@ -1,5 +1,5 @@
 // ===== Hospital Management System - Main JavaScript =====
-// Version: 2.1.0
+// Version: 2.2.0
 // Description: Core application logic for hospital management system
 // Author: Hospital MS Team
 // Last Updated: 2025-10-13
@@ -309,8 +309,599 @@ const storage = {
                 notes: 'VIP ระดับสูง'
             }
         ]);
+
+        // ===== Ward Management System Data Structure =====
+        // Initialize wards (หอผู้ป่วย) - Hospital departments for inpatient care
+        if (!storage.get('wards')) storage.set('wards', [
+            {
+                id: 'ward-001',
+                wardName: 'หอผู้ป่วยอายุรกรรม',
+                wardCode: 'IMW-01',
+                department: 'อายุรศาสตร์',
+                wardType: 'general', // 'general' = นับเตียง, 'special' = นับห้อง
+                building: 'อาคารผู้ป่วยใน 1',
+                floor: 2,
+                headNurse: 'พยาบาล สมศรี ใจดี',
+                nursingStation: 'NS-2A',
+                contactPhone: '02-123-4501',
+                totalRooms: 0,
+                totalBeds: 0,
+                occupiedBeds: 0,
+                availableBeds: 0,
+                status: 'active',
+                description: 'หอผู้ป่วยสำหรับผู้ป่วยโรคทั่วไปทางอายุรศาสตร์'
+            },
+            {
+                id: 'ward-002',
+                wardName: 'หอผู้ป่วยศัลยกรรม',
+                wardCode: 'SRW-01',
+                department: 'ศัลยศาสตร์',
+                wardType: 'general',
+                building: 'อาคารผู้ป่วยใน 1',
+                floor: 3,
+                headNurse: 'พยาบาล วิไลวรรณ รักษ์',
+                nursingStation: 'NS-3A',
+                contactPhone: '02-123-4502',
+                totalRooms: 0,
+                totalBeds: 0,
+                occupiedBeds: 0,
+                availableBeds: 0,
+                status: 'active',
+                description: 'หอผู้ป่วยสำหรับผู้ป่วยหลังผ่าตัด'
+            },
+            {
+                id: 'ward-003',
+                wardName: 'หอผู้ป่วยกุมารเวชกรรม',
+                wardCode: 'PDW-01',
+                department: 'กุมารเวชศาสตร์',
+                wardType: 'general',
+                building: 'อาคารเด็ก',
+                floor: 2,
+                headNurse: 'พยาบาล ชนิดา อ่อนโยน',
+                nursingStation: 'NS-PED-2',
+                contactPhone: '02-123-4503',
+                totalRooms: 0,
+                totalBeds: 0,
+                occupiedBeds: 0,
+                availableBeds: 0,
+                status: 'active',
+                description: 'หอผู้ป่วยเด็กและวัยรุ่น'
+            },
+            {
+                id: 'ward-004',
+                wardName: 'หอผู้ป่วยสูติ-นรีเวช',
+                wardCode: 'OBW-01',
+                department: 'สูติ-นรีเวชศาสตร์',
+                wardType: 'general',
+                building: 'อาคารสตรี',
+                floor: 3,
+                headNurse: 'พยาบาล ปราณี คุ้มครอง',
+                nursingStation: 'NS-OB-3',
+                contactPhone: '02-123-4504',
+                totalRooms: 0,
+                totalBeds: 0,
+                occupiedBeds: 0,
+                availableBeds: 0,
+                status: 'active',
+                description: 'หอผู้ป่วยสำหรับมารดาและทารกแรกเกิด'
+            },
+            {
+                id: 'ward-005',
+                wardName: 'หอผู้ป่วยพิเศษ',
+                wardCode: 'SPW-01',
+                department: 'หอผู้ป่วยพิเศษ',
+                wardType: 'special', // นับเป็นห้อง (ห้องเดี่ยว/ห้องคู่)
+                building: 'อาคารผู้ป่วยใน 2',
+                floor: 4,
+                headNurse: 'พยาบาล สุดารัตน์ ประสิทธิ์',
+                nursingStation: 'NS-4A',
+                contactPhone: '02-123-4505',
+                totalRooms: 0,
+                totalBeds: 0,
+                occupiedBeds: 0,
+                availableBeds: 0,
+                status: 'active',
+                description: 'หอผู้ป่วยห้องเดี่ยวและห้องคู่พิเศษ'
+            },
+            {
+                id: 'ward-006',
+                wardName: 'หอผู้ป่วยหนัก (ICU)',
+                wardCode: 'ICU-01',
+                department: 'แพทย์วิกฤต',
+                wardType: 'special',
+                building: 'อาคารผู้ป่วยใน 2',
+                floor: 5,
+                headNurse: 'พยาบาล อรุณี เข้มแข็ง',
+                nursingStation: 'NS-ICU-5',
+                contactPhone: '02-123-4506',
+                totalRooms: 0,
+                totalBeds: 0,
+                occupiedBeds: 0,
+                availableBeds: 0,
+                status: 'active',
+                description: 'หอผู้ป่วยวิกฤตที่ต้องการการดูแลระดับสูง'
+            }
+        ]);
+
+        // Initialize ward rooms (ห้องภายใน ward)
+        if (!storage.get('wardRooms')) storage.set('wardRooms', [
+            // Ward 1: หอผู้ป่วยอายุรกรรม (General Ward - ห้องรวม)
+            {
+                id: 'wroom-001',
+                roomNumber: 'IMW-201A',
+                roomName: 'ห้อง 201A',
+                wardId: 'ward-001',
+                roomType: 'general', // 'general' = ห้องรวม, 'single' = ห้องเดี่ยว, 'double' = ห้องคู่
+                totalBeds: 8,
+                occupiedBeds: 5,
+                availableBeds: 3,
+                pricePerBedPerDay: 500,
+                amenities: ['เตียงปรับระดับ', 'พัดลม', 'ห้องน้ำรวม', 'ตู้เก็บของส่วนตัว', 'ม่านกั้น'],
+                status: 'available',
+                notes: ''
+            },
+            {
+                id: 'wroom-002',
+                roomNumber: 'IMW-201B',
+                roomName: 'ห้อง 201B',
+                wardId: 'ward-001',
+                roomType: 'general',
+                totalBeds: 6,
+                occupiedBeds: 6,
+                availableBeds: 0,
+                pricePerBedPerDay: 500,
+                amenities: ['เตียงปรับระดับ', 'พัดลม', 'ห้องน้ำรวม', 'ตู้เก็บของส่วนตัว', 'ม่านกั้น'],
+                status: 'full',
+                notes: 'เต็ม'
+            },
+            {
+                id: 'wroom-003',
+                roomNumber: 'IMW-202A',
+                roomName: 'ห้อง 202A',
+                wardId: 'ward-001',
+                roomType: 'general',
+                totalBeds: 10,
+                occupiedBeds: 7,
+                availableBeds: 3,
+                pricePerBedPerDay: 500,
+                amenities: ['เตียงปรับระดับ', 'พัดลม', 'ห้องน้ำรวม', 'ตู้เก็บของส่วนตัว', 'ม่านกั้น'],
+                status: 'available',
+                notes: ''
+            },
+
+            // Ward 2: หอผู้ป่วยศัลยกรรม (General Ward - ห้องรวม)
+            {
+                id: 'wroom-004',
+                roomNumber: 'SRW-301A',
+                roomName: 'ห้อง 301A',
+                wardId: 'ward-002',
+                roomType: 'general',
+                totalBeds: 6,
+                occupiedBeds: 4,
+                availableBeds: 2,
+                pricePerBedPerDay: 600,
+                amenities: ['เตียงไฟฟ้า', 'พัดลม', 'ห้องน้ำรวม', 'ตู้เก็บของส่วนตัว', 'ม่านกั้น', 'ระบบเรียกพยาบาล'],
+                status: 'available',
+                notes: 'สำหรับผู้ป่วยหลังผ่าตัด'
+            },
+            {
+                id: 'wroom-005',
+                roomNumber: 'SRW-301B',
+                roomName: 'ห้อง 301B',
+                wardId: 'ward-002',
+                roomType: 'general',
+                totalBeds: 8,
+                occupiedBeds: 6,
+                availableBeds: 2,
+                pricePerBedPerDay: 600,
+                amenities: ['เตียงไฟฟ้า', 'พัดลม', 'ห้องน้ำรวม', 'ตู้เก็บของส่วนตัว', 'ม่านกั้น', 'ระบบเรียกพยาบาล'],
+                status: 'available',
+                notes: ''
+            },
+
+            // Ward 3: หอผู้ป่วยกุมารเวชกรรม (General Ward - ห้องรวม)
+            {
+                id: 'wroom-006',
+                roomNumber: 'PDW-201A',
+                roomName: 'ห้องเด็กชาย A',
+                wardId: 'ward-003',
+                roomType: 'general',
+                totalBeds: 6,
+                occupiedBeds: 3,
+                availableBeds: 3,
+                pricePerBedPerDay: 550,
+                amenities: ['เตียงเด็ก', 'พัดลม', 'ห้องน้ำรวม', 'ตู้เก็บของ', 'เตียงพ่อแม่', 'ของเล่น', 'ทีวี'],
+                status: 'available',
+                notes: 'สำหรับเด็กชาย'
+            },
+            {
+                id: 'wroom-007',
+                roomNumber: 'PDW-201B',
+                roomName: 'ห้องเด็กหญิง B',
+                wardId: 'ward-003',
+                roomType: 'general',
+                totalBeds: 6,
+                occupiedBeds: 4,
+                availableBeds: 2,
+                pricePerBedPerDay: 550,
+                amenities: ['เตียงเด็ก', 'พัดลม', 'ห้องน้ำรวม', 'ตู้เก็บของ', 'เตียงพ่อแม่', 'ของเล่น', 'ทีวี'],
+                status: 'available',
+                notes: 'สำหรับเด็กหญิง'
+            },
+
+            // Ward 4: หอผู้ป่วยสูติ-นรีเวช (General Ward - ห้องรวม)
+            {
+                id: 'wroom-008',
+                roomNumber: 'OBW-301A',
+                roomName: 'ห้อง 301A',
+                wardId: 'ward-004',
+                roomType: 'general',
+                totalBeds: 4,
+                occupiedBeds: 2,
+                availableBeds: 2,
+                pricePerBedPerDay: 700,
+                amenities: ['เตียงคลอด', 'แอร์', 'ห้องน้ำรวม', 'ตู้เก็บของ', 'เปลเด็ก', 'เครื่องอุ่นนม'],
+                status: 'available',
+                notes: 'หอผู้คลอดและหลังคลอด'
+            },
+
+            // Ward 5: หอผู้ป่วยพิเศษ (Special Ward - ห้องเดี่ยว/ห้องคู่)
+            {
+                id: 'wroom-009',
+                roomNumber: 'SPW-401',
+                roomName: 'ห้องเดี่ยว 401',
+                wardId: 'ward-005',
+                roomType: 'single',
+                totalBeds: 1,
+                occupiedBeds: 0,
+                availableBeds: 1,
+                pricePerRoomPerDay: 3000,
+                amenities: ['เตียงไฟฟ้า', 'แอร์', 'TV 32"', 'ห้องน้ำในตัว', 'ตู้เย็น', 'โซฟา', 'WiFi'],
+                status: 'available',
+                notes: ''
+            },
+            {
+                id: 'wroom-010',
+                roomNumber: 'SPW-402',
+                roomName: 'ห้องเดี่ยว 402',
+                wardId: 'ward-005',
+                roomType: 'single',
+                totalBeds: 1,
+                occupiedBeds: 1,
+                availableBeds: 0,
+                pricePerRoomPerDay: 3000,
+                amenities: ['เตียงไฟฟ้า', 'แอร์', 'TV 32"', 'ห้องน้ำในตัว', 'ตู้เย็น', 'โซฟา', 'WiFi'],
+                status: 'occupied',
+                notes: 'มีผู้ป่วย'
+            },
+            {
+                id: 'wroom-011',
+                roomNumber: 'SPW-403',
+                roomName: 'ห้องคู่ 403',
+                wardId: 'ward-005',
+                roomType: 'double',
+                totalBeds: 2,
+                occupiedBeds: 1,
+                availableBeds: 1,
+                pricePerRoomPerDay: 5000,
+                amenities: ['เตียงไฟฟ้า 2 เตียง', 'แอร์', 'TV 40"', 'ห้องน้ำในตัว', 'ตู้เย็น', 'โซฟา 2 ตัว', 'WiFi'],
+                status: 'available',
+                notes: 'มีเตียงว่าง 1 เตียง'
+            },
+
+            // Ward 6: หอผู้ป่วยหนัก ICU (Special Ward - ห้องเดี่ยว)
+            {
+                id: 'wroom-012',
+                roomNumber: 'ICU-501',
+                roomName: 'ICU 501',
+                wardId: 'ward-006',
+                roomType: 'single',
+                totalBeds: 1,
+                occupiedBeds: 1,
+                availableBeds: 0,
+                pricePerRoomPerDay: 10000,
+                amenities: ['เตียง ICU พิเศษ', 'เครื่องช่วยหายใจ', 'Monitor', 'แอร์', 'ระบบแยกโซน', 'อุปกรณ์ชีพจร'],
+                status: 'occupied',
+                notes: 'ผู้ป่วยวิกฤต'
+            },
+            {
+                id: 'wroom-013',
+                roomNumber: 'ICU-502',
+                roomName: 'ICU 502',
+                wardId: 'ward-006',
+                roomType: 'single',
+                totalBeds: 1,
+                occupiedBeds: 0,
+                availableBeds: 1,
+                pricePerRoomPerDay: 10000,
+                amenities: ['เตียง ICU พิเศษ', 'เครื่องช่วยหายใจ', 'Monitor', 'แอร์', 'ระบบแยกโซน', 'อุปกรณ์ชีพจร'],
+                status: 'available',
+                notes: ''
+            }
+        ]);
+
+        // Initialize ward beds (เตียงภายในห้อง)
+        if (!storage.get('wardBeds')) storage.set('wardBeds', [
+            // Room IMW-201A (8 beds)
+            {
+                id: 'bed-001',
+                bedNumber: 'IMW-201A-01',
+                bedName: 'เตียง 1',
+                roomId: 'wroom-001',
+                wardId: 'ward-001',
+                status: 'occupied',
+                patientId: null,
+                patientName: 'นาง สมศรี ใจดี',
+                patientHN: 'HN-2025-001',
+                admissionDate: '2025-10-10',
+                expectedDischargeDate: '2025-10-15',
+                dailyRate: 500,
+                specialCare: false,
+                isolation: false,
+                notes: ''
+            },
+            {
+                id: 'bed-002',
+                bedNumber: 'IMW-201A-02',
+                bedName: 'เตียง 2',
+                roomId: 'wroom-001',
+                wardId: 'ward-001',
+                status: 'available',
+                patientId: null,
+                patientName: null,
+                patientHN: null,
+                admissionDate: null,
+                expectedDischargeDate: null,
+                dailyRate: 500,
+                specialCare: false,
+                isolation: false,
+                notes: ''
+            },
+            {
+                id: 'bed-003',
+                bedNumber: 'IMW-201A-03',
+                bedName: 'เตียง 3',
+                roomId: 'wroom-001',
+                wardId: 'ward-001',
+                status: 'occupied',
+                patientId: null,
+                patientName: 'นาย วิชัย สุขสันต์',
+                patientHN: 'HN-2025-002',
+                admissionDate: '2025-10-11',
+                expectedDischargeDate: '2025-10-16',
+                dailyRate: 500,
+                specialCare: false,
+                isolation: false,
+                notes: ''
+            },
+            {
+                id: 'bed-004',
+                bedNumber: 'IMW-201A-04',
+                bedName: 'เตียง 4',
+                roomId: 'wroom-001',
+                wardId: 'ward-001',
+                status: 'occupied',
+                patientId: null,
+                patientName: 'นาง ประนอม ดีงาม',
+                patientHN: 'HN-2025-003',
+                admissionDate: '2025-10-09',
+                expectedDischargeDate: '2025-10-14',
+                dailyRate: 500,
+                specialCare: true,
+                isolation: false,
+                notes: 'ต้องการดูแลพิเศษ'
+            },
+            {
+                id: 'bed-005',
+                bedNumber: 'IMW-201A-05',
+                bedName: 'เตียง 5',
+                roomId: 'wroom-001',
+                wardId: 'ward-001',
+                status: 'available',
+                patientId: null,
+                patientName: null,
+                patientHN: null,
+                admissionDate: null,
+                expectedDischargeDate: null,
+                dailyRate: 500,
+                specialCare: false,
+                isolation: false,
+                notes: ''
+            },
+            {
+                id: 'bed-006',
+                bedNumber: 'IMW-201A-06',
+                bedName: 'เตียง 6',
+                roomId: 'wroom-001',
+                wardId: 'ward-001',
+                status: 'occupied',
+                patientId: null,
+                patientName: 'นาย สุชาติ รักดี',
+                patientHN: 'HN-2025-004',
+                admissionDate: '2025-10-12',
+                expectedDischargeDate: '2025-10-17',
+                dailyRate: 500,
+                specialCare: false,
+                isolation: false,
+                notes: ''
+            },
+            {
+                id: 'bed-007',
+                bedNumber: 'IMW-201A-07',
+                bedName: 'เตียง 7',
+                roomId: 'wroom-001',
+                wardId: 'ward-001',
+                status: 'available',
+                patientId: null,
+                patientName: null,
+                patientHN: null,
+                admissionDate: null,
+                expectedDischargeDate: null,
+                dailyRate: 500,
+                specialCare: false,
+                isolation: false,
+                notes: ''
+            },
+            {
+                id: 'bed-008',
+                bedNumber: 'IMW-201A-08',
+                bedName: 'เตียง 8',
+                roomId: 'wroom-001',
+                wardId: 'ward-001',
+                status: 'occupied',
+                patientId: null,
+                patientName: 'นาง วิไล ชนะชัย',
+                patientHN: 'HN-2025-005',
+                admissionDate: '2025-10-13',
+                expectedDischargeDate: '2025-10-18',
+                dailyRate: 500,
+                specialCare: false,
+                isolation: false,
+                notes: ''
+            },
+
+            // Room IMW-201B (6 beds - all occupied)
+            {
+                id: 'bed-009',
+                bedNumber: 'IMW-201B-01',
+                bedName: 'เตียง 1',
+                roomId: 'wroom-002',
+                wardId: 'ward-001',
+                status: 'occupied',
+                patientId: null,
+                patientName: 'นาย ประยุทธ เก่ง',
+                patientHN: 'HN-2025-006',
+                admissionDate: '2025-10-10',
+                expectedDischargeDate: '2025-10-15',
+                dailyRate: 500,
+                specialCare: false,
+                isolation: false,
+                notes: ''
+            },
+            {
+                id: 'bed-010',
+                bedNumber: 'IMW-201B-02',
+                bedName: 'เตียง 2',
+                roomId: 'wroom-002',
+                wardId: 'ward-001',
+                status: 'occupied',
+                patientId: null,
+                patientName: 'นาง สุดา แจ่มใส',
+                patientHN: 'HN-2025-007',
+                admissionDate: '2025-10-11',
+                expectedDischargeDate: '2025-10-16',
+                dailyRate: 500,
+                specialCare: false,
+                isolation: false,
+                notes: ''
+            },
+            {
+                id: 'bed-011',
+                bedNumber: 'IMW-201B-03',
+                bedName: 'เตียง 3',
+                roomId: 'wroom-002',
+                wardId: 'ward-001',
+                status: 'occupied',
+                patientId: null,
+                patientName: 'นาย มานะ ชัยชนะ',
+                patientHN: 'HN-2025-008',
+                admissionDate: '2025-10-12',
+                expectedDischargeDate: '2025-10-17',
+                dailyRate: 500,
+                specialCare: false,
+                isolation: false,
+                notes: ''
+            },
+            {
+                id: 'bed-012',
+                bedNumber: 'IMW-201B-04',
+                bedName: 'เตียง 4',
+                roomId: 'wroom-002',
+                wardId: 'ward-001',
+                status: 'occupied',
+                patientId: null,
+                patientName: 'นาง จิตรา สวยงาม',
+                patientHN: 'HN-2025-009',
+                admissionDate: '2025-10-09',
+                expectedDischargeDate: '2025-10-14',
+                dailyRate: 500,
+                specialCare: false,
+                isolation: false,
+                notes: ''
+            },
+            {
+                id: 'bed-013',
+                bedNumber: 'IMW-201B-05',
+                bedName: 'เตียง 5',
+                roomId: 'wroom-002',
+                wardId: 'ward-001',
+                status: 'occupied',
+                patientId: null,
+                patientName: 'นาย บุญชู มีสุข',
+                patientHN: 'HN-2025-010',
+                admissionDate: '2025-10-13',
+                expectedDischargeDate: '2025-10-18',
+                dailyRate: 500,
+                specialCare: false,
+                isolation: false,
+                notes: ''
+            },
+            {
+                id: 'bed-014',
+                bedNumber: 'IMW-201B-06',
+                bedName: 'เตียง 6',
+                roomId: 'wroom-002',
+                wardId: 'ward-001',
+                status: 'occupied',
+                patientId: null,
+                patientName: 'นาง สมพร เจริญ',
+                patientHN: 'HN-2025-011',
+                admissionDate: '2025-10-11',
+                expectedDischargeDate: '2025-10-16',
+                dailyRate: 500,
+                specialCare: false,
+                isolation: false,
+                notes: ''
+            }
+
+            // Note: เพิ่มเตียงสำหรับห้องอื่นๆ ได้ในภายหลัง
+            // สำหรับ Commit 1 จะเพิ่มข้อมูลตัวอย่างพอสมควรก่อน
+        ]);
+
+        // Update ward statistics after initialization
+        updateWardStatistics();
     }
 };
+
+/**
+ * Update ward statistics (total beds, occupied, available)
+ * Calculates real-time statistics from wardRooms and wardBeds data
+ */
+function updateWardStatistics() {
+    const wards = storage.get('wards') || [];
+    const wardRooms = storage.get('wardRooms') || [];
+    const wardBeds = storage.get('wardBeds') || [];
+
+    wards.forEach(ward => {
+        // Get all rooms in this ward
+        const roomsInWard = wardRooms.filter(r => r.wardId === ward.id);
+
+        // Calculate total rooms
+        ward.totalRooms = roomsInWard.length;
+
+        // Calculate total beds
+        ward.totalBeds = roomsInWard.reduce((sum, room) => sum + room.totalBeds, 0);
+
+        // Calculate occupied beds
+        ward.occupiedBeds = roomsInWard.reduce((sum, room) => sum + room.occupiedBeds, 0);
+
+        // Calculate available beds
+        ward.availableBeds = ward.totalBeds - ward.occupiedBeds;
+    });
+
+    // Save updated wards
+    storage.set('wards', wards);
+}
 
 // Initialize data on first load
 storage.init();
