@@ -5,6 +5,70 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-10-13
+
+### Added
+- **Complete Doctor Management System** (Day 15)
+  - Full CRUD operations for doctor management:
+    - Add new doctors with comprehensive form
+    - View doctor details in modal
+    - Edit existing doctor information
+    - Delete doctors with confirmation
+
+  - Enhanced doctor data model:
+    - Name, specialty, phone, email
+    - Working hours (เวลาทำงาน)
+    - Experience (ประสบการณ์)
+    - Education (วุฒิการศึกษา)
+    - License number (เลขที่ใบอนุญาต)
+    - Status (active/on-leave/busy)
+    - Registration date tracking
+
+  - Modern doctor card display:
+    - Grid layout with responsive design
+    - Status badges with color coding:
+      - ออกตรวจ (Active): Green
+      - ลาพัก (On Leave): Orange
+      - ไม่ว่าง (Busy): Red
+    - Comprehensive doctor information display
+    - Action buttons (View, Edit, Delete)
+
+  - Doctor registration form:
+    - 10+ specialty departments dropdown
+    - Form validation (phone: 9-10 digits, email format)
+    - Optional fields (experience, education, license)
+    - Status selection
+    - Auto-generated doctor ID
+
+  - UI Enhancements:
+    - Search functionality (by name, specialty)
+    - Status filter (all, active, on-leave, busy)
+    - Result count display
+    - Empty state messages
+    - Modern card design with gradient headers
+    - Emoji icons for better visual appeal
+
+### Changed
+- Updated version to 2.0.0
+- Enhanced Doctors section with comprehensive management features
+- Updated app.js version to 2.0.0
+- Improved dashboard statistics to include active doctors count
+
+### Technical
+- `loadDoctors()` - Enhanced display with modern cards
+- `showAddDoctorModal()` - Registration form modal
+- `addDoctor()` - Save new doctor to localStorage
+- `viewDoctor(id)` - View detailed doctor information
+- `editDoctor(id)` - Edit existing doctor with pre-filled form
+- `deleteDoctor(id)` - Delete with confirmation dialog
+- `getDoctorStatusConfig(status)` - Status badge configuration
+- JSDoc documentation for all functions
+- Form validation with regex patterns
+- Auto-updates dashboard after CRUD operations
+- Sample doctors with comprehensive data
+
+---
+
 ## [1.9.0] - 2025-10-12
 
 ### Added
