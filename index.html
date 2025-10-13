@@ -54,6 +54,7 @@
                     <li><a href="#patients" class="nav-link">ผู้ป่วย</a></li>
                     <li><a href="#appointments" class="nav-link">นัดหมาย</a></li>
                     <li><a href="#doctors" class="nav-link">แพทย์</a></li>
+                    <li><a href="#wards" class="nav-link">หอผู้ป่วย</a></li>
                     <li><a href="#rooms" class="nav-link">ห้องพัก</a></li>
                 </ul>
             </nav>
@@ -371,6 +372,47 @@
                 </div>
 
                 <div class="doctors-grid" id="doctorsGrid">
+                    <p class="no-data">กำลังโหลดข้อมูล...</p>
+                </div>
+            </section>
+
+            <!-- Wards Section -->
+            <section id="wards" class="section">
+                <h2>จัดการหอผู้ป่วย</h2>
+                <div class="section-header" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;">
+                    <button class="btn btn-primary" id="addWardBtn">+ เพิ่มหอผู้ป่วยใหม่</button>
+                    <input type="search" class="search-box" id="wardSearch" placeholder="ค้นหาหอผู้ป่วย (ชื่อ, รหัส, แผนก)..." style="flex: 1; min-width: 250px;">
+                </div>
+
+                <!-- Filter Section -->
+                <div class="filter-section" style="background: var(--light-color); padding: 1rem; border-radius: var(--border-radius); margin-bottom: 1rem;">
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <label style="font-weight: 600;">กรองตามสถานะ:</label>
+                        <select id="wardStatusFilter" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); min-width: 150px;">
+                            <option value="">ทั้งหมด</option>
+                            <option value="active">ใช้งาน</option>
+                            <option value="maintenance">ปิดบำรุง</option>
+                            <option value="closed">ปิดชั่วคราว</option>
+                        </select>
+
+                        <label style="font-weight: 600;">กรองตามประเภท:</label>
+                        <select id="wardTypeFilter" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); min-width: 150px;">
+                            <option value="">ทั้งหมด</option>
+                            <option value="general">หอสามัญ (นับเตียง)</option>
+                            <option value="special">หอพิเศษ (นับห้อง)</option>
+                        </select>
+
+                        <button class="btn btn-secondary" id="clearWardFilterBtn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">ล้างตัวกรอง</button>
+                    </div>
+                </div>
+
+                <!-- Result Count -->
+                <div id="wardResultCount" style="margin-bottom: 1rem; color: #6b7280; font-size: 0.875rem;">
+                    <!-- Result count will be displayed here -->
+                </div>
+
+                <!-- Wards Grid -->
+                <div class="wards-grid" id="wardsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
                     <p class="no-data">กำลังโหลดข้อมูล...</p>
                 </div>
             </section>

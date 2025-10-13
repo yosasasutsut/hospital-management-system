@@ -955,6 +955,9 @@ function showSection(sectionId) {
             case 'doctors':
                 loadDoctors();
                 break;
+            case 'wards':
+                loadWards();
+                break;
             case 'rooms':
                 loadRooms();
                 break;
@@ -3339,6 +3342,843 @@ function deleteDoctor(doctorId) {
         loadDashboard();
         alert(`ลบข้อมูลแพทย์ ${doctor.name} เรียบร้อยแล้ว`);
     }
+}
+
+// ===== Ward Management Functions =====
+
+/**
+ * Load and display all wards in card view
+ * Shows ward data with statistics and status badges
+ */
+function loadWards() {
+    const wards = storage.get('wards') || [];
+    const grid = document.getElementById('wardsGrid');
+    const resultCount = document.getElementById('wardResultCount');
+
+    if (wards.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: white; border-radius: var(--border-radius); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🏥</div>
+                <h3 style="margin: 0 0 0.5rem 0; color: #374151;">ยังไม่มีข้อมูลหอผู้ป่วย</h3>
+                <p style="margin: 0; color: #6b7280;">กรุณาเพิ่มข้อมูลหอผู้ป่วยเข้าสู่ระบบ</p>
+            </div>
+        `;
+        updateWardResultCount(0, 0);
+        return;
+    }
+
+    // Sort wards by wardCode
+    const sortedWards = [...wards].sort((a, b) => a.wardCode.localeCompare(b.wardCode));
+
+    grid.innerHTML = sortedWards.map(ward => {
+        const occupancyRate = ward.totalBeds > 0 ? ((ward.occupiedBeds / ward.totalBeds) * 100).toFixed(1) : 0;
+
+        // Status badge
+        const statusConfig = {
+            'active': { label: 'ใช้งาน', color: '#10b981', bgColor: '#d1fae5' },
+            'maintenance': { label: 'ปิดบำรุง', color: '#f59e0b', bgColor: '#fef3c7' },
+            'closed': { label: 'ปิดชั่วคราว', color: '#ef4444', bgColor: '#fee2e2' }
+        };
+        const status = statusConfig[ward.status] || statusConfig.active;
+
+        // Ward type badge
+        const typeLabel = ward.wardType === 'general' ? 'หอสามัญ (นับเตียง)' : 'หอพิเศษ (นับห้อง)';
+        const typeColor = ward.wardType === 'general' ? '#3b82f6' : '#8b5cf6';
+
+        return `
+            <div style="background: white; border-radius: var(--border-radius); box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 1.5rem; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; border-left: 4px solid ${typeColor};"
+                 onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)';">
+
+                <!-- Header -->
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div style="flex: 1;">
+                        <h3 style="margin: 0 0 0.25rem 0; color: #1f2937; font-size: 1.25rem;">
+                            ${ward.wardName}
+                        </h3>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">
+                            รหัส: ${ward.wardCode} | แผนก ${ward.department}
+                        </p>
+                    </div>
+                    <span style="padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: ${status.bgColor}; color: ${status.color};">
+                        ${status.label}
+                    </span>
+                </div>
+
+                <!-- Ward Info -->
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.875rem;">
+                        <div>
+                            <p style="margin: 0; color: #6b7280;">📍 สถานที่</p>
+                            <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #374151;">${ward.building}</p>
+                            <p style="margin: 0; color: #9ca3af; font-size: 0.75rem;">ชั้น ${ward.floor}</p>
+                        </div>
+                        <div>
+                            <p style="margin: 0; color: #6b7280;">👩‍⚕️ พยาบาลหัวหน้า</p>
+                            <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #374151;">${ward.headNurse}</p>
+                            <p style="margin: 0; color: #9ca3af; font-size: 0.75rem;">${ward.nursingStation}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 1rem; border-radius: 0.5rem; color: white; margin-bottom: 1rem;">
+                    <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem; opacity: 0.9;">📊 สถิติการใช้งาน</p>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center;">
+                        <div>
+                            <p style="margin: 0; font-size: 1.5rem; font-weight: 700;">${ward.totalBeds}</p>
+                            <p style="margin: 0; font-size: 0.75rem; opacity: 0.9;">เตียงทั้งหมด</p>
+                        </div>
+                        <div>
+                            <p style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #fbbf24;">${ward.occupiedBeds}</p>
+                            <p style="margin: 0; font-size: 0.75rem; opacity: 0.9;">ไม่ว่าง</p>
+                        </div>
+                        <div>
+                            <p style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #10b981;">${ward.availableBeds}</p>
+                            <p style="margin: 0; font-size: 0.75rem; opacity: 0.9;">ว่าง</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.2);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem;">อัตราการใช้งาน</span>
+                            <span style="font-size: 1.125rem; font-weight: 700;">${occupancyRate}%</span>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.3); height: 8px; border-radius: 999px; margin-top: 0.5rem; overflow: hidden;">
+                            <div style="background: #fbbf24; height: 100%; width: ${occupancyRate}%; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ward Type Badge -->
+                <div style="margin-bottom: 1rem;">
+                    <span style="display: inline-block; padding: 0.375rem 0.75rem; background: ${typeColor}15; color: ${typeColor}; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600;">
+                        ${typeLabel}
+                    </span>
+                    <span style="margin-left: 0.5rem; color: #6b7280; font-size: 0.875rem;">
+                        ${ward.totalRooms} ห้อง
+                    </span>
+                </div>
+
+                <!-- Description -->
+                <p style="margin: 0 0 1rem 0; color: #6b7280; font-size: 0.875rem; line-height: 1.5;">
+                    ${ward.description || 'ไม่มีคำอธิบาย'}
+                </p>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button onclick="viewWardDetails('${ward.id}')" class="btn btn-secondary" style="flex: 1; min-width: 120px; font-size: 0.875rem;">
+                        👁️ ดูรายละเอียด
+                    </button>
+                    <button onclick="editWard('${ward.id}')" class="btn btn-primary" style="flex: 1; min-width: 100px; font-size: 0.875rem;">
+                        ✏️ แก้ไข
+                    </button>
+                    <button onclick="deleteWard('${ward.id}')" class="btn" style="background: #ef4444; color: white; flex: 0; padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        🗑️
+                    </button>
+                </div>
+
+                <!-- Contact Info -->
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; font-size: 0.75rem; color: #9ca3af;">
+                    📞 ติดต่อ: ${ward.contactPhone}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    updateWardResultCount(sortedWards.length, wards.length);
+}
+
+/**
+ * Update ward result count display
+ * @param {number} showing - Number of wards shown
+ * @param {number} total - Total number of wards
+ */
+function updateWardResultCount(showing, total) {
+    const resultCount = document.getElementById('wardResultCount');
+    if (showing === total) {
+        resultCount.innerHTML = `<strong>แสดง ${showing} หอผู้ป่วย</strong> จากทั้งหมด ${total} หอ`;
+    } else {
+        resultCount.innerHTML = `<strong>พบ ${showing} หอผู้ป่วย</strong> จากทั้งหมด ${total} หอ`;
+    }
+}
+
+/**
+ * Show modal for adding a new ward
+ */
+function showAddWardModal() {
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    modalBody.innerHTML = `
+        <h3 style="margin-bottom: 1.5rem;">เพิ่มหอผู้ป่วยใหม่</h3>
+        <form id="addWardForm" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ชื่อหอผู้ป่วย *</label>
+                    <input type="text" id="wardName" required placeholder="เช่น หอผู้ป่วยอายุรกรรม"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">รหัสหอผู้ป่วย *</label>
+                    <input type="text" id="wardCode" required placeholder="เช่น IMW-01"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">แผนก *</label>
+                    <select id="wardDepartment" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        <option value="">เลือกแผนก</option>
+                        <option value="อายุรศาสตร์">อายุรศาสตร์</option>
+                        <option value="ศัลยศาสตร์">ศัลยศาสตร์</option>
+                        <option value="กุมารเวชศาสตร์">กุมารเวชศาสตร์</option>
+                        <option value="สูติ-นรีเวชศาสตร์">สูติ-นรีเวชศาสตร์</option>
+                        <option value="ออร์โธปิดิกส์">ออร์โธปิดิกส์</option>
+                        <option value="แพทย์วิกฤต">แพทย์วิกฤต (ICU)</option>
+                        <option value="หอผู้ป่วยพิเศษ">หอผู้ป่วยพิเศษ</option>
+                        <option value="อื่นๆ">อื่นๆ</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ประเภทหอผู้ป่วย *</label>
+                    <select id="wardType" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        <option value="">เลือกประเภท</option>
+                        <option value="general">หอสามัญ (นับเตียง)</option>
+                        <option value="special">หอพิเศษ (นับห้อง)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">อาคาร *</label>
+                    <input type="text" id="wardBuilding" required placeholder="เช่น อาคารผู้ป่วยใน 1"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ชั้น *</label>
+                    <input type="number" id="wardFloor" required min="1" max="50" placeholder="เช่น 2"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">พยาบาลหัวหน้า *</label>
+                    <input type="text" id="wardHeadNurse" required placeholder="เช่น พยาบาล สมศรี ใจดี"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">จุดพยาบาล *</label>
+                    <input type="text" id="wardNursingStation" required placeholder="เช่น NS-2A"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">เบอร์โทรศัพท์ *</label>
+                <input type="tel" id="wardContactPhone" required placeholder="เช่น 02-123-4567"
+                       style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">คำอธิบาย</label>
+                <textarea id="wardDescription" rows="3" placeholder="คำอธิบายเกี่ยวกับหอผู้ป่วย..."
+                          style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); resize: vertical;"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                <button type="button" onclick="closeModal()" class="btn btn-secondary">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary">บันทึก</button>
+            </div>
+        </form>
+    `;
+
+    modal.style.display = 'flex';
+
+    // Handle form submission
+    document.getElementById('addWardForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        addWard();
+    });
+}
+
+/**
+ * Add a new ward to the system
+ */
+function addWard() {
+    const wards = storage.get('wards') || [];
+
+    // Generate new ward ID
+    const newId = 'ward-' + String(wards.length + 1).padStart(3, '0');
+
+    const newWard = {
+        id: newId,
+        wardName: document.getElementById('wardName').value.trim(),
+        wardCode: document.getElementById('wardCode').value.trim().toUpperCase(),
+        department: document.getElementById('wardDepartment').value,
+        wardType: document.getElementById('wardType').value,
+        building: document.getElementById('wardBuilding').value.trim(),
+        floor: parseInt(document.getElementById('wardFloor').value),
+        headNurse: document.getElementById('wardHeadNurse').value.trim(),
+        nursingStation: document.getElementById('wardNursingStation').value.trim().toUpperCase(),
+        contactPhone: document.getElementById('wardContactPhone').value.trim(),
+        description: document.getElementById('wardDescription').value.trim() || '',
+        totalRooms: 0,
+        totalBeds: 0,
+        occupiedBeds: 0,
+        availableBeds: 0,
+        status: 'active'
+    };
+
+    // Validate ward code uniqueness
+    const existingWard = wards.find(w => w.wardCode === newWard.wardCode);
+    if (existingWard) {
+        alert(`⚠️ รหัสหอผู้ป่วย "${newWard.wardCode}" มีอยู่แล้วในระบบ\n\nกรุณาใช้รหัสอื่น`);
+        return;
+    }
+
+    wards.push(newWard);
+    storage.set('wards', wards);
+
+    closeModal();
+    loadWards();
+    alert(`✅ เพิ่มหอผู้ป่วย "${newWard.wardName}" สำเร็จ!`);
+}
+
+/**
+ * View comprehensive ward details in modal
+ * @param {string} wardId - Ward ID
+ */
+function viewWardDetails(wardId) {
+    const wards = storage.get('wards') || [];
+    const ward = wards.find(w => w.id === wardId);
+
+    if (!ward) {
+        alert('ไม่พบข้อมูลหอผู้ป่วย');
+        return;
+    }
+
+    const wardRooms = storage.get('wardRooms') || [];
+    const roomsInWard = wardRooms.filter(r => r.wardId === wardId);
+
+    const occupancyRate = ward.totalBeds > 0 ? ((ward.occupiedBeds / ward.totalBeds) * 100).toFixed(1) : 0;
+
+    // Status config
+    const statusConfig = {
+        'active': { label: 'ใช้งาน', color: '#10b981' },
+        'maintenance': { label: 'ปิดบำรุง', color: '#f59e0b' },
+        'closed': { label: 'ปิดชั่วคราว', color: '#ef4444' }
+    };
+    const status = statusConfig[ward.status] || statusConfig.active;
+
+    const typeLabel = ward.wardType === 'general' ? 'หอสามัญ (นับเตียง)' : 'หอพิเศษ (นับห้อง)';
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    modalBody.innerHTML = `
+        <div style="max-height: 80vh; overflow-y: auto;">
+            <h3 style="margin-bottom: 1.5rem; color: var(--primary-color);">รายละเอียดหอผู้ป่วย</h3>
+
+            <!-- Ward Header -->
+            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 2rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div>
+                        <h2 style="margin: 0 0 0.5rem 0;">${ward.wardName}</h2>
+                        <p style="margin: 0; opacity: 0.9; font-size: 1.125rem;">รหัส: ${ward.wardCode}</p>
+                    </div>
+                    <span style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 999px; font-weight: 600;">
+                        ${status.label}
+                    </span>
+                </div>
+                <div style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 0.5rem;">
+                    <p style="margin: 0; font-size: 0.875rem; opacity: 0.9;">แผนก ${ward.department} | ${typeLabel}</p>
+                </div>
+            </div>
+
+            <!-- Statistics Grid -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                <div style="background: #f0f9ff; padding: 1rem; border-radius: var(--border-radius); text-align: center; border-left: 3px solid #3b82f6;">
+                    <p style="margin: 0; color: #3b82f6; font-size: 2rem; font-weight: 700;">${ward.totalRooms}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #6b7280; font-size: 0.875rem;">ห้องทั้งหมด</p>
+                </div>
+                <div style="background: #f0f9ff; padding: 1rem; border-radius: var(--border-radius); text-align: center; border-left: 3px solid #3b82f6;">
+                    <p style="margin: 0; color: #3b82f6; font-size: 2rem; font-weight: 700;">${ward.totalBeds}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #6b7280; font-size: 0.875rem;">เตียงทั้งหมด</p>
+                </div>
+                <div style="background: #fef3c7; padding: 1rem; border-radius: var(--border-radius); text-align: center; border-left: 3px solid #f59e0b;">
+                    <p style="margin: 0; color: #f59e0b; font-size: 2rem; font-weight: 700;">${ward.occupiedBeds}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #6b7280; font-size: 0.875rem;">เตียงไม่ว่าง</p>
+                </div>
+                <div style="background: #d1fae5; padding: 1rem; border-radius: var(--border-radius); text-align: center; border-left: 3px solid #10b981;">
+                    <p style="margin: 0; color: #10b981; font-size: 2rem; font-weight: 700;">${ward.availableBeds}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #6b7280; font-size: 0.875rem;">เตียงว่าง</p>
+                </div>
+            </div>
+
+            <!-- Occupancy Rate -->
+            <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius); box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <h4 style="margin: 0; color: #374151;">อัตราการใช้งาน</h4>
+                    <span style="font-size: 1.5rem; font-weight: 700; color: #3b82f6;">${occupancyRate}%</span>
+                </div>
+                <div style="background: #e5e7eb; height: 12px; border-radius: 999px; overflow: hidden;">
+                    <div style="background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%); height: 100%; width: ${occupancyRate}%; transition: width 0.3s;"></div>
+                </div>
+            </div>
+
+            <!-- Ward Information -->
+            <div style="background: #f9fafb; padding: 1.5rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+                <h4 style="margin: 0 0 1rem 0; color: #374151;">ข้อมูลทั่วไป</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">📍 สถานที่</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #374151;">${ward.building}</p>
+                        <p style="margin: 0.25rem 0 0 0; color: #9ca3af; font-size: 0.875rem;">ชั้น ${ward.floor}</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">👩‍⚕️ พยาบาลหัวหน้า</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #374151;">${ward.headNurse}</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">🏥 จุดพยาบาล</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #374151;">${ward.nursingStation}</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">📞 เบอร์โทรศัพท์</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #374151;">${ward.contactPhone}</p>
+                    </div>
+                </div>
+            </div>
+
+            ${ward.description ? `
+                <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius); box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem;">
+                    <h4 style="margin: 0 0 0.75rem 0; color: #374151;">📋 คำอธิบาย</h4>
+                    <p style="margin: 0; color: #6b7280; line-height: 1.6;">${ward.description}</p>
+                </div>
+            ` : ''}
+
+            <!-- Rooms in Ward -->
+            <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <h4 style="margin: 0 0 1rem 0; color: #374151;">🚪 ห้องในหอผู้ป่วย (${roomsInWard.length} ห้อง)</h4>
+                ${roomsInWard.length > 0 ? `
+                    <div style="display: grid; gap: 0.75rem;">
+                        ${roomsInWard.slice(0, 5).map(room => `
+                            <div style="padding: 0.75rem; background: #f9fafb; border-radius: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <p style="margin: 0; font-weight: 600; color: #374151;">${room.roomName}</p>
+                                    <p style="margin: 0.25rem 0 0 0; color: #6b7280; font-size: 0.875rem;">
+                                        ${room.roomNumber} | ${room.totalBeds} เตียง (ว่าง: ${room.availableBeds})
+                                    </p>
+                                </div>
+                                <span style="padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: ${room.status === 'available' ? '#d1fae5' : room.status === 'full' ? '#fee2e2' : '#fef3c7'}; color: ${room.status === 'available' ? '#10b981' : room.status === 'full' ? '#ef4444' : '#f59e0b'};">
+                                    ${room.status === 'available' ? 'ว่าง' : room.status === 'full' ? 'เต็ม' : 'บางส่วน'}
+                                </span>
+                            </div>
+                        `).join('')}
+                        ${roomsInWard.length > 5 ? `
+                            <p style="margin: 0.5rem 0 0 0; color: #6b7280; font-size: 0.875rem; text-align: center;">
+                                และอีก ${roomsInWard.length - 5} ห้อง...
+                            </p>
+                        ` : ''}
+                    </div>
+                ` : '<p style="margin: 0; color: #9ca3af; text-align: center;">ยังไม่มีห้องในหอผู้ป่วยนี้</p>'}
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                <button onclick="closeModal()" class="btn btn-secondary">ปิด</button>
+                <button onclick="closeModal(); editWard('${ward.id}')" class="btn btn-primary">แก้ไขข้อมูล</button>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+/**
+ * Edit ward information
+ * @param {string} wardId - Ward ID
+ */
+function editWard(wardId) {
+    const wards = storage.get('wards') || [];
+    const ward = wards.find(w => w.id === wardId);
+
+    if (!ward) {
+        alert('ไม่พบข้อมูลหอผู้ป่วย');
+        return;
+    }
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    modalBody.innerHTML = `
+        <h3 style="margin-bottom: 1.5rem;">แก้ไขข้อมูลหอผู้ป่วย</h3>
+        <form id="editWardForm" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ชื่อหอผู้ป่วย *</label>
+                    <input type="text" id="editWardName" required value="${ward.wardName}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">รหัสหอผู้ป่วย *</label>
+                    <input type="text" id="editWardCode" required value="${ward.wardCode}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">แผนก *</label>
+                    <select id="editWardDepartment" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        <option value="อายุรศาสตร์" ${ward.department === 'อายุรศาสตร์' ? 'selected' : ''}>อายุรศาสตร์</option>
+                        <option value="ศัลยศาสตร์" ${ward.department === 'ศัลยศาสตร์' ? 'selected' : ''}>ศัลยศาสตร์</option>
+                        <option value="กุมารเวชศาสตร์" ${ward.department === 'กุมารเวชศาสตร์' ? 'selected' : ''}>กุมารเวชศาสตร์</option>
+                        <option value="สูติ-นรีเวชศาสตร์" ${ward.department === 'สูติ-นรีเวชศาสตร์' ? 'selected' : ''}>สูติ-นรีเวชศาสตร์</option>
+                        <option value="ออร์โธปิดิกส์" ${ward.department === 'ออร์โธปิดิกส์' ? 'selected' : ''}>ออร์โธปิดิกส์</option>
+                        <option value="แพทย์วิกฤต" ${ward.department === 'แพทย์วิกฤต' ? 'selected' : ''}>แพทย์วิกฤต (ICU)</option>
+                        <option value="หอผู้ป่วยพิเศษ" ${ward.department === 'หอผู้ป่วยพิเศษ' ? 'selected' : ''}>หอผู้ป่วยพิเศษ</option>
+                        <option value="อื่นๆ" ${ward.department === 'อื่นๆ' ? 'selected' : ''}>อื่นๆ</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ประเภทหอผู้ป่วย *</label>
+                    <select id="editWardType" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        <option value="general" ${ward.wardType === 'general' ? 'selected' : ''}>หอสามัญ (นับเตียง)</option>
+                        <option value="special" ${ward.wardType === 'special' ? 'selected' : ''}>หอพิเศษ (นับห้อง)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">อาคาร *</label>
+                    <input type="text" id="editWardBuilding" required value="${ward.building}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ชั้น *</label>
+                    <input type="number" id="editWardFloor" required min="1" max="50" value="${ward.floor}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">พยาบาลหัวหน้า *</label>
+                    <input type="text" id="editWardHeadNurse" required value="${ward.headNurse}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">จุดพยาบาล *</label>
+                    <input type="text" id="editWardNursingStation" required value="${ward.nursingStation}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">เบอร์โทรศัพท์ *</label>
+                    <input type="tel" id="editWardContactPhone" required value="${ward.contactPhone}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">สถานะ *</label>
+                    <select id="editWardStatus" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        <option value="active" ${ward.status === 'active' ? 'selected' : ''}>ใช้งาน</option>
+                        <option value="maintenance" ${ward.status === 'maintenance' ? 'selected' : ''}>ปิดบำรุง</option>
+                        <option value="closed" ${ward.status === 'closed' ? 'selected' : ''}>ปิดชั่วคราว</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">คำอธิบาย</label>
+                <textarea id="editWardDescription" rows="3"
+                          style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); resize: vertical;">${ward.description || ''}</textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                <button type="button" onclick="closeModal()" class="btn btn-secondary">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary">บันทึก</button>
+            </div>
+        </form>
+    `;
+
+    modal.style.display = 'flex';
+
+    // Handle form submission
+    document.getElementById('editWardForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const wardCode = document.getElementById('editWardCode').value.trim().toUpperCase();
+
+        // Check for duplicate ward code (excluding current ward)
+        const existingWard = wards.find(w => w.wardCode === wardCode && w.id !== wardId);
+        if (existingWard) {
+            alert(`⚠️ รหัสหอผู้ป่วย "${wardCode}" มีอยู่แล้วในระบบ\n\nกรุณาใช้รหัสอื่น`);
+            return;
+        }
+
+        // Update ward
+        ward.wardName = document.getElementById('editWardName').value.trim();
+        ward.wardCode = wardCode;
+        ward.department = document.getElementById('editWardDepartment').value;
+        ward.wardType = document.getElementById('editWardType').value;
+        ward.building = document.getElementById('editWardBuilding').value.trim();
+        ward.floor = parseInt(document.getElementById('editWardFloor').value);
+        ward.headNurse = document.getElementById('editWardHeadNurse').value.trim();
+        ward.nursingStation = document.getElementById('editWardNursingStation').value.trim().toUpperCase();
+        ward.contactPhone = document.getElementById('editWardContactPhone').value.trim();
+        ward.status = document.getElementById('editWardStatus').value;
+        ward.description = document.getElementById('editWardDescription').value.trim();
+
+        storage.set('wards', wards);
+        closeModal();
+        loadWards();
+        alert(`✅ แก้ไขข้อมูลหอผู้ป่วย "${ward.wardName}" สำเร็จ!`);
+    });
+}
+
+/**
+ * Delete ward with confirmation
+ * @param {string} wardId - Ward ID
+ */
+function deleteWard(wardId) {
+    const wards = storage.get('wards') || [];
+    const ward = wards.find(w => w.id === wardId);
+
+    if (!ward) {
+        alert('ไม่พบข้อมูลหอผู้ป่วย');
+        return;
+    }
+
+    // Check if ward has rooms
+    const wardRooms = storage.get('wardRooms') || [];
+    const roomsInWard = wardRooms.filter(r => r.wardId === wardId);
+
+    if (roomsInWard.length > 0) {
+        alert(`⚠️ ไม่สามารถลบหอผู้ป่วย "${ward.wardName}" ได้\n\nเนื่องจากมี ${roomsInWard.length} ห้องในหอผู้ป่วยนี้\n\nกรุณาลบห้องทั้งหมดก่อนลบหอผู้ป่วย`);
+        return;
+    }
+
+    const confirmed = confirm(`คุณต้องการลบหอผู้ป่วย "${ward.wardName}" ใช่หรือไม่?\n\nการดำเนินการนี้ไม่สามารถย้อนกลับได้`);
+
+    if (confirmed) {
+        const updatedWards = wards.filter(w => w.id !== wardId);
+        storage.set('wards', updatedWards);
+        loadWards();
+        alert(`✅ ลบหอผู้ป่วย "${ward.wardName}" สำเร็จ!`);
+    }
+}
+
+/**
+ * Search and filter wards
+ * @param {string} query - Search query
+ * @param {string} statusFilter - Status filter
+ * @param {string} typeFilter - Ward type filter
+ */
+function searchAndFilterWards(query = '', statusFilter = '', typeFilter = '') {
+    const wards = storage.get('wards') || [];
+    const grid = document.getElementById('wardsGrid');
+    const totalWards = wards.length;
+
+    if (wards.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                <p class="no-data">ยังไม่มีข้อมูลหอผู้ป่วย</p>
+            </div>
+        `;
+        updateWardResultCount(0, 0);
+        return;
+    }
+
+    // Filter wards
+    let filtered = wards;
+
+    // Apply search query
+    if (query) {
+        filtered = filtered.filter(ward =>
+            ward.wardName.toLowerCase().includes(query.toLowerCase()) ||
+            ward.wardCode.toLowerCase().includes(query.toLowerCase()) ||
+            ward.department.toLowerCase().includes(query.toLowerCase()) ||
+            ward.building.toLowerCase().includes(query.toLowerCase())
+        );
+    }
+
+    // Apply status filter
+    if (statusFilter) {
+        filtered = filtered.filter(ward => ward.status === statusFilter);
+    }
+
+    // Apply type filter
+    if (typeFilter) {
+        filtered = filtered.filter(ward => ward.wardType === typeFilter);
+    }
+
+    // Display results
+    if (filtered.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: white; border-radius: var(--border-radius); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🔍</div>
+                <h3 style="margin: 0 0 0.5rem 0; color: #374151;">ไม่พบหอผู้ป่วยที่ค้นหา</h3>
+                <p style="margin: 0; color: #6b7280;">ลองปรับเงื่อนไขการค้นหาใหม่</p>
+                <button onclick="clearWardFilters()" class="btn btn-secondary" style="margin-top: 1rem;">ล้างตัวกรอง</button>
+            </div>
+        `;
+        updateWardResultCount(0, totalWards);
+        return;
+    }
+
+    // Sort and display
+    const sortedWards = [...filtered].sort((a, b) => a.wardCode.localeCompare(b.wardCode));
+
+    grid.innerHTML = sortedWards.map(ward => {
+        const occupancyRate = ward.totalBeds > 0 ? ((ward.occupiedBeds / ward.totalBeds) * 100).toFixed(1) : 0;
+
+        const statusConfig = {
+            'active': { label: 'ใช้งาน', color: '#10b981', bgColor: '#d1fae5' },
+            'maintenance': { label: 'ปิดบำรุง', color: '#f59e0b', bgColor: '#fef3c7' },
+            'closed': { label: 'ปิดชั่วคราว', color: '#ef4444', bgColor: '#fee2e2' }
+        };
+        const status = statusConfig[ward.status] || statusConfig.active;
+
+        const typeLabel = ward.wardType === 'general' ? 'หอสามัญ (นับเตียง)' : 'หอพิเศษ (นับห้อง)';
+        const typeColor = ward.wardType === 'general' ? '#3b82f6' : '#8b5cf6';
+
+        return `
+            <div style="background: white; border-radius: var(--border-radius); box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 1.5rem; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; border-left: 4px solid ${typeColor};"
+                 onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)';">
+
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div style="flex: 1;">
+                        <h3 style="margin: 0 0 0.25rem 0; color: #1f2937; font-size: 1.25rem;">${ward.wardName}</h3>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">รหัส: ${ward.wardCode} | แผนก ${ward.department}</p>
+                    </div>
+                    <span style="padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: ${status.bgColor}; color: ${status.color};">${status.label}</span>
+                </div>
+
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.875rem;">
+                        <div>
+                            <p style="margin: 0; color: #6b7280;">📍 สถานที่</p>
+                            <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #374151;">${ward.building}</p>
+                            <p style="margin: 0; color: #9ca3af; font-size: 0.75rem;">ชั้น ${ward.floor}</p>
+                        </div>
+                        <div>
+                            <p style="margin: 0; color: #6b7280;">👩‍⚕️ พยาบาลหัวหน้า</p>
+                            <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #374151;">${ward.headNurse}</p>
+                            <p style="margin: 0; color: #9ca3af; font-size: 0.75rem;">${ward.nursingStation}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 1rem; border-radius: 0.5rem; color: white; margin-bottom: 1rem;">
+                    <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem; opacity: 0.9;">📊 สถิติการใช้งาน</p>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center;">
+                        <div>
+                            <p style="margin: 0; font-size: 1.5rem; font-weight: 700;">${ward.totalBeds}</p>
+                            <p style="margin: 0; font-size: 0.75rem; opacity: 0.9;">เตียงทั้งหมด</p>
+                        </div>
+                        <div>
+                            <p style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #fbbf24;">${ward.occupiedBeds}</p>
+                            <p style="margin: 0; font-size: 0.75rem; opacity: 0.9;">ไม่ว่าง</p>
+                        </div>
+                        <div>
+                            <p style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #10b981;">${ward.availableBeds}</p>
+                            <p style="margin: 0; font-size: 0.75rem; opacity: 0.9;">ว่าง</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.2);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem;">อัตราการใช้งาน</span>
+                            <span style="font-size: 1.125rem; font-weight: 700;">${occupancyRate}%</span>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.3); height: 8px; border-radius: 999px; margin-top: 0.5rem; overflow: hidden;">
+                            <div style="background: #fbbf24; height: 100%; width: ${occupancyRate}%; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <span style="display: inline-block; padding: 0.375rem 0.75rem; background: ${typeColor}15; color: ${typeColor}; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600;">${typeLabel}</span>
+                    <span style="margin-left: 0.5rem; color: #6b7280; font-size: 0.875rem;">${ward.totalRooms} ห้อง</span>
+                </div>
+
+                <p style="margin: 0 0 1rem 0; color: #6b7280; font-size: 0.875rem; line-height: 1.5;">${ward.description || 'ไม่มีคำอธิบาย'}</p>
+
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button onclick="viewWardDetails('${ward.id}')" class="btn btn-secondary" style="flex: 1; min-width: 120px; font-size: 0.875rem;">👁️ ดูรายละเอียด</button>
+                    <button onclick="editWard('${ward.id}')" class="btn btn-primary" style="flex: 1; min-width: 100px; font-size: 0.875rem;">✏️ แก้ไข</button>
+                    <button onclick="deleteWard('${ward.id}')" class="btn" style="background: #ef4444; color: white; flex: 0; padding: 0.5rem 1rem; font-size: 0.875rem;">🗑️</button>
+                </div>
+
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; font-size: 0.75rem; color: #9ca3af;">📞 ติดต่อ: ${ward.contactPhone}</div>
+            </div>
+        `;
+    }).join('');
+
+    updateWardResultCount(filtered.length, totalWards);
+}
+
+/**
+ * Clear all ward filters and show all wards
+ */
+function clearWardFilters() {
+    const searchBox = document.getElementById('wardSearch');
+    const statusFilter = document.getElementById('wardStatusFilter');
+    const typeFilter = document.getElementById('wardTypeFilter');
+
+    if (searchBox) searchBox.value = '';
+    if (statusFilter) statusFilter.value = '';
+    if (typeFilter) typeFilter.value = '';
+
+    loadWards();
+}
+
+// Add event listeners for ward search and filters
+const wardSearchBox = document.getElementById('wardSearch');
+if (wardSearchBox) {
+    wardSearchBox.addEventListener('input', () => {
+        const query = wardSearchBox.value;
+        const statusFilter = document.getElementById('wardStatusFilter')?.value || '';
+        const typeFilter = document.getElementById('wardTypeFilter')?.value || '';
+        searchAndFilterWards(query, statusFilter, typeFilter);
+    });
+}
+
+const wardStatusFilter = document.getElementById('wardStatusFilter');
+if (wardStatusFilter) {
+    wardStatusFilter.addEventListener('change', () => {
+        const query = document.getElementById('wardSearch')?.value || '';
+        const statusFilter = wardStatusFilter.value;
+        const typeFilter = document.getElementById('wardTypeFilter')?.value || '';
+        searchAndFilterWards(query, statusFilter, typeFilter);
+    });
+}
+
+const wardTypeFilter = document.getElementById('wardTypeFilter');
+if (wardTypeFilter) {
+    wardTypeFilter.addEventListener('change', () => {
+        const query = document.getElementById('wardSearch')?.value || '';
+        const statusFilter = document.getElementById('wardStatusFilter')?.value || '';
+        const typeFilter = wardTypeFilter.value;
+        searchAndFilterWards(query, statusFilter, typeFilter);
+    });
+}
+
+const clearWardFilterBtn = document.getElementById('clearWardFilterBtn');
+if (clearWardFilterBtn) {
+    clearWardFilterBtn.addEventListener('click', clearWardFilters);
+}
+
+const addWardBtn = document.getElementById('addWardBtn');
+if (addWardBtn) {
+    addWardBtn.addEventListener('click', showAddWardModal);
 }
 
 // ===== Rooms Functions =====
