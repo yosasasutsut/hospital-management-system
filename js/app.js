@@ -1608,9 +1608,21 @@ function addPatient() {
 
 function viewPatient(hn) {
     const patients = storage.get('patients') || [];
+    const wardBeds = storage.get('wardBeds') || [];
+    const wardRooms = storage.get('wardRooms') || [];
+    const wards = storage.get('wards') || [];
     const patient = patients.find(p => p.hn === hn);
 
     if (patient) {
+        // Find if patient has an assigned bed
+        const assignedBed = wardBeds.find(b => b.patientHN === patient.hn && b.status === 'occupied');
+        let bedInfo = null;
+        if (assignedBed) {
+            const room = wardRooms.find(r => r.id === assignedBed.roomId);
+            const ward = wards.find(w => w.id === assignedBed.wardId);
+            bedInfo = { bed: assignedBed, room, ward };
+        }
+
         const modal = document.getElementById('modal');
         const modalBody = document.getElementById('modalBody');
 
@@ -1625,6 +1637,42 @@ function viewPatient(hn) {
                 <p><strong>เบอร์โทร:</strong> ${patient.phone}</p>
                 <p><strong>ที่อยู่:</strong> ${patient.address || '-'}</p>
                 <p><strong>วันที่ลงทะเบียน:</strong> ${patient.registrationDate}</p>
+
+                ${bedInfo ? `
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #eff6ff; border-radius: 0.5rem; border-left: 3px solid #3b82f6;">
+                        <h4 style="margin: 0 0 0.75rem 0; color: #1e40af;">🛏️ ข้อมูลการเข้าพัก</h4>
+                        <p style="margin: 0.5rem 0;"><strong>หอผู้ป่วย:</strong> ${bedInfo.ward?.wardName || '-'}</p>
+                        <p style="margin: 0.5rem 0;"><strong>ห้อง:</strong> ${bedInfo.room?.roomName || '-'} (${bedInfo.room?.roomNumber || '-'})</p>
+                        <p style="margin: 0.5rem 0;"><strong>เตียง:</strong> ${bedInfo.bed.bedName} (${bedInfo.bed.bedNumber})</p>
+                        <p style="margin: 0.5rem 0;"><strong>วันที่รับเข้า:</strong> ${bedInfo.bed.admissionDate ? new Date(bedInfo.bed.admissionDate).toLocaleDateString('th-TH') : '-'}</p>
+                        <p style="margin: 0.5rem 0;"><strong>คาดว่าจำหน่าย:</strong> ${bedInfo.bed.expectedDischargeDate ? new Date(bedInfo.bed.expectedDischargeDate).toLocaleDateString('th-TH') : '-'}</p>
+                        ${bedInfo.bed.specialCare ? '<p style="margin: 0.5rem 0; color: #f59e0b;"><strong>⚕️ ดูแลพิเศษ</strong></p>' : ''}
+                        ${bedInfo.bed.isolation ? '<p style="margin: 0.5rem 0; color: #ef4444;"><strong>🚫 กักโรค</strong></p>' : ''}
+                    </div>
+                ` : `
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #fef3c7; border-radius: 0.5rem; border-left: 3px solid #f59e0b;">
+                        <p style="margin: 0; color: #92400e;">⚠️ ผู้ป่วยยังไม่ได้รับการมอบหมายเตียง</p>
+                    </div>
+                `}
+
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    ${bedInfo ? `
+                        <button onclick="closeModal(); viewRoomBeds('${bedInfo.bed.roomId}')" class="btn btn-primary">
+                            🛏️ ดูข้อมูลเตียง
+                        </button>
+                        <button onclick="dischargePatientFromBed('${bedInfo.bed.id}')" class="btn" style="background: #10b981; color: white;">
+                            ↗️ จำหน่ายผู้ป่วย
+                        </button>
+                    ` : `
+                        <button onclick="closeModal(); showAvailableBedsModal('${patient.id}')" class="btn btn-primary">
+                            ➕ มอบหมายเตียง
+                        </button>
+                    `}
+                    <button onclick="closeModal(); editPatient('${patient.hn}')" class="btn btn-secondary">
+                        แก้ไข
+                    </button>
+                    <button onclick="closeModal()" class="btn btn-secondary">ปิด</button>
+                </div>
             </div>
         `;
 
@@ -4829,12 +4877,19 @@ function viewRoomBeds(roomId) {
                                 ` : ''}
 
                                 <div style="display: flex; gap: 0.5rem;">
-                                    <button onclick="closeModal(); editBed('${bed.id}')" class="btn btn-secondary" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                                    ${bed.status === 'occupied' ? `
+                                        <button onclick="dischargePatientFromBed('${bed.id}')" class="btn" style="flex: 1; background: #10b981; color: white; font-size: 0.875rem; padding: 0.5rem 1rem;">
+                                            ↗️ จำหน่าย
+                                        </button>
+                                    ` : ''}
+                                    <button onclick="closeModal(); editBed('${bed.id}')" class="btn btn-secondary" style="${bed.status === 'occupied' ? 'flex: 1;' : ''} font-size: 0.875rem; padding: 0.5rem 1rem;">
                                         แก้ไข
                                     </button>
-                                    <button onclick="deleteBed('${bed.id}')" class="btn btn-danger" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
-                                        ลบ
-                                    </button>
+                                    ${bed.status !== 'occupied' ? `
+                                        <button onclick="deleteBed('${bed.id}')" class="btn btn-danger" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                                            ลบ
+                                        </button>
+                                    ` : ''}
                                 </div>
                             </div>
                         `;
@@ -5254,6 +5309,379 @@ function deleteBed(bedId) {
 
         viewRoomBeds(bed.roomId);
         alert(`✅ ลบเตียง "${bed.bedName}" สำเร็จ!`);
+    }
+}
+
+// ===== Bed Assignment Functions =====
+/**
+ * Show available beds modal for patient assignment
+ * @param {string} patientId - Patient ID (optional)
+ */
+function showAvailableBedsModal(patientId = null) {
+    const wardBeds = storage.get('wardBeds') || [];
+    const wardRooms = storage.get('wardRooms') || [];
+    const wards = storage.get('wards') || [];
+    const patients = storage.get('patients') || [];
+
+    // Get available beds
+    const availableBeds = wardBeds.filter(b => b.status === 'available');
+
+    // Get patient info if patientId provided
+    let patient = null;
+    if (patientId) {
+        patient = patients.find(p => p.id === patientId);
+    }
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    modalBody.innerHTML = `
+        <div style="max-height: 80vh; overflow-y: auto;">
+            <div style="position: sticky; top: 0; background: white; z-index: 10; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0 0 0.5rem 0;">🛏️ เตียงว่าง ${patient ? `สำหรับ ${patient.name}` : ''}</h3>
+                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">
+                    มีเตียงว่างทั้งหมด ${availableBeds.length} เตียง
+                </p>
+                ${patient ? `
+                    <div style="margin-top: 1rem; padding: 1rem; background: #eff6ff; border-radius: 0.5rem; border-left: 3px solid #3b82f6;">
+                        <p style="margin: 0; color: #1e40af; font-weight: 600;">
+                            👤 ${patient.name} (HN: ${patient.hn})
+                        </p>
+                        <p style="margin: 0.25rem 0 0 0; color: #1e40af; font-size: 0.875rem;">
+                            อายุ ${patient.age} ปี | ${patient.gender === 'male' ? 'ชาย' : 'หญิง'}
+                        </p>
+                    </div>
+                ` : ''}
+            </div>
+
+            ${availableBeds.length > 0 ? `
+                <div style="display: grid; gap: 1rem;">
+                    ${availableBeds.map(bed => {
+                        const room = wardRooms.find(r => r.id === bed.roomId);
+                        const ward = wards.find(w => w.id === bed.wardId);
+
+                        if (!room || !ward) return '';
+
+                        const roomTypeLabel = room.roomType === 'general' ? 'ห้องรวม' : room.roomType === 'single' ? 'ห้องเดี่ยว' : 'ห้องคู่';
+                        const pricePerDay = room.pricePerBedPerDay || room.pricePerRoomPerDay || 0;
+
+                        return `
+                            <div style="background: white; padding: 1.25rem; border-radius: var(--border-radius); box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 2px solid #e5e7eb; transition: all 0.2s;" onmouseover="this.style.borderColor='#10b981'" onmouseout="this.style.borderColor='#e5e7eb'">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+                                    <div>
+                                        <h4 style="margin: 0; color: #111827;">${bed.bedName}</h4>
+                                        <p style="margin: 0.25rem 0 0 0; color: #6b7280; font-size: 0.875rem;">${bed.bedNumber}</p>
+                                    </div>
+                                    <span style="padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: #d1fae5; color: #10b981;">
+                                        ✅ ว่าง
+                                    </span>
+                                </div>
+
+                                <div style="background: #f9fafb; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.75rem;">
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;">
+                                        <div>
+                                            <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">หอผู้ป่วย</p>
+                                            <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; font-weight: 600; color: #374151;">${ward.wardName}</p>
+                                        </div>
+                                        <div>
+                                            <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">ห้อง</p>
+                                            <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; font-weight: 600; color: #374151;">${room.roomName}</p>
+                                        </div>
+                                        <div>
+                                            <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">ประเภท</p>
+                                            <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; font-weight: 600; color: #374151;">${roomTypeLabel}</p>
+                                        </div>
+                                        <div>
+                                            <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">ราคา/วัน</p>
+                                            <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; font-weight: 600; color: #10b981;">฿${pricePerDay.toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                ${room.amenities && room.amenities.length > 0 ? `
+                                    <div style="margin-bottom: 0.75rem;">
+                                        <p style="margin: 0 0 0.25rem 0; font-size: 0.75rem; color: #6b7280;">สิ่งอำนวยความสะดวก:</p>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
+                                            ${room.amenities.slice(0, 3).map(a => `
+                                                <span style="padding: 0.125rem 0.5rem; background: #eff6ff; color: #1e40af; border-radius: 999px; font-size: 0.625rem;">
+                                                    ${a}
+                                                </span>
+                                            `).join('')}
+                                            ${room.amenities.length > 3 ? `
+                                                <span style="padding: 0.125rem 0.5rem; background: #f3f4f6; color: #6b7280; border-radius: 999px; font-size: 0.625rem;">
+                                                    +${room.amenities.length - 3}
+                                                </span>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                ` : ''}
+
+                                <button onclick="closeModal(); ${patient ? `showAssignBedForm('${bed.id}', '${patient.id}')` : `showQuickAssignForm('${bed.id}')`}" class="btn btn-primary" style="width: 100%; font-size: 0.875rem; padding: 0.625rem;">
+                                    ${patient ? '✅ เลือกเตียงนี้' : '➕ มอบหมายผู้ป่วย'}
+                                </button>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            ` : `
+                <div style="text-align: center; padding: 3rem; color: #9ca3af;">
+                    <p style="font-size: 1.125rem; margin: 0;">ไม่มีเตียงว่าง</p>
+                    <p style="font-size: 0.875rem; margin: 0.5rem 0 0 0;">เตียงทั้งหมดถูกใช้งานหมดแล้ว</p>
+                </div>
+            `}
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb;">
+                <button onclick="closeModal()" class="btn btn-secondary">ปิด</button>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+/**
+ * Show form to assign a bed to a patient
+ * @param {string} bedId - Bed ID
+ * @param {string} patientId - Patient ID
+ */
+function showAssignBedForm(bedId, patientId) {
+    const patients = storage.get('patients') || [];
+    const wardBeds = storage.get('wardBeds') || [];
+    const wardRooms = storage.get('wardRooms') || [];
+    const wards = storage.get('wards') || [];
+
+    const patient = patients.find(p => p.id === patientId);
+    const bed = wardBeds.find(b => b.id === bedId);
+    const room = wardRooms.find(r => r.id === bed?.roomId);
+    const ward = wards.find(w => w.id === bed?.wardId);
+
+    if (!patient || !bed || !room || !ward) {
+        alert('ไม่พบข้อมูล');
+        return;
+    }
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    const today = new Date().toISOString().split('T')[0];
+    const pricePerDay = room.pricePerBedPerDay || room.pricePerRoomPerDay || 0;
+
+    modalBody.innerHTML = `
+        <h3 style="margin-bottom: 1.5rem;">มอบหมายเตียง</h3>
+
+        <div style="background: #eff6ff; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; border-left: 3px solid #3b82f6;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <p style="margin: 0; font-size: 0.75rem; color: #1e40af;">ผู้ป่วย</p>
+                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1e40af;">${patient.name}</p>
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #1e40af;">HN: ${patient.hn}</p>
+                </div>
+                <div>
+                    <p style="margin: 0; font-size: 0.75rem; color: #1e40af;">เตียง</p>
+                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1e40af;">${bed.bedName} (${bed.bedNumber})</p>
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #1e40af;">${ward.wardName} - ${room.roomName}</p>
+                </div>
+            </div>
+        </div>
+
+        <form id="assignBedForm" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">วันที่รับเข้า *</label>
+                    <input type="date" id="admissionDate" required value="${today}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">คาดว่าจำหน่าย</label>
+                    <input type="date" id="expectedDischargeDate"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ค่าใช้จ่ายต่อวัน (฿) *</label>
+                <input type="number" id="dailyRate" required value="${pricePerDay}" min="0"
+                       style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: #6b7280;">
+                    ราคามาตรฐาน: ฿${pricePerDay.toLocaleString()}/วัน
+                </p>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">การดูแลพิเศษ</label>
+                <div style="display: flex; gap: 1.5rem; padding: 0.75rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="specialCare">
+                        <span>⚕️ ดูแลพิเศษ (Special Care)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="isolation">
+                        <span>🚫 กักโรค (Isolation)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">หมายเหตุ</label>
+                <textarea id="assignmentNotes" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);" placeholder="บันทึกข้อมูลเพิ่มเติม เช่น อาการ การวินิจฉัย แผนการรักษา..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                <button type="button" onclick="closeModal()" class="btn btn-secondary">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary">✅ ยืนยันการมอบหมาย</button>
+            </div>
+        </form>
+    `;
+
+    document.getElementById('assignBedForm').onsubmit = function(e) {
+        e.preventDefault();
+        assignPatientToBed(bedId, patientId);
+    };
+
+    modal.style.display = 'flex';
+}
+
+/**
+ * Assign a patient to a bed
+ * @param {string} bedId - Bed ID
+ * @param {string} patientId - Patient ID
+ */
+function assignPatientToBed(bedId, patientId) {
+    const patients = storage.get('patients') || [];
+    const wardBeds = storage.get('wardBeds') || [];
+    const wardRooms = storage.get('wardRooms') || [];
+
+    const patient = patients.find(p => p.id === patientId);
+    const bedIndex = wardBeds.findIndex(b => b.id === bedId);
+    const bed = wardBeds[bedIndex];
+
+    if (!patient || bedIndex === -1) {
+        alert('ไม่พบข้อมูล');
+        return;
+    }
+
+    // Check if bed is available
+    if (bed.status !== 'available') {
+        alert(`⚠️ เตียงนี้ไม่ว่าง\n\nสถานะปัจจุบัน: ${bed.status}\nกรุณาเลือกเตียงอื่น`);
+        return;
+    }
+
+    // Get form data
+    const admissionDate = document.getElementById('admissionDate').value;
+    const expectedDischargeDate = document.getElementById('expectedDischargeDate').value;
+    const dailyRate = parseInt(document.getElementById('dailyRate').value);
+    const specialCare = document.getElementById('specialCare').checked;
+    const isolation = document.getElementById('isolation').checked;
+    const notes = document.getElementById('assignmentNotes').value.trim();
+
+    if (!admissionDate) {
+        alert('⚠️ กรุณากรอกวันที่รับเข้า');
+        return;
+    }
+
+    // Update bed
+    wardBeds[bedIndex].status = 'occupied';
+    wardBeds[bedIndex].patientId = patientId;
+    wardBeds[bedIndex].patientName = patient.name;
+    wardBeds[bedIndex].patientHN = patient.hn;
+    wardBeds[bedIndex].admissionDate = admissionDate;
+    wardBeds[bedIndex].expectedDischargeDate = expectedDischargeDate || null;
+    wardBeds[bedIndex].dailyRate = dailyRate;
+    wardBeds[bedIndex].specialCare = specialCare;
+    wardBeds[bedIndex].isolation = isolation;
+    wardBeds[bedIndex].notes = notes;
+
+    storage.set('wardBeds', wardBeds);
+
+    // Update room statistics
+    const room = wardRooms.find(r => r.id === bed.roomId);
+    if (room) {
+        const roomBeds = wardBeds.filter(b => b.roomId === room.id);
+        room.occupiedBeds = roomBeds.filter(b => b.status === 'occupied').length;
+        room.availableBeds = room.totalBeds - room.occupiedBeds;
+
+        // Update room status
+        if (room.availableBeds === 0) {
+            room.status = 'full';
+        } else {
+            room.status = 'available';
+        }
+
+        const roomIndex = wardRooms.findIndex(r => r.id === room.id);
+        wardRooms[roomIndex] = room;
+        storage.set('wardRooms', wardRooms);
+    }
+
+    updateWardStatistics();
+
+    closeModal();
+    alert(`✅ มอบหมายเตียงสำเร็จ!\n\nผู้ป่วย: ${patient.name}\nเตียง: ${bed.bedName} (${bed.bedNumber})\nวันที่รับเข้า: ${new Date(admissionDate).toLocaleDateString('th-TH')}`);
+}
+
+/**
+ * Discharge patient from bed
+ * @param {string} bedId - Bed ID
+ */
+function dischargePatientFromBed(bedId) {
+    const wardBeds = storage.get('wardBeds') || [];
+    const wardRooms = storage.get('wardRooms') || [];
+    const bedIndex = wardBeds.findIndex(b => b.id === bedId);
+    const bed = wardBeds[bedIndex];
+
+    if (bedIndex === -1) {
+        alert('ไม่พบข้อมูลเตียง');
+        return;
+    }
+
+    if (bed.status !== 'occupied') {
+        alert('⚠️ เตียงนี้ไม่มีผู้ป่วย');
+        return;
+    }
+
+    const patientName = bed.patientName;
+    const bedName = bed.bedName;
+    const admissionDate = bed.admissionDate ? new Date(bed.admissionDate) : null;
+    const dischargeDate = new Date();
+
+    let stayDuration = '';
+    if (admissionDate) {
+        const days = Math.ceil((dischargeDate - admissionDate) / (1000 * 60 * 60 * 24));
+        stayDuration = `\nระยะเวลานอน: ${days} วัน`;
+    }
+
+    const confirmed = confirm(`คุณต้องการจำหน่ายผู้ป่วยใช่หรือไม่?\n\nผู้ป่วย: ${patientName}\nHN: ${bed.patientHN}\nเตียง: ${bedName} (${bed.bedNumber})${stayDuration}\n\nเตียงจะว่างและพร้อมใช้งานทันที`);
+
+    if (confirmed) {
+        // Clear patient data
+        wardBeds[bedIndex].status = 'cleaning'; // Set to cleaning first
+        wardBeds[bedIndex].patientId = null;
+        wardBeds[bedIndex].patientName = null;
+        wardBeds[bedIndex].patientHN = null;
+        wardBeds[bedIndex].admissionDate = null;
+        wardBeds[bedIndex].expectedDischargeDate = null;
+        wardBeds[bedIndex].specialCare = false;
+        wardBeds[bedIndex].isolation = false;
+        wardBeds[bedIndex].notes = '';
+
+        storage.set('wardBeds', wardBeds);
+
+        // Update room statistics
+        const room = wardRooms.find(r => r.id === bed.roomId);
+        if (room) {
+            const roomBeds = wardBeds.filter(b => b.roomId === room.id);
+            room.occupiedBeds = roomBeds.filter(b => b.status === 'occupied').length;
+            room.availableBeds = room.totalBeds - room.occupiedBeds;
+            room.status = room.availableBeds > 0 ? 'available' : 'full';
+
+            const roomIndex = wardRooms.findIndex(r => r.id === room.id);
+            wardRooms[roomIndex] = room;
+            storage.set('wardRooms', wardRooms);
+        }
+
+        updateWardStatistics();
+
+        viewRoomBeds(bed.roomId);
+        alert(`✅ จำหน่ายผู้ป่วยสำเร็จ!\n\nผู้ป่วย: ${patientName}\nเตียง: ${bedName}\n\nเตียงอยู่ในสถานะ "กำลังทำความสะอาด"\nกรุณาเปลี่ยนเป็น "ว่าง" เมื่อพร้อมใช้งาน`);
     }
 }
 
