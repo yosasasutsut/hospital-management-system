@@ -134,9 +134,9 @@
 - [x] Enhanced UI with emoji icons
 - **Commit message**: `feat: implement complete doctor management system (Day 15)`
 
-### Day 16: Doctor Profile Page
-- [ ] Enhanced doctor profile page with comprehensive layout
-- [ ] Doctor profile photo management:
+### Day 16: Doctor Profile Page ✅
+- [x] Enhanced doctor profile page with comprehensive layout
+- [x] Doctor profile photo management:
   - [ ] Upload photo functionality (File input)
   - [ ] Remove photo option
   - [ ] Default placeholder avatar (emoji or initials)

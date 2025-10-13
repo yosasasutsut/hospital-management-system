@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-10-13
+
+### Added
+- **Comprehensive Doctor Profile Pages** (Day 16)
+  - Extended doctor data model with profile fields:
+    - title (คำนำหน้าชื่อ)
+    - photo (รูปโปรไฟล์ base64)
+    - roomNumber (ห้องตรวจ/สถานที่)
+    - bio (ประวัติและแนะนำตัว)
+    - languages (ภาษาที่พูดได้)
+    - specializations (ความเชี่ยวชาญเฉพาะทาง)
+    - certifications (ใบรับรองวิชาชีพ)
+    - memberships (สมาชิกภาพทางวิชาชีพ)
+    - awards (รางวัลที่ได้รับ)
+    - researchInterests (ความสนใจด้านวิจัย)
+    - patientsCount, appointmentsCompleted
+
+  - Completely redesigned doctor profile view:
+    - Tabbed interface with 4 sections (Overview, Education, About, Statistics)
+    - Beautiful gradient header with photo/placeholder
+    - Organized information sections
+    - Real-time appointment statistics integration
+    - Professional layout with modern design
+
+  - Profile photo management system:
+    - uploadDoctorPhoto() function with validation
+    - removeDoctorPhoto() function with confirmation
+    - Base64 storage in localStorage
+    - File size limit (2MB), type validation
+    - Auto-refresh after upload/removal
+
+  - Enhanced sample doctor data:
+    - 3 doctors with comprehensive profiles
+    - Realistic professional information
+    - Certifications, memberships, awards
+    - Patient and appointment statistics
+
+### Changed
+- Updated version to 2.1.0
+- Redesigned viewDoctor() function completely
+- Enhanced doctor profile display system
+- Updated app.js version header
+
+### Technical
+- `viewDoctor(id)` - Comprehensive profile with tabs
+- `switchProfileTab(tabName, id)` - Tab switching logic
+- `uploadDoctorPhoto(id, file)` - Photo upload handler
+- `removeDoctorPhoto(id)` - Photo removal handler
+- Base64 encoding for image storage
+- FileReader API integration
+- Tabbed interface with CSS-in-JS
+- Conditional rendering for empty sections
+- JSDoc documentation for all functions
+
+---
+
 ## [2.0.0] - 2025-10-13
 
 ### Added
