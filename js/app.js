@@ -36,11 +36,47 @@ const storage = {
         if (!storage.get('patients')) storage.set('patients', []);
         if (!storage.get('appointments')) storage.set('appointments', []);
 
-        // Initialize sample doctors
+        // Initialize sample doctors with comprehensive data
         if (!storage.get('doctors')) storage.set('doctors', [
-            { id: 1, name: 'นพ.สมชาย ใจดี', specialty: 'อายุรแพทย์', phone: '081-234-5678', status: 'active' },
-            { id: 2, name: 'นพ.สมหญิง รักษา', specialty: 'ศัลยแพทย์', phone: '082-345-6789', status: 'active' },
-            { id: 3, name: 'นพ.วิชัย เก่ง', specialty: 'กุมารแพทย์', phone: '083-456-7890', status: 'active' }
+            {
+                id: 1,
+                name: 'นพ.สมชาย ใจดี',
+                specialty: 'อายุรแพทย์',
+                phone: '081-234-5678',
+                email: 'somchai.j@hospital.com',
+                workingHours: 'จันทร์-ศุกร์ 08:00-17:00',
+                experience: '15 ปี',
+                education: 'แพทยศาสตร์บัณฑิต จุฬาลงกรณ์มหาวิทยาลัย',
+                licenseNumber: 'MD-2008-001234',
+                status: 'active',
+                registrationDate: new Date().toISOString().split('T')[0]
+            },
+            {
+                id: 2,
+                name: 'นพ.สมหญิง รักษา',
+                specialty: 'ศัลยแพทย์',
+                phone: '082-345-6789',
+                email: 'somying.r@hospital.com',
+                workingHours: 'จันทร์-เสาร์ 09:00-18:00',
+                experience: '12 ปี',
+                education: 'แพทยศาสตร์บัณฑิต มหาวิทยาลัยมหิดล',
+                licenseNumber: 'MD-2011-005678',
+                status: 'active',
+                registrationDate: new Date().toISOString().split('T')[0]
+            },
+            {
+                id: 3,
+                name: 'นพ.วิชัย เก่ง',
+                specialty: 'กุมารแพทย์',
+                phone: '083-456-7890',
+                email: 'wichai.k@hospital.com',
+                workingHours: 'จันทร์-ศุกร์ 10:00-19:00',
+                experience: '8 ปี',
+                education: 'แพทยศาสตร์บัณฑิต มหาวิทยาลัยเชียงใหม่',
+                licenseNumber: 'MD-2015-009012',
+                status: 'active',
+                registrationDate: new Date().toISOString().split('T')[0]
+            }
         ]);
 
         // Initialize comprehensive room data with Thai hospital standards
