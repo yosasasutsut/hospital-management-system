@@ -156,6 +156,122 @@ async function captureDesktopScreenshots(page) {
   await page.waitForTimeout(500);
   await page.screenshot({ path: 'POC/desktop/11-appointments.png', fullPage: true });
   console.log('✅ 11-appointments.png');
+
+  // 12. Wards (หอผู้ป่วย)
+  await page.click('a[href="#wards"]');
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'POC/desktop/12-wards-list.png', fullPage: true });
+  console.log('✅ 12-wards-list.png');
+
+  // 13. Doctor Profile Modal
+  await page.click('a[href="#doctors"]');
+  await page.waitForTimeout(300);
+  await page.click('button[onclick*="viewDoctor"]');
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'POC/desktop/13-doctor-profile.png', fullPage: true });
+  console.log('✅ 13-doctor-profile.png');
+  await page.click('#modalClose');
+  await page.waitForTimeout(300);
+
+  // 14. Doctor Schedule Modal
+  await page.evaluate(() => {
+    viewDoctorSchedule(1);
+  });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'POC/desktop/14-doctor-schedule.png', fullPage: true });
+  console.log('✅ 14-doctor-schedule.png');
+  await page.click('button[onclick*="closeModal"]');
+  await page.waitForTimeout(300);
+
+  // 15. Doctor Status Toggle Modal
+  await page.evaluate(() => {
+    toggleDoctorStatus(1);
+  });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'POC/desktop/15-doctor-status-toggle.png', fullPage: true });
+  console.log('✅ 15-doctor-status-toggle.png');
+  await page.click('button[onclick*="closeModal"]');
+  await page.waitForTimeout(300);
+
+  // 16. Doctor Performance Modal
+  await page.evaluate(() => {
+    viewDoctorPerformance(1);
+  });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'POC/desktop/16-doctor-performance.png', fullPage: true });
+  console.log('✅ 16-doctor-performance.png');
+  await page.click('button[onclick*="closeModal"]');
+  await page.waitForTimeout(300);
+
+  // 17. Department Management Modal
+  await page.evaluate(() => {
+    viewDepartments();
+  });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'POC/desktop/17-departments.png', fullPage: true });
+  console.log('✅ 17-departments.png');
+  await page.click('button[onclick*="closeModal"]');
+  await page.waitForTimeout(300);
+
+  // 18. Ward Details Modal
+  await page.click('a[href="#wards"]');
+  await page.waitForTimeout(300);
+  await page.click('button[onclick*="viewWardDetails"]');
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'POC/desktop/18-ward-details.png', fullPage: true });
+  console.log('✅ 18-ward-details.png');
+  await page.click('button[onclick*="closeModal"]');
+  await page.waitForTimeout(300);
+
+  // 19. Room Management Modal (for ward)
+  await page.evaluate(() => {
+    viewWardRooms('ward-001');
+  });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'POC/desktop/19-ward-rooms.png', fullPage: true });
+  console.log('✅ 19-ward-rooms.png');
+  await page.click('button[onclick*="closeModal"]');
+  await page.waitForTimeout(300);
+
+  // 20. Bed Management Modal
+  await page.evaluate(() => {
+    viewRoomBeds('wroom-001');
+  });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'POC/desktop/20-room-beds.png', fullPage: true });
+  console.log('✅ 20-room-beds.png');
+  await page.click('button[onclick*="closeModal"]');
+  await page.waitForTimeout(300);
+
+  // 21. Available Beds Modal
+  await page.click('#modalClose');
+  await page.waitForTimeout(500);
+  await page.click('a[href="#patients"]');
+  await page.waitForTimeout(500);
+  await page.click('button[onclick*="viewPatient"]');
+  await page.waitForTimeout(500);
+
+  // Try to click assign bed button if exists
+  try {
+    await page.click('button:has-text("มอบหมายเตียง")', { timeout: 2000 });
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: 'POC/desktop/21-available-beds.png', fullPage: true });
+    console.log('✅ 21-available-beds.png');
+  } catch (e) {
+    // If button doesn't exist, just show modal with evaluate
+    await page.click('#modalClose');
+    await page.waitForTimeout(300);
+    await page.evaluate(() => {
+      showAvailableBedsModal(null);
+    });
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: 'POC/desktop/21-available-beds.png', fullPage: true });
+    console.log('✅ 21-available-beds.png');
+  }
+
+  // Clean up - close modal
+  await page.click('button[onclick*="closeModal"]');
+  await page.waitForTimeout(500);
 }
 
 async function captureTabletScreenshots(page) {
@@ -300,11 +416,11 @@ async function main() {
 
     console.log('\n✅ All screenshots captured successfully!');
     console.log('\n📁 Screenshots saved to POC/ folder:');
-    console.log('   - Desktop: 11 screenshots');
+    console.log('   - Desktop: 21 screenshots (Dashboard, Patients, Doctors, Rooms, Wards, All Modals)');
     console.log('   - Tablet: 3 screenshots');
     console.log('   - Mobile: 6 screenshots');
     console.log('   - Features: 4 screenshots');
-    console.log('   Total: 24 screenshots\n');
+    console.log('   Total: 34 screenshots\n');
 
   } catch (error) {
     console.error('❌ Error:', error);
