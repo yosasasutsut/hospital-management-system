@@ -4309,7 +4309,10 @@ function viewWardRooms(wardId) {
 
                                 <!-- Action Buttons -->
                                 <div style="display: flex; gap: 0.5rem;">
-                                    <button onclick="editWardRoom('${room.id}')" class="btn btn-primary" style="flex: 1; font-size: 0.8125rem; padding: 0.5rem 1rem;">
+                                    <button onclick="closeModal(); viewRoomBeds('${room.id}')" class="btn btn-primary" style="flex: 1; font-size: 0.8125rem; padding: 0.5rem 1rem;">
+                                        🛏️ จัดการเตียง
+                                    </button>
+                                    <button onclick="editWardRoom('${room.id}')" class="btn btn-secondary" style="flex: 1; font-size: 0.8125rem; padding: 0.5rem 1rem;">
                                         ✏️ แก้ไข
                                     </button>
                                     <button onclick="deleteWardRoom('${room.id}')" class="btn" style="flex: 1; background: #ef4444; color: white; font-size: 0.8125rem; padding: 0.5rem 1rem;">
@@ -4728,6 +4731,529 @@ function deleteWardRoom(roomId) {
 
         viewWardRooms(room.wardId);
         alert(`✅ ลบห้อง "${room.roomName}" สำเร็จ!`);
+    }
+}
+
+// ===== Bed Management Functions =====
+/**
+ * View all beds in a room
+ * @param {string} roomId - Room ID
+ */
+function viewRoomBeds(roomId) {
+    const wardRooms = storage.get('wardRooms') || [];
+    const wardBeds = storage.get('wardBeds') || [];
+    const room = wardRooms.find(r => r.id === roomId);
+
+    if (!room) {
+        alert('ไม่พบข้อมูลห้อง');
+        return;
+    }
+
+    const bedsInRoom = wardBeds.filter(b => b.roomId === roomId);
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    modalBody.innerHTML = `
+        <div style="max-height: 80vh; overflow-y: auto;">
+            <div style="position: sticky; top: 0; background: white; z-index: 10; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0 0 0.5rem 0;">🛏️ จัดการเตียงในห้อง: ${room.roomName}</h3>
+                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">
+                    ${room.roomNumber} | ${bedsInRoom.length}/${room.totalBeds} เตียง
+                </p>
+                <button onclick="closeModal(); showAddBedModal('${roomId}')" class="btn btn-primary" style="margin-top: 1rem;">
+                    + เพิ่มเตียงใหม่
+                </button>
+            </div>
+
+            ${bedsInRoom.length > 0 ? `
+                <div style="display: grid; gap: 1rem;">
+                    ${bedsInRoom.map(bed => {
+                        const statusConfig = {
+                            available: { label: 'ว่าง', color: '#10b981', bg: '#d1fae5' },
+                            occupied: { label: 'มีผู้ป่วย', color: '#ef4444', bg: '#fee2e2' },
+                            maintenance: { label: 'ซ่อมบำรุง', color: '#f59e0b', bg: '#fef3c7' },
+                            cleaning: { label: 'กำลังทำความสะอาด', color: '#3b82f6', bg: '#dbeafe' }
+                        };
+                        const config = statusConfig[bed.status] || statusConfig.available;
+
+                        return `
+                            <div style="background: white; padding: 1.25rem; border-radius: var(--border-radius); box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 2px solid #e5e7eb; transition: all 0.2s;" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#e5e7eb'">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+                                    <div>
+                                        <h4 style="margin: 0; color: #111827;">${bed.bedName}</h4>
+                                        <p style="margin: 0.25rem 0 0 0; color: #6b7280; font-size: 0.875rem;">${bed.bedNumber}</p>
+                                    </div>
+                                    <span style="padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: ${config.bg}; color: ${config.color};">
+                                        ${config.label}
+                                    </span>
+                                </div>
+
+                                ${bed.status === 'occupied' && bed.patientName ? `
+                                    <div style="background: #f9fafb; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.75rem;">
+                                        <p style="margin: 0; font-size: 0.875rem; color: #374151;">
+                                            <strong>ผู้ป่วย:</strong> ${bed.patientName} (HN: ${bed.patientHN})
+                                        </p>
+                                        ${bed.admissionDate ? `
+                                            <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #6b7280;">
+                                                <strong>วันที่รับเข้า:</strong> ${new Date(bed.admissionDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                            </p>
+                                        ` : ''}
+                                        ${bed.expectedDischargeDate ? `
+                                            <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #6b7280;">
+                                                <strong>คาดว่าจำหน่าย:</strong> ${new Date(bed.expectedDischargeDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                            </p>
+                                        ` : ''}
+                                        ${bed.dailyRate ? `
+                                            <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #6b7280;">
+                                                <strong>ค่าใช้จ่ายต่อวัน:</strong> ฿${bed.dailyRate.toLocaleString()}
+                                            </p>
+                                        ` : ''}
+                                        ${bed.specialCare ? `
+                                            <span style="display: inline-block; margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #fef3c7; color: #f59e0b; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600;">
+                                                ⚕️ ดูแลพิเศษ
+                                            </span>
+                                        ` : ''}
+                                        ${bed.isolation ? `
+                                            <span style="display: inline-block; margin-top: 0.5rem; margin-left: 0.5rem; padding: 0.25rem 0.5rem; background: #fee2e2; color: #ef4444; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600;">
+                                                🚫 กักโรค
+                                            </span>
+                                        ` : ''}
+                                    </div>
+                                ` : ''}
+
+                                ${bed.notes ? `
+                                    <p style="margin: 0 0 0.75rem 0; color: #6b7280; font-size: 0.875rem;">
+                                        <strong>หมายเหตุ:</strong> ${bed.notes}
+                                    </p>
+                                ` : ''}
+
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button onclick="closeModal(); editBed('${bed.id}')" class="btn btn-secondary" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                                        แก้ไข
+                                    </button>
+                                    <button onclick="deleteBed('${bed.id}')" class="btn btn-danger" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                                        ลบ
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            ` : `
+                <div style="text-align: center; padding: 3rem; color: #9ca3af;">
+                    <p style="font-size: 1.125rem; margin: 0;">ยังไม่มีเตียงในห้องนี้</p>
+                    <p style="font-size: 0.875rem; margin: 0.5rem 0 0 0;">คลิกปุ่ม "+ เพิ่มเตียงใหม่" เพื่อเพิ่มเตียง</p>
+                </div>
+            `}
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb;">
+                <button onclick="closeModal(); viewWardRooms('${room.wardId}')" class="btn btn-secondary">กลับ</button>
+                <button onclick="closeModal()" class="btn btn-primary">ปิด</button>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+/**
+ * Show modal to add a new bed to a room
+ * @param {string} roomId - Room ID
+ */
+function showAddBedModal(roomId) {
+    const wardRooms = storage.get('wardRooms') || [];
+    const wardBeds = storage.get('wardBeds') || [];
+    const room = wardRooms.find(r => r.id === roomId);
+
+    if (!room) {
+        alert('ไม่พบข้อมูลห้อง');
+        return;
+    }
+
+    const bedsInRoom = wardBeds.filter(b => b.roomId === roomId);
+
+    // Check if room is full
+    if (bedsInRoom.length >= room.totalBeds) {
+        alert(`⚠️ ห้อง "${room.roomName}" เต็มแล้ว\n\nมีเตียงครบ ${room.totalBeds} เตียงแล้ว\n\nหากต้องการเพิ่มเตียง กรุณาแก้ไขจำนวนเตียงในห้องก่อน`);
+        return;
+    }
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    // Generate suggested bed number
+    const nextBedNum = bedsInRoom.length + 1;
+    const suggestedBedNumber = `${room.roomNumber}-${String(nextBedNum).padStart(2, '0')}`;
+    const suggestedBedName = `เตียง ${nextBedNum}`;
+
+    modalBody.innerHTML = `
+        <h3 style="margin-bottom: 1.5rem;">เพิ่มเตียงใหม่: ${room.roomName}</h3>
+        <form id="addBedForm" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ชื่อเตียง *</label>
+                    <input type="text" id="bedName" required value="${suggestedBedName}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);"
+                           placeholder="เช่น เตียง 1">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">หมายเลขเตียง *</label>
+                    <input type="text" id="bedNumber" required value="${suggestedBedNumber}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);"
+                           placeholder="เช่น IMW-201A-01">
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">สถานะเตียง *</label>
+                <select id="bedStatus" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="available">ว่าง (พร้อมใช้งาน)</option>
+                    <option value="maintenance">ซ่อมบำรุง</option>
+                    <option value="cleaning">กำลังทำความสะอาด</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">หมายเหตุ</label>
+                <textarea id="bedNotes" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);" placeholder="บันทึกข้อมูลเพิ่มเติม..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                <button type="button" onclick="closeModal(); viewRoomBeds('${roomId}')" class="btn btn-secondary">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary">บันทึก</button>
+            </div>
+        </form>
+    `;
+
+    document.getElementById('addBedForm').onsubmit = function(e) {
+        e.preventDefault();
+        addBed(roomId);
+    };
+
+    modal.style.display = 'flex';
+}
+
+/**
+ * Add a new bed to a room
+ * @param {string} roomId - Room ID
+ */
+function addBed(roomId) {
+    const wardRooms = storage.get('wardRooms') || [];
+    const wardBeds = storage.get('wardBeds') || [];
+    const room = wardRooms.find(r => r.id === roomId);
+
+    if (!room) {
+        alert('ไม่พบข้อมูลห้อง');
+        return;
+    }
+
+    const bedName = document.getElementById('bedName').value.trim();
+    const bedNumber = document.getElementById('bedNumber').value.trim().toUpperCase();
+    const bedStatus = document.getElementById('bedStatus').value;
+    const bedNotes = document.getElementById('bedNotes').value.trim();
+
+    // Validate
+    if (!bedName || !bedNumber) {
+        alert('⚠️ กรุณากรอกข้อมูลให้ครบถ้วน');
+        return;
+    }
+
+    // Check duplicate bed number
+    const existingBed = wardBeds.find(b => b.bedNumber === bedNumber);
+    if (existingBed) {
+        alert(`⚠️ หมายเลขเตียง "${bedNumber}" ถูกใช้งานแล้ว\n\nกรุณาใช้หมายเลขอื่น`);
+        return;
+    }
+
+    // Check if room is full
+    const bedsInRoom = wardBeds.filter(b => b.roomId === roomId);
+    if (bedsInRoom.length >= room.totalBeds) {
+        alert(`⚠️ ห้อง "${room.roomName}" เต็มแล้ว\n\nมีเตียงครบ ${room.totalBeds} เตียงแล้ว`);
+        return;
+    }
+
+    // Generate new bed ID
+    const newId = 'bed-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+    // Get daily rate from room
+    const dailyRate = room.pricePerBedPerDay || room.pricePerRoomPerDay || 0;
+
+    const newBed = {
+        id: newId,
+        bedNumber: bedNumber,
+        bedName: bedName,
+        roomId: roomId,
+        wardId: room.wardId,
+        status: bedStatus,
+        patientId: null,
+        patientName: null,
+        patientHN: null,
+        admissionDate: null,
+        expectedDischargeDate: null,
+        dailyRate: dailyRate,
+        specialCare: false,
+        isolation: false,
+        notes: bedNotes
+    };
+
+    wardBeds.push(newBed);
+    storage.set('wardBeds', wardBeds);
+
+    // Update room statistics if bed is available
+    if (bedStatus === 'available') {
+        room.availableBeds = (room.availableBeds || 0) + 1;
+        const roomIndex = wardRooms.findIndex(r => r.id === roomId);
+        wardRooms[roomIndex] = room;
+        storage.set('wardRooms', wardRooms);
+    }
+
+    updateWardStatistics();
+
+    closeModal();
+    viewRoomBeds(roomId);
+    alert(`✅ เพิ่มเตียง "${bedName}" สำเร็จ!`);
+}
+
+/**
+ * Edit bed information
+ * @param {string} bedId - Bed ID
+ */
+function editBed(bedId) {
+    const wardBeds = storage.get('wardBeds') || [];
+    const bed = wardBeds.find(b => b.id === bedId);
+
+    if (!bed) {
+        alert('ไม่พบข้อมูลเตียง');
+        return;
+    }
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    modalBody.innerHTML = `
+        <h3 style="margin-bottom: 1.5rem;">แก้ไขข้อมูลเตียง</h3>
+        <form id="editBedForm" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ชื่อเตียง *</label>
+                    <input type="text" id="editBedName" required value="${bed.bedName}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">หมายเลขเตียง *</label>
+                    <input type="text" id="editBedNumber" required value="${bed.bedNumber}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">สถานะเตียง *</label>
+                <select id="editBedStatus" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="available" ${bed.status === 'available' ? 'selected' : ''}>ว่าง (พร้อมใช้งาน)</option>
+                    <option value="occupied" ${bed.status === 'occupied' ? 'selected' : ''}>มีผู้ป่วย</option>
+                    <option value="maintenance" ${bed.status === 'maintenance' ? 'selected' : ''}>ซ่อมบำรุง</option>
+                    <option value="cleaning" ${bed.status === 'cleaning' ? 'selected' : ''}>กำลังทำความสะอาด</option>
+                </select>
+            </div>
+
+            ${bed.status === 'occupied' ? `
+                <div style="background: #f9fafb; padding: 1rem; border-radius: var(--border-radius); border: 1px solid #e5e7eb;">
+                    <h4 style="margin: 0 0 1rem 0; color: #374151;">ข้อมูลผู้ป่วย</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ชื่อผู้ป่วย</label>
+                            <input type="text" id="editPatientName" value="${bed.patientName || ''}"
+                                   style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">HN</label>
+                            <input type="text" id="editPatientHN" value="${bed.patientHN || ''}"
+                                   style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">วันที่รับเข้า</label>
+                            <input type="date" id="editAdmissionDate" value="${bed.admissionDate || ''}"
+                                   style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">คาดว่าจำหน่าย</label>
+                            <input type="date" id="editExpectedDischargeDate" value="${bed.expectedDischargeDate || ''}"
+                                   style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ค่าใช้จ่ายต่อวัน (฿)</label>
+                            <input type="number" id="editDailyRate" value="${bed.dailyRate || 0}" min="0"
+                                   style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">การดูแลพิเศษ</label>
+                            <div style="display: flex; gap: 1rem; padding: 0.75rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="editSpecialCare" ${bed.specialCare ? 'checked' : ''}>
+                                    <span>ดูแลพิเศษ</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="editIsolation" ${bed.isolation ? 'checked' : ''}>
+                                    <span>กักโรค</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">หมายเหตุ</label>
+                <textarea id="editBedNotes" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">${bed.notes || ''}</textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                <button type="button" onclick="closeModal(); viewRoomBeds('${bed.roomId}')" class="btn btn-secondary">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary">บันทึก</button>
+            </div>
+        </form>
+    `;
+
+    document.getElementById('editBedForm').onsubmit = function(e) {
+        e.preventDefault();
+        updateBed(bedId);
+    };
+
+    modal.style.display = 'flex';
+}
+
+/**
+ * Update bed information
+ * @param {string} bedId - Bed ID
+ */
+function updateBed(bedId) {
+    const wardBeds = storage.get('wardBeds') || [];
+    const wardRooms = storage.get('wardRooms') || [];
+    const bedIndex = wardBeds.findIndex(b => b.id === bedId);
+
+    if (bedIndex === -1) {
+        alert('ไม่พบข้อมูลเตียง');
+        return;
+    }
+
+    const oldBed = wardBeds[bedIndex];
+    const oldStatus = oldBed.status;
+
+    const bedName = document.getElementById('editBedName').value.trim();
+    const bedNumber = document.getElementById('editBedNumber').value.trim().toUpperCase();
+    const bedStatus = document.getElementById('editBedStatus').value;
+    const bedNotes = document.getElementById('editBedNotes').value.trim();
+
+    // Validate
+    if (!bedName || !bedNumber) {
+        alert('⚠️ กรุณากรอกข้อมูลให้ครบถ้วน');
+        return;
+    }
+
+    // Check duplicate bed number (excluding current bed)
+    const existingBed = wardBeds.find(b => b.bedNumber === bedNumber && b.id !== bedId);
+    if (existingBed) {
+        alert(`⚠️ หมายเลขเตียง "${bedNumber}" ถูกใช้งานแล้ว\n\nกรุณาใช้หมายเลขอื่น`);
+        return;
+    }
+
+    // Update bed
+    wardBeds[bedIndex].bedName = bedName;
+    wardBeds[bedIndex].bedNumber = bedNumber;
+    wardBeds[bedIndex].status = bedStatus;
+    wardBeds[bedIndex].notes = bedNotes;
+
+    // Update patient information if occupied
+    if (bedStatus === 'occupied') {
+        wardBeds[bedIndex].patientName = document.getElementById('editPatientName')?.value.trim() || null;
+        wardBeds[bedIndex].patientHN = document.getElementById('editPatientHN')?.value.trim() || null;
+        wardBeds[bedIndex].admissionDate = document.getElementById('editAdmissionDate')?.value || null;
+        wardBeds[bedIndex].expectedDischargeDate = document.getElementById('editExpectedDischargeDate')?.value || null;
+        wardBeds[bedIndex].dailyRate = parseInt(document.getElementById('editDailyRate')?.value) || 0;
+        wardBeds[bedIndex].specialCare = document.getElementById('editSpecialCare')?.checked || false;
+        wardBeds[bedIndex].isolation = document.getElementById('editIsolation')?.checked || false;
+    } else {
+        // Clear patient data if not occupied
+        wardBeds[bedIndex].patientName = null;
+        wardBeds[bedIndex].patientHN = null;
+        wardBeds[bedIndex].patientId = null;
+        wardBeds[bedIndex].admissionDate = null;
+        wardBeds[bedIndex].expectedDischargeDate = null;
+        wardBeds[bedIndex].specialCare = false;
+        wardBeds[bedIndex].isolation = false;
+    }
+
+    storage.set('wardBeds', wardBeds);
+
+    // Update room statistics if status changed
+    if (oldStatus !== bedStatus) {
+        const room = wardRooms.find(r => r.id === oldBed.roomId);
+        if (room) {
+            // Recalculate occupied and available beds
+            const roomBeds = wardBeds.filter(b => b.roomId === room.id);
+            room.occupiedBeds = roomBeds.filter(b => b.status === 'occupied').length;
+            room.availableBeds = room.totalBeds - room.occupiedBeds;
+
+            const roomIndex = wardRooms.findIndex(r => r.id === room.id);
+            wardRooms[roomIndex] = room;
+            storage.set('wardRooms', wardRooms);
+        }
+    }
+
+    updateWardStatistics();
+
+    closeModal();
+    viewRoomBeds(oldBed.roomId);
+    alert(`✅ อัพเดทข้อมูลเตียง "${bedName}" สำเร็จ!`);
+}
+
+/**
+ * Delete bed with confirmation
+ * @param {string} bedId - Bed ID
+ */
+function deleteBed(bedId) {
+    const wardBeds = storage.get('wardBeds') || [];
+    const wardRooms = storage.get('wardRooms') || [];
+    const bed = wardBeds.find(b => b.id === bedId);
+
+    if (!bed) {
+        alert('ไม่พบข้อมูลเตียง');
+        return;
+    }
+
+    // Check if bed is occupied
+    if (bed.status === 'occupied') {
+        alert(`⚠️ ไม่สามารถลบเตียง "${bed.bedName}" ได้\n\nเนื่องจากมีผู้ป่วยอยู่\n\nกรุณาย้ายผู้ป่วยหรือเปลี่ยนสถานะเตียงก่อน`);
+        return;
+    }
+
+    const confirmed = confirm(`คุณต้องการลบเตียง "${bed.bedName}" (${bed.bedNumber}) ใช่หรือไม่?\n\nการดำเนินการนี้ไม่สามารถย้อนกลับได้`);
+
+    if (confirmed) {
+        const updatedBeds = wardBeds.filter(b => b.id !== bedId);
+        storage.set('wardBeds', updatedBeds);
+
+        // Update room statistics
+        const room = wardRooms.find(r => r.id === bed.roomId);
+        if (room) {
+            if (bed.status === 'available') {
+                room.availableBeds = Math.max(0, (room.availableBeds || 0) - 1);
+            }
+
+            const roomIndex = wardRooms.findIndex(r => r.id === room.id);
+            wardRooms[roomIndex] = room;
+            storage.set('wardRooms', wardRooms);
+        }
+
+        updateWardStatistics();
+
+        viewRoomBeds(bed.roomId);
+        alert(`✅ ลบเตียง "${bed.bedName}" สำเร็จ!`);
     }
 }
 
