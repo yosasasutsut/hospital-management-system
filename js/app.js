@@ -3790,6 +3790,7 @@ function viewWardDetails(wardId) {
             <!-- Action Buttons -->
             <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
                 <button onclick="closeModal()" class="btn btn-secondary">ปิด</button>
+                <button onclick="closeModal(); viewWardRooms('${ward.id}')" class="btn btn-primary">จัดการห้อง</button>
                 <button onclick="closeModal(); editWard('${ward.id}')" class="btn btn-primary">แก้ไขข้อมูล</button>
             </div>
         </div>
@@ -4179,6 +4180,555 @@ if (clearWardFilterBtn) {
 const addWardBtn = document.getElementById('addWardBtn');
 if (addWardBtn) {
     addWardBtn.addEventListener('click', showAddWardModal);
+}
+
+// ===== Ward Room Management Functions =====
+
+/**
+ * View all rooms in a specific ward
+ * @param {string} wardId - Ward ID
+ */
+function viewWardRooms(wardId) {
+    const wards = storage.get('wards') || [];
+    const ward = wards.find(w => w.id === wardId);
+
+    if (!ward) {
+        alert('ไม่พบข้อมูลหอผู้ป่วย');
+        return;
+    }
+
+    const wardRooms = storage.get('wardRooms') || [];
+    const roomsInWard = wardRooms.filter(r => r.wardId === wardId);
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    modalBody.innerHTML = `
+        <div style="max-height: 80vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div>
+                    <h3 style="margin: 0; color: var(--primary-color);">จัดการห้องใน ${ward.wardName}</h3>
+                    <p style="margin: 0.5rem 0 0 0; color: #6b7280; font-size: 0.875rem;">รหัส: ${ward.wardCode} | ทั้งหมด ${roomsInWard.length} ห้อง</p>
+                </div>
+                <button onclick="showAddWardRoomModal('${wardId}')" class="btn btn-primary" style="font-size: 0.875rem;">
+                    + เพิ่มห้องใหม่
+                </button>
+            </div>
+
+            ${roomsInWard.length === 0 ? `
+                <div style="text-align: center; padding: 3rem; background: #f9fafb; border-radius: var(--border-radius);">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">🚪</div>
+                    <h4 style="margin: 0 0 0.5rem 0; color: #374151;">ยังไม่มีห้องในหอผู้ป่วยนี้</h4>
+                    <p style="margin: 0; color: #6b7280;">คลิก "เพิ่มห้องใหม่" เพื่อเริ่มต้น</p>
+                </div>
+            ` : `
+                <div style="display: grid; gap: 1rem;">
+                    ${roomsInWard.map(room => {
+                        const statusConfig = {
+                            'available': { label: 'ว่าง', color: '#10b981', bgColor: '#d1fae5' },
+                            'full': { label: 'เต็ม', color: '#ef4444', bgColor: '#fee2e2' },
+                            'maintenance': { label: 'ซ่อมบำรุง', color: '#f59e0b', bgColor: '#fef3c7' }
+                        };
+                        const status = statusConfig[room.status] || statusConfig.available;
+
+                        const roomTypeLabels = {
+                            'general': '🏥 ห้องรวม',
+                            'single': '🚪 ห้องเดี่ยว',
+                            'double': '🚪🚪 ห้องคู่'
+                        };
+                        const typeLabel = roomTypeLabels[room.roomType] || room.roomType;
+
+                        return `
+                            <div style="background: white; border: 2px solid #e5e7eb; border-radius: var(--border-radius); padding: 1.25rem; transition: border-color 0.2s;"
+                                 onmouseover="this.style.borderColor='#3b82f6'"
+                                 onmouseout="this.style.borderColor='#e5e7eb'">
+
+                                <!-- Room Header -->
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                    <div style="flex: 1;">
+                                        <h4 style="margin: 0 0 0.25rem 0; color: #1f2937; font-size: 1.125rem;">
+                                            ${room.roomName}
+                                        </h4>
+                                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">
+                                            รหัส: ${room.roomNumber}
+                                        </p>
+                                    </div>
+                                    <span style="padding: 0.375rem 0.875rem; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; background: ${status.bgColor}; color: ${status.color};">
+                                        ${status.label}
+                                    </span>
+                                </div>
+
+                                <!-- Room Info Grid -->
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; padding: 1rem; background: #f9fafb; border-radius: 0.5rem;">
+                                    <div>
+                                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">ประเภทห้อง</p>
+                                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #374151; font-size: 0.9375rem;">${typeLabel}</p>
+                                    </div>
+                                    <div>
+                                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">จำนวนเตียง</p>
+                                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #374151; font-size: 0.9375rem;">${room.totalBeds} เตียง</p>
+                                    </div>
+                                    <div>
+                                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">ใช้งาน</p>
+                                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: ${room.occupiedBeds > 0 ? '#f59e0b' : '#10b981'}; font-size: 0.9375rem;">
+                                            ${room.occupiedBeds}/${room.totalBeds}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">ราคา/วัน</p>
+                                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #374151; font-size: 0.9375rem;">
+                                            ${(room.pricePerBedPerDay || room.pricePerRoomPerDay || 0).toLocaleString()} ฿
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Amenities -->
+                                ${room.amenities && room.amenities.length > 0 ? `
+                                    <div style="margin-bottom: 1rem;">
+                                        <p style="margin: 0 0 0.5rem 0; color: #6b7280; font-size: 0.8125rem; font-weight: 600;">สิ่งอำนวยความสะดวก:</p>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 0.375rem;">
+                                            ${room.amenities.slice(0, 4).map(a => `
+                                                <span style="padding: 0.25rem 0.625rem; background: #eff6ff; color: #1e40af; border-radius: 999px; font-size: 0.75rem;">
+                                                    ${a}
+                                                </span>
+                                            `).join('')}
+                                            ${room.amenities.length > 4 ? `
+                                                <span style="padding: 0.25rem 0.625rem; background: #f3f4f6; color: #6b7280; border-radius: 999px; font-size: 0.75rem;">
+                                                    +${room.amenities.length - 4} อื่นๆ
+                                                </span>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                ` : ''}
+
+                                ${room.notes ? `
+                                    <p style="margin: 0 0 1rem 0; padding: 0.75rem; background: #fef3c7; border-left: 3px solid #f59e0b; border-radius: 0.25rem; color: #92400e; font-size: 0.8125rem;">
+                                        📝 ${room.notes}
+                                    </p>
+                                ` : ''}
+
+                                <!-- Action Buttons -->
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button onclick="editWardRoom('${room.id}')" class="btn btn-primary" style="flex: 1; font-size: 0.8125rem; padding: 0.5rem 1rem;">
+                                        ✏️ แก้ไข
+                                    </button>
+                                    <button onclick="deleteWardRoom('${room.id}')" class="btn" style="flex: 1; background: #ef4444; color: white; font-size: 0.8125rem; padding: 0.5rem 1rem;">
+                                        🗑️ ลบ
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `}
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb;">
+                <button onclick="closeModal()" class="btn btn-secondary">ปิด</button>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+/**
+ * Show modal for adding a new room to ward
+ * @param {string} wardId - Ward ID
+ */
+function showAddWardRoomModal(wardId) {
+    const wards = storage.get('wards') || [];
+    const ward = wards.find(w => w.id === wardId);
+
+    if (!ward) {
+        alert('ไม่พบข้อมูลหอผู้ป่วย');
+        return;
+    }
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    modalBody.innerHTML = `
+        <h3 style="margin-bottom: 1.5rem;">เพิ่มห้องใหม่ใน ${ward.wardName}</h3>
+        <form id="addWardRoomForm" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ชื่อห้อง *</label>
+                    <input type="text" id="roomName" required placeholder="เช่น ห้อง 201A"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">รหัสห้อง *</label>
+                    <input type="text" id="roomNumber" required placeholder="เช่น ${ward.wardCode}-201A"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ประเภทห้อง *</label>
+                <select id="roomType" required onchange="handleRoomTypeChange()" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="">เลือกประเภท</option>
+                    <option value="general">🏥 ห้องรวม (หลายเตียง - ปรับจำนวนได้)</option>
+                    <option value="single">🚪 ห้องเดี่ยว (1 เตียง)</option>
+                    <option value="double">🚪🚪 ห้องคู่ (2 เตียง)</option>
+                </select>
+            </div>
+
+            <div id="bedCountSection" style="display: none;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">จำนวนเตียง *</label>
+                <input type="number" id="totalBeds" min="1" max="20" value="6" placeholder="จำนวนเตียงในห้อง"
+                       style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                <p style="margin: 0.5rem 0 0 0; color: #6b7280; font-size: 0.8125rem;">
+                    💡 สำหรับห้องรวม สามารถกำหนดจำนวนเตียงได้ตามต้องการ (1-20 เตียง)
+                </p>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ราคา/วัน (บาท) *</label>
+                <input type="number" id="pricePerDay" required min="0" step="100" placeholder="เช่น 500"
+                       style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                <p style="margin: 0.5rem 0 0 0; color: #6b7280; font-size: 0.8125rem;" id="pricingNote">
+                    💡 ราคาต่อเตียงต่อวัน (สำหรับห้องรวม) หรือราคาต่อห้องต่อวัน (สำหรับห้องเดี่ยว/คู่)
+                </p>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">สิ่งอำนวยความสะดวก</label>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; padding: 0.75rem; background: #f9fafb; border-radius: 0.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" class="amenity-checkbox" value="เตียงปรับระดับ">
+                        <span style="font-size: 0.875rem;">เตียงปรับระดับ</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" class="amenity-checkbox" value="พัดลม">
+                        <span style="font-size: 0.875rem;">พัดลม</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" class="amenity-checkbox" value="แอร์">
+                        <span style="font-size: 0.875rem;">แอร์</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" class="amenity-checkbox" value="TV">
+                        <span style="font-size: 0.875rem;">TV</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" class="amenity-checkbox" value="ห้องน้ำในตัว">
+                        <span style="font-size: 0.875rem;">ห้องน้ำในตัว</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" class="amenity-checkbox" value="ห้องน้ำรวม">
+                        <span style="font-size: 0.875rem;">ห้องน้ำรวม</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" class="amenity-checkbox" value="ตู้เก็บของส่วนตัว">
+                        <span style="font-size: 0.875rem;">ตู้เก็บของส่วนตัว</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" class="amenity-checkbox" value="ม่านกั้น">
+                        <span style="font-size: 0.875rem;">ม่านกั้น</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" class="amenity-checkbox" value="WiFi">
+                        <span style="font-size: 0.875rem;">WiFi</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" class="amenity-checkbox" value="ระบบเรียกพยาบาล">
+                        <span style="font-size: 0.875rem;">ระบบเรียกพยาบาล</span>
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">หมายเหตุ</label>
+                <textarea id="roomNotes" rows="2" placeholder="หมายเหตุเพิ่มเติม..."
+                          style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); resize: vertical;"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                <button type="button" onclick="viewWardRooms('${wardId}')" class="btn btn-secondary">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary">บันทึก</button>
+            </div>
+        </form>
+
+        <script>
+            function handleRoomTypeChange() {
+                const roomType = document.getElementById('roomType').value;
+                const bedCountSection = document.getElementById('bedCountSection');
+                const totalBedsInput = document.getElementById('totalBeds');
+                const pricingNote = document.getElementById('pricingNote');
+
+                if (roomType === 'general') {
+                    bedCountSection.style.display = 'block';
+                    totalBedsInput.required = true;
+                    totalBedsInput.value = 6;
+                    pricingNote.innerHTML = '💡 ราคาต่อเตียงต่อวัน (สำหรับห้องรวม)';
+                } else if (roomType === 'single') {
+                    bedCountSection.style.display = 'none';
+                    totalBedsInput.required = false;
+                    totalBedsInput.value = 1;
+                    pricingNote.innerHTML = '💡 ราคาต่อห้องต่อวัน (สำหรับห้องเดี่ยว)';
+                } else if (roomType === 'double') {
+                    bedCountSection.style.display = 'none';
+                    totalBedsInput.required = false;
+                    totalBedsInput.value = 2;
+                    pricingNote.innerHTML = '💡 ราคาต่อห้องต่อวัน (สำหรับห้องคู่)';
+                }
+            }
+        </script>
+    `;
+
+    modal.style.display = 'flex';
+
+    // Handle form submission
+    document.getElementById('addWardRoomForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        addWardRoom(wardId);
+    });
+}
+
+/**
+ * Add a new room to ward
+ * @param {string} wardId - Ward ID
+ */
+function addWardRoom(wardId) {
+    const wardRooms = storage.get('wardRooms') || [];
+
+    // Get selected amenities
+    const amenities = Array.from(document.querySelectorAll('.amenity-checkbox:checked'))
+        .map(cb => cb.value);
+
+    const roomType = document.getElementById('roomType').value;
+    let totalBeds = 1;
+
+    if (roomType === 'general') {
+        totalBeds = parseInt(document.getElementById('totalBeds').value);
+    } else if (roomType === 'single') {
+        totalBeds = 1;
+    } else if (roomType === 'double') {
+        totalBeds = 2;
+    }
+
+    // Generate new room ID
+    const newId = 'wroom-' + String(wardRooms.length + 1).padStart(3, '0');
+
+    const pricePerDay = parseFloat(document.getElementById('pricePerDay').value);
+
+    const newRoom = {
+        id: newId,
+        roomNumber: document.getElementById('roomNumber').value.trim().toUpperCase(),
+        roomName: document.getElementById('roomName').value.trim(),
+        wardId: wardId,
+        roomType: roomType,
+        totalBeds: totalBeds,
+        occupiedBeds: 0,
+        availableBeds: totalBeds,
+        pricePerBedPerDay: roomType === 'general' ? pricePerDay : 0,
+        pricePerRoomPerDay: roomType !== 'general' ? pricePerDay : 0,
+        amenities: amenities,
+        status: 'available',
+        notes: document.getElementById('roomNotes').value.trim()
+    };
+
+    // Check for duplicate room number
+    const existingRoom = wardRooms.find(r => r.roomNumber === newRoom.roomNumber);
+    if (existingRoom) {
+        alert(`⚠️ รหัสห้อง "${newRoom.roomNumber}" มีอยู่แล้วในระบบ\n\nกรุณาใช้รหัสอื่น`);
+        return;
+    }
+
+    wardRooms.push(newRoom);
+    storage.set('wardRooms', wardRooms);
+
+    // Update ward statistics
+    updateWardStatistics();
+
+    // Refresh ward rooms view
+    viewWardRooms(wardId);
+    alert(`✅ เพิ่มห้อง "${newRoom.roomName}" สำเร็จ!`);
+}
+
+/**
+ * Edit ward room
+ * @param {string} roomId - Room ID
+ */
+function editWardRoom(roomId) {
+    const wardRooms = storage.get('wardRooms') || [];
+    const room = wardRooms.find(r => r.id === roomId);
+
+    if (!room) {
+        alert('ไม่พบข้อมูลห้อง');
+        return;
+    }
+
+    const wards = storage.get('wards') || [];
+    const ward = wards.find(w => w.id === room.wardId);
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    const priceValue = room.pricePerBedPerDay || room.pricePerRoomPerDay || 0;
+
+    modalBody.innerHTML = `
+        <h3 style="margin-bottom: 1.5rem;">แก้ไขห้อง ${room.roomName}</h3>
+        <form id="editWardRoomForm" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ชื่อห้อง *</label>
+                    <input type="text" id="editRoomName" required value="${room.roomName}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">รหัสห้อง *</label>
+                    <input type="text" id="editRoomNumber" required value="${room.roomNumber}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ประเภทห้อง *</label>
+                <select id="editRoomType" required disabled style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); background: #f3f4f6; cursor: not-allowed;">
+                    <option value="general" ${room.roomType === 'general' ? 'selected' : ''}>🏥 ห้องรวม</option>
+                    <option value="single" ${room.roomType === 'single' ? 'selected' : ''}>🚪 ห้องเดี่ยว</option>
+                    <option value="double" ${room.roomType === 'double' ? 'selected' : ''}>🚪🚪 ห้องคู่</option>
+                </select>
+                <p style="margin: 0.5rem 0 0 0; color: #9ca3af; font-size: 0.75rem;">
+                    ⚠️ ไม่สามารถเปลี่ยนประเภทห้องได้ เนื่องจากอาจมีเตียงและผู้ป่วยอยู่
+                </p>
+            </div>
+
+            ${room.roomType === 'general' ? `
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">จำนวนเตียง *</label>
+                    <input type="number" id="editTotalBeds" required min="${room.occupiedBeds}" max="20" value="${room.totalBeds}"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <p style="margin: 0.5rem 0 0 0; color: #6b7280; font-size: 0.8125rem;">
+                        💡 ปัจจุบันมีผู้ป่วย ${room.occupiedBeds} คน ต้องมีเตียงอย่างน้อย ${room.occupiedBeds} เตียง
+                    </p>
+                </div>
+            ` : ''}
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ราคา/วัน (บาท) *</label>
+                <input type="number" id="editPricePerDay" required min="0" step="100" value="${priceValue}"
+                       style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">สถานะ *</label>
+                <select id="editRoomStatus" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="available" ${room.status === 'available' ? 'selected' : ''}>ว่าง</option>
+                    <option value="full" ${room.status === 'full' ? 'selected' : ''}>เต็ม</option>
+                    <option value="maintenance" ${room.status === 'maintenance' ? 'selected' : ''}>ซ่อมบำรุง</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">สิ่งอำนวยความสะดวก</label>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; padding: 0.75rem; background: #f9fafb; border-radius: 0.5rem;">
+                    ${['เตียงปรับระดับ', 'พัดลม', 'แอร์', 'TV', 'ห้องน้ำในตัว', 'ห้องน้ำรวม', 'ตู้เก็บของส่วนตัว', 'ม่านกั้น', 'WiFi', 'ระบบเรียกพยาบาล'].map(amenity => `
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" class="edit-amenity-checkbox" value="${amenity}" ${room.amenities && room.amenities.includes(amenity) ? 'checked' : ''}>
+                            <span style="font-size: 0.875rem;">${amenity}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">หมายเหตุ</label>
+                <textarea id="editRoomNotes" rows="2"
+                          style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); resize: vertical;">${room.notes || ''}</textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                <button type="button" onclick="viewWardRooms('${room.wardId}')" class="btn btn-secondary">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary">บันทึก</button>
+            </div>
+        </form>
+    `;
+
+    modal.style.display = 'flex';
+
+    // Handle form submission
+    document.getElementById('editWardRoomForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const roomNumber = document.getElementById('editRoomNumber').value.trim().toUpperCase();
+
+        // Check for duplicate room number (excluding current room)
+        const existingRoom = wardRooms.find(r => r.roomNumber === roomNumber && r.id !== roomId);
+        if (existingRoom) {
+            alert(`⚠️ รหัสห้อง "${roomNumber}" มีอยู่แล้วในระบบ\n\nกรุณาใช้รหัสอื่น`);
+            return;
+        }
+
+        // Get selected amenities
+        const amenities = Array.from(document.querySelectorAll('.edit-amenity-checkbox:checked'))
+            .map(cb => cb.value);
+
+        // Update room
+        room.roomName = document.getElementById('editRoomName').value.trim();
+        room.roomNumber = roomNumber;
+
+        // Update beds if it's a general room
+        if (room.roomType === 'general') {
+            const newTotalBeds = parseInt(document.getElementById('editTotalBeds').value);
+            const bedDifference = newTotalBeds - room.totalBeds;
+            room.totalBeds = newTotalBeds;
+            room.availableBeds = room.availableBeds + bedDifference;
+        }
+
+        const priceValue = parseFloat(document.getElementById('editPricePerDay').value);
+        if (room.roomType === 'general') {
+            room.pricePerBedPerDay = priceValue;
+        } else {
+            room.pricePerRoomPerDay = priceValue;
+        }
+
+        room.status = document.getElementById('editRoomStatus').value;
+        room.amenities = amenities;
+        room.notes = document.getElementById('editRoomNotes').value.trim();
+
+        storage.set('wardRooms', wardRooms);
+
+        // Update ward statistics
+        updateWardStatistics();
+
+        viewWardRooms(room.wardId);
+        alert(`✅ แก้ไขห้อง "${room.roomName}" สำเร็จ!`);
+    });
+}
+
+/**
+ * Delete ward room with confirmation
+ * @param {string} roomId - Room ID
+ */
+function deleteWardRoom(roomId) {
+    const wardRooms = storage.get('wardRooms') || [];
+    const room = wardRooms.find(r => r.id === roomId);
+
+    if (!room) {
+        alert('ไม่พบข้อมูลห้อง');
+        return;
+    }
+
+    // Check if room has occupied beds
+    if (room.occupiedBeds > 0) {
+        alert(`⚠️ ไม่สามารถลบห้อง "${room.roomName}" ได้\n\nเนื่องจากมีผู้ป่วย ${room.occupiedBeds} คน\n\nกรุณาย้ายผู้ป่วยออกก่อนลบห้อง`);
+        return;
+    }
+
+    const confirmed = confirm(`คุณต้องการลบห้อง "${room.roomName}" ใช่หรือไม่?\n\nการดำเนินการนี้ไม่สามารถย้อนกลับได้`);
+
+    if (confirmed) {
+        const updatedRooms = wardRooms.filter(r => r.id !== roomId);
+        storage.set('wardRooms', updatedRooms);
+
+        // Update ward statistics
+        updateWardStatistics();
+
+        viewWardRooms(room.wardId);
+        alert(`✅ ลบห้อง "${room.roomName}" สำเร็จ!`);
+    }
 }
 
 // ===== Rooms Functions =====
