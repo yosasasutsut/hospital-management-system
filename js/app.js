@@ -1931,18 +1931,275 @@ function updateAppointmentReminders() {
 }
 
 // ===== Doctors Functions =====
+/**
+ * Load and display all doctors in a modern card grid layout
+ * Shows comprehensive doctor information with action buttons
+ */
 function loadDoctors() {
     const doctors = storage.get('doctors') || [];
     const grid = document.getElementById('doctorsGrid');
+    const resultCount = document.getElementById('doctorResultCount');
 
-    grid.innerHTML = doctors.map(doctor => `
-        <div style="padding: 1.5rem; background-color: var(--light-color); border-radius: var(--border-radius); margin-bottom: 1rem;">
-            <h4>${doctor.name}</h4>
-            <p>แผนก: ${doctor.specialty}</p>
-            <p>โทร: ${doctor.phone}</p>
-            <p>สถานะ: <span style="color: var(--secondary-color);">${doctor.status === 'active' ? 'ออกตรวจ' : 'ไม่ว่าง'}</span></p>
-        </div>
-    `).join('');
+    if (doctors.length === 0) {
+        grid.innerHTML = `
+            <div style="text-align: center; padding: 3rem 1rem; color: #6b7280; grid-column: 1 / -1;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">👨‍⚕️</div>
+                <h3 style="margin: 0 0 0.5rem 0; color: #374151;">ยังไม่มีข้อมูลแพทย์</h3>
+                <p style="margin: 0;">เริ่มต้นโดยการเพิ่มแพทย์ใหม่</p>
+            </div>
+        `;
+        resultCount.innerHTML = '';
+        return;
+    }
+
+    // Display doctor cards with modern design
+    grid.innerHTML = doctors.map(doctor => {
+        const statusConfig = getDoctorStatusConfig(doctor.status);
+        return `
+            <div class="doctor-card" style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid ${statusConfig.color};">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div>
+                        <h3 style="margin: 0 0 0.5rem 0; color: #1f2937; font-size: 1.25rem;">${doctor.name}</h3>
+                        <div style="display: inline-block; padding: 0.25rem 0.75rem; background: ${statusConfig.bgColor}; color: ${statusConfig.textColor}; border-radius: 999px; font-size: 0.75rem; font-weight: 600;">
+                            ${statusConfig.icon} ${statusConfig.label}
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem; color: #4b5563;">
+                    <p style="margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600; min-width: 80px;">🏥 แผนก:</span>
+                        <span>${doctor.specialty}</span>
+                    </p>
+                    <p style="margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600; min-width: 80px;">📞 โทร:</span>
+                        <span>${doctor.phone}</span>
+                    </p>
+                    <p style="margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600; min-width: 80px;">📧 Email:</span>
+                        <span style="font-size: 0.875rem;">${doctor.email}</span>
+                    </p>
+                    <p style="margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600; min-width: 80px;">⏰ เวลา:</span>
+                        <span style="font-size: 0.875rem;">${doctor.workingHours}</span>
+                    </p>
+                    <p style="margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600; min-width: 80px;">📚 ประสบการณ์:</span>
+                        <span>${doctor.experience}</span>
+                    </p>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button class="btn btn-secondary" onclick="viewDoctor(${doctor.id})" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">ดูรายละเอียด</button>
+                    <button class="btn btn-primary" onclick="editDoctor(${doctor.id})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">แก้ไข</button>
+                    <button class="btn" onclick="deleteDoctor(${doctor.id})" style="padding: 0.5rem 1rem; font-size: 0.875rem; background-color: #ef4444; color: white;">ลบ</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Update result count
+    resultCount.innerHTML = `พบแพทย์ทั้งหมด <strong>${doctors.length}</strong> คน`;
+}
+
+/**
+ * Get status configuration for doctor status badges
+ * @param {string} status - Doctor status (active, on-leave, busy)
+ * @returns {Object} Status configuration
+ */
+function getDoctorStatusConfig(status) {
+    const configs = {
+        active: {
+            label: 'ออกตรวจ',
+            icon: '✅',
+            color: '#10b981',
+            bgColor: '#d1fae5',
+            textColor: '#065f46'
+        },
+        'on-leave': {
+            label: 'ลาพัก',
+            icon: '🏖️',
+            color: '#f59e0b',
+            bgColor: '#fef3c7',
+            textColor: '#92400e'
+        },
+        busy: {
+            label: 'ไม่ว่าง',
+            icon: '⏱️',
+            color: '#ef4444',
+            bgColor: '#fee2e2',
+            textColor: '#991b1b'
+        }
+    };
+    return configs[status] || configs.active;
+}
+
+// Add Doctor button event listener
+document.getElementById('addDoctorBtn')?.addEventListener('click', () => {
+    showAddDoctorModal();
+});
+
+/**
+ * Show modal form for adding new doctor
+ * Creates a comprehensive form with all required fields
+ */
+function showAddDoctorModal() {
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    modalBody.innerHTML = `
+        <h3>เพิ่มแพทย์ใหม่</h3>
+        <form id="addDoctorForm" style="margin-top: 1rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                <!-- Name -->
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ชื่อ-นามสกุล <span style="color: red;">*</span></label>
+                    <input type="text" id="doctorName" required minlength="3" placeholder="นพ.สมชาย ใจดี" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <small style="color: #6b7280;">กรอกคำนำหน้า ชื่อ และนามสกุล</small>
+                </div>
+
+                <!-- Specialty -->
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">แผนก/ความเชี่ยวชาญ <span style="color: red;">*</span></label>
+                    <select id="doctorSpecialty" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        <option value="">-- เลือกแผนก --</option>
+                        <option value="อายุรแพทย์">อายุรแพทย์</option>
+                        <option value="ศัลยแพทย์">ศัลยแพทย์</option>
+                        <option value="กุมารแพทย์">กุมารแพทย์</option>
+                        <option value="สูติ-นรีเวชแพทย์">สูติ-นรีเวชแพทย์</option>
+                        <option value="ออร์โธปิดิกส์">ออร์โธปิดิกส์</option>
+                        <option value="จักษุแพทย์">จักษุแพทย์</option>
+                        <option value="โสต ศอ นาสิก">โสต ศอ นาสิก</option>
+                        <option value="รังสีแพทย์">รังสีแพทย์</option>
+                        <option value="ทันตแพทย์">ทันตแพทย์</option>
+                        <option value="จิตแพทย์">จิตแพทย์</option>
+                        <option value="other">อื่นๆ</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                <!-- Phone -->
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">เบอร์โทร <span style="color: red;">*</span></label>
+                    <input type="tel" id="doctorPhone" required pattern="[0-9]{9,10}" placeholder="0812345678" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <small style="color: #6b7280;">กรอกเบอร์โทรศัพท์ 9-10 หลัก</small>
+                </div>
+
+                <!-- Email -->
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Email <span style="color: red;">*</span></label>
+                    <input type="email" id="doctorEmail" required placeholder="doctor@hospital.com" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <small style="color: #6b7280;">อีเมลสำหรับการติดต่อ</small>
+                </div>
+            </div>
+
+            <!-- Working Hours -->
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">เวลาทำงาน <span style="color: red;">*</span></label>
+                <input type="text" id="doctorWorkingHours" required placeholder="จันทร์-ศุกร์ 08:00-17:00" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                <small style="color: #6b7280;">ระบุวันและเวลาทำงาน</small>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                <!-- Experience -->
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ประสบการณ์</label>
+                    <input type="text" id="doctorExperience" placeholder="10 ปี" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+
+                <!-- License Number -->
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">เลขที่ใบอนุญาต</label>
+                    <input type="text" id="doctorLicenseNumber" placeholder="MD-2020-001234" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+            </div>
+
+            <!-- Education -->
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">วุฒิการศึกษา</label>
+                <textarea id="doctorEducation" rows="2" placeholder="แพทยศาสตร์บัณฑิต มหาวิทยาลัย..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit;"></textarea>
+            </div>
+
+            <!-- Status -->
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">สถานะ <span style="color: red;">*</span></label>
+                <select id="doctorStatus" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="active">ออกตรวจ</option>
+                    <option value="on-leave">ลาพัก</option>
+                    <option value="busy">ไม่ว่าง</option>
+                </select>
+            </div>
+
+            <div id="formError" style="color: red; margin-bottom: 1rem; display: none;"></div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">บันทึกข้อมูลแพทย์</button>
+        </form>
+    `;
+
+    modal.classList.add('active');
+
+    // Handle form submission
+    document.getElementById('addDoctorForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        // Validation
+        const formError = document.getElementById('formError');
+        const phone = document.getElementById('doctorPhone').value;
+        const email = document.getElementById('doctorEmail').value;
+
+        // Phone validation
+        if (!/^[0-9]{9,10}$/.test(phone)) {
+            formError.textContent = 'เบอร์โทรศัพท์ไม่ถูกต้อง กรุณากรอกตัวเลข 9-10 หลัก';
+            formError.style.display = 'block';
+            return;
+        }
+
+        // Email validation
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            formError.textContent = 'รูปแบบอีเมลไม่ถูกต้อง';
+            formError.style.display = 'block';
+            return;
+        }
+
+        formError.style.display = 'none';
+        addDoctor();
+    });
+}
+
+/**
+ * Add new doctor to the system
+ * Saves to localStorage and refreshes the display
+ */
+function addDoctor() {
+    const doctors = storage.get('doctors') || [];
+    const today = new Date().toISOString().split('T')[0];
+
+    const newDoctor = {
+        id: doctors.length > 0 ? Math.max(...doctors.map(d => d.id)) + 1 : 1,
+        name: document.getElementById('doctorName').value,
+        specialty: document.getElementById('doctorSpecialty').value,
+        phone: document.getElementById('doctorPhone').value,
+        email: document.getElementById('doctorEmail').value,
+        workingHours: document.getElementById('doctorWorkingHours').value,
+        experience: document.getElementById('doctorExperience').value || '-',
+        education: document.getElementById('doctorEducation').value || '-',
+        licenseNumber: document.getElementById('doctorLicenseNumber').value || '-',
+        status: document.getElementById('doctorStatus').value,
+        registrationDate: today
+    };
+
+    doctors.push(newDoctor);
+    storage.set('doctors', doctors);
+
+    // Close modal
+    document.getElementById('modal').classList.remove('active');
+
+    // Reload doctors list
+    loadDoctors();
+
+    // Update dashboard
+    loadDashboard();
+
+    // Show success message (optional)
+    alert(`เพิ่มข้อมูลแพทย์ ${newDoctor.name} เรียบร้อยแล้ว!`);
 }
 
 // ===== Rooms Functions =====
