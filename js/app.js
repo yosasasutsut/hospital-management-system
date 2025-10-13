@@ -868,6 +868,100 @@ const storage = {
             // สำหรับ Commit 1 จะเพิ่มข้อมูลตัวอย่างพอสมควรก่อน
         ]);
 
+        // Initialize doctor schedules (Day 17)
+        if (!storage.get('doctorSchedules')) storage.set('doctorSchedules', [
+            {
+                id: 'schedule-001',
+                doctorId: 1,
+                weeklySchedule: {
+                    monday: [
+                        { startTime: '08:00', endTime: '12:00', type: 'consultation', location: 'ห้องตรวจ 301' },
+                        { startTime: '13:00', endTime: '17:00', type: 'consultation', location: 'ห้องตรวจ 301' }
+                    ],
+                    tuesday: [
+                        { startTime: '08:00', endTime: '12:00', type: 'consultation', location: 'ห้องตรวจ 301' },
+                        { startTime: '13:00', endTime: '17:00', type: 'consultation', location: 'ห้องตรวจ 301' }
+                    ],
+                    wednesday: [
+                        { startTime: '08:00', endTime: '12:00', type: 'consultation', location: 'ห้องตรวจ 301' },
+                        { startTime: '13:00', endTime: '17:00', type: 'consultation', location: 'ห้องตรวจ 301' }
+                    ],
+                    thursday: [
+                        { startTime: '08:00', endTime: '12:00', type: 'consultation', location: 'ห้องตรวจ 301' },
+                        { startTime: '13:00', endTime: '17:00', type: 'consultation', location: 'ห้องตรวจ 301' }
+                    ],
+                    friday: [
+                        { startTime: '08:00', endTime: '12:00', type: 'consultation', location: 'ห้องตรวจ 301' },
+                        { startTime: '13:00', endTime: '17:00', type: 'consultation', location: 'ห้องตรวจ 301' }
+                    ],
+                    saturday: [],
+                    sunday: []
+                },
+                effectiveDate: '2025-10-01',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'schedule-002',
+                doctorId: 2,
+                weeklySchedule: {
+                    monday: [
+                        { startTime: '09:00', endTime: '13:00', type: 'consultation', location: 'ห้องตรวจ 405' },
+                        { startTime: '14:00', endTime: '18:00', type: 'consultation', location: 'ห้องตรวจ 405' }
+                    ],
+                    tuesday: [
+                        { startTime: '09:00', endTime: '13:00', type: 'consultation', location: 'ห้องตรวจ 405' }
+                    ],
+                    wednesday: [
+                        { startTime: '09:00', endTime: '13:00', type: 'consultation', location: 'ห้องตรวจ 405' },
+                        { startTime: '14:00', endTime: '18:00', type: 'consultation', location: 'ห้องตรวจ 405' }
+                    ],
+                    thursday: [
+                        { startTime: '09:00', endTime: '13:00', type: 'consultation', location: 'ห้องตรวจ 405' }
+                    ],
+                    friday: [
+                        { startTime: '09:00', endTime: '13:00', type: 'consultation', location: 'ห้องตรวจ 405' },
+                        { startTime: '14:00', endTime: '18:00', type: 'consultation', location: 'ห้องตรวจ 405' }
+                    ],
+                    saturday: [
+                        { startTime: '09:00', endTime: '13:00', type: 'consultation', location: 'ห้องตรวจ 405' }
+                    ],
+                    sunday: []
+                },
+                effectiveDate: '2025-10-01',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'schedule-003',
+                doctorId: 3,
+                weeklySchedule: {
+                    monday: [
+                        { startTime: '10:00', endTime: '14:00', type: 'consultation', location: 'ห้องตรวจ 201' },
+                        { startTime: '15:00', endTime: '19:00', type: 'consultation', location: 'ห้องตรวจ 201' }
+                    ],
+                    tuesday: [
+                        { startTime: '10:00', endTime: '14:00', type: 'consultation', location: 'ห้องตรวจ 201' },
+                        { startTime: '15:00', endTime: '19:00', type: 'consultation', location: 'ห้องตรวจ 201' }
+                    ],
+                    wednesday: [
+                        { startTime: '10:00', endTime: '14:00', type: 'consultation', location: 'ห้องตรวจ 201' },
+                        { startTime: '15:00', endTime: '19:00', type: 'consultation', location: 'ห้องตรวจ 201' }
+                    ],
+                    thursday: [
+                        { startTime: '10:00', endTime: '14:00', type: 'consultation', location: 'ห้องตรวจ 201' },
+                        { startTime: '15:00', endTime: '19:00', type: 'consultation', location: 'ห้องตรวจ 201' }
+                    ],
+                    friday: [
+                        { startTime: '10:00', endTime: '14:00', type: 'consultation', location: 'ห้องตรวจ 201' },
+                        { startTime: '15:00', endTime: '19:00', type: 'consultation', location: 'ห้องตรวจ 201' }
+                    ],
+                    saturday: [],
+                    sunday: []
+                },
+                effectiveDate: '2025-10-01',
+                createdAt: new Date().toISOString()
+            }
+        ]);
+
         // Update ward statistics after initialization
         updateWardStatistics();
     }
@@ -2854,10 +2948,11 @@ function loadDoctors() {
                         <span>${doctor.experience}</span>
                     </p>
                 </div>
-                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                    <button class="btn btn-secondary" onclick="viewDoctor(${doctor.id})" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">ดูรายละเอียด</button>
-                    <button class="btn btn-primary" onclick="editDoctor(${doctor.id})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">แก้ไข</button>
-                    <button class="btn" onclick="deleteDoctor(${doctor.id})" style="padding: 0.5rem 1rem; font-size: 0.875rem; background-color: #ef4444; color: white;">ลบ</button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem;">
+                    <button class="btn btn-secondary" onclick="viewDoctor(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem;">ดูรายละเอียด</button>
+                    <button class="btn" onclick="viewDoctorSchedule(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem; background: #8b5cf6; color: white;">📅 ตารางเวลา</button>
+                    <button class="btn btn-primary" onclick="editDoctor(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem;">แก้ไข</button>
+                    <button class="btn" onclick="deleteDoctor(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem; background-color: #ef4444; color: white;">ลบ</button>
                 </div>
             </div>
         `;
@@ -3547,6 +3642,354 @@ function deleteDoctor(doctorId) {
         loadDashboard();
         alert(`ลบข้อมูลแพทย์ ${doctor.name} เรียบร้อยแล้ว`);
     }
+}
+
+// ===== Doctor Schedule Management Functions (Day 17) =====
+
+/**
+ * Get doctor schedule by doctor ID
+ * @param {number} doctorId - Doctor ID
+ * @returns {Object|null} Schedule object or null if not found
+ */
+function getDoctorSchedule(doctorId) {
+    const schedules = storage.get('doctorSchedules') || [];
+    return schedules.find(s => s.doctorId === doctorId) || null;
+}
+
+/**
+ * Show doctor schedule management modal
+ * @param {number} doctorId - Doctor ID
+ */
+function showDoctorScheduleModal(doctorId) {
+    const doctors = storage.get('doctors') || [];
+    const doctor = doctors.find(d => d.id === doctorId);
+
+    if (!doctor) {
+        alert('ไม่พบข้อมูลแพทย์');
+        return;
+    }
+
+    const schedule = getDoctorSchedule(doctorId);
+    const weeklySchedule = schedule ? schedule.weeklySchedule : {
+        monday: [],
+        tuesday: [],
+        wednesday: [],
+        thursday: [],
+        friday: [],
+        saturday: [],
+        sunday: []
+    };
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    const dayNames = {
+        monday: 'จันทร์',
+        tuesday: 'อังคาร',
+        wednesday: 'พุธ',
+        thursday: 'พฤหัสบดี',
+        friday: 'ศุกร์',
+        saturday: 'เสาร์',
+        sunday: 'อาทิตย์'
+    };
+
+    modalBody.innerHTML = `
+        <style>
+            .schedule-grid {
+                display: grid;
+                gap: 1rem;
+                margin-top: 1.5rem;
+            }
+            .schedule-day-card {
+                background: #f9fafb;
+                border-radius: 8px;
+                padding: 1rem;
+                border: 2px solid #e5e7eb;
+            }
+            .schedule-day-card.has-schedule {
+                border-color: #3b82f6;
+                background: #eff6ff;
+            }
+            .schedule-day-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 0.75rem;
+            }
+            .schedule-slots {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .schedule-slot {
+                display: grid;
+                grid-template-columns: 1fr 1fr 2fr auto;
+                gap: 0.5rem;
+                align-items: center;
+                padding: 0.5rem;
+                background: white;
+                border-radius: 4px;
+                border: 1px solid #e5e7eb;
+            }
+            .schedule-slot input, .schedule-slot select {
+                padding: 0.5rem;
+                border: 1px solid #d1d5db;
+                border-radius: 4px;
+                font-size: 0.875rem;
+            }
+            .btn-add-slot {
+                padding: 0.5rem 1rem;
+                background: #3b82f6;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.875rem;
+            }
+            .btn-add-slot:hover {
+                background: #2563eb;
+            }
+            .btn-remove-slot {
+                padding: 0.25rem 0.5rem;
+                background: #ef4444;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.75rem;
+            }
+            .btn-remove-slot:hover {
+                background: #dc2626;
+            }
+        </style>
+
+        <h3 style="margin: 0 0 0.5rem 0;">📅 จัดการตารางเวลา - ${doctor.name}</h3>
+        <p style="margin: 0 0 1.5rem 0; color: #6b7280; font-size: 0.875rem;">กำหนดเวลาทำงานของแพทย์ในแต่ละวัน</p>
+
+        <div class="schedule-grid" id="scheduleGrid">
+            ${Object.keys(dayNames).map(day => {
+                const daySchedule = weeklySchedule[day] || [];
+                return `
+                    <div class="schedule-day-card ${daySchedule.length > 0 ? 'has-schedule' : ''}" id="day-${day}">
+                        <div class="schedule-day-header">
+                            <h4 style="margin: 0; color: #1f2937;">${dayNames[day]}</h4>
+                            <button type="button" class="btn-add-slot" onclick="addTimeSlot('${day}')">+ เพิ่มช่วงเวลา</button>
+                        </div>
+                        <div class="schedule-slots" id="slots-${day}">
+                            ${daySchedule.length > 0 ? daySchedule.map((slot, index) => `
+                                <div class="schedule-slot">
+                                    <input type="time" value="${slot.startTime}" data-day="${day}" data-index="${index}" data-field="startTime" class="slot-input">
+                                    <input type="time" value="${slot.endTime}" data-day="${day}" data-index="${index}" data-field="endTime" class="slot-input">
+                                    <input type="text" value="${slot.location || ''}" placeholder="สถานที่" data-day="${day}" data-index="${index}" data-field="location" class="slot-input">
+                                    <button type="button" class="btn-remove-slot" onclick="removeTimeSlot('${day}', ${index})">ลบ</button>
+                                </div>
+                            `).join('') : '<p style="margin: 0; color: #9ca3af; font-size: 0.875rem;">ไม่มีช่วงเวลาทำงาน</p>'}
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb;">
+            <button type="button" onclick="closeModal()" class="btn btn-secondary">ยกเลิก</button>
+            <button type="button" onclick="saveDoctorSchedule(${doctorId})" class="btn btn-primary">💾 บันทึกตารางเวลา</button>
+        </div>
+    `;
+
+    modal.classList.add('active');
+
+    // Store current schedule data in a global variable for manipulation
+    window.currentScheduleData = JSON.parse(JSON.stringify(weeklySchedule));
+}
+
+/**
+ * Add a new time slot to a specific day
+ * @param {string} day - Day name (monday, tuesday, etc.)
+ */
+function addTimeSlot(day) {
+    if (!window.currentScheduleData) {
+        window.currentScheduleData = {};
+    }
+    if (!window.currentScheduleData[day]) {
+        window.currentScheduleData[day] = [];
+    }
+
+    window.currentScheduleData[day].push({
+        startTime: '09:00',
+        endTime: '17:00',
+        type: 'consultation',
+        location: ''
+    });
+
+    // Re-render the specific day
+    renderDaySlots(day);
+}
+
+/**
+ * Remove a time slot from a specific day
+ * @param {string} day - Day name
+ * @param {number} index - Slot index to remove
+ */
+function removeTimeSlot(day, index) {
+    if (window.currentScheduleData && window.currentScheduleData[day]) {
+        window.currentScheduleData[day].splice(index, 1);
+        renderDaySlots(day);
+    }
+}
+
+/**
+ * Re-render slots for a specific day
+ * @param {string} day - Day name
+ */
+function renderDaySlots(day) {
+    const dayNames = {
+        monday: 'จันทร์',
+        tuesday: 'อังคาร',
+        wednesday: 'พุธ',
+        thursday: 'พฤหัสบดี',
+        friday: 'ศุกร์',
+        saturday: 'เสาร์',
+        sunday: 'อาทิตย์'
+    };
+
+    const slotsContainer = document.getElementById(`slots-${day}`);
+    const dayCard = document.getElementById(`day-${day}`);
+    const daySchedule = window.currentScheduleData[day] || [];
+
+    // Update card style
+    if (daySchedule.length > 0) {
+        dayCard.classList.add('has-schedule');
+    } else {
+        dayCard.classList.remove('has-schedule');
+    }
+
+    if (daySchedule.length === 0) {
+        slotsContainer.innerHTML = '<p style="margin: 0; color: #9ca3af; font-size: 0.875rem;">ไม่มีช่วงเวลาทำงาน</p>';
+    } else {
+        slotsContainer.innerHTML = daySchedule.map((slot, index) => `
+            <div class="schedule-slot">
+                <input type="time" value="${slot.startTime}" data-day="${day}" data-index="${index}" data-field="startTime" class="slot-input" onchange="updateSlotField(this)">
+                <input type="time" value="${slot.endTime}" data-day="${day}" data-index="${index}" data-field="endTime" class="slot-input" onchange="updateSlotField(this)">
+                <input type="text" value="${slot.location || ''}" placeholder="สถานที่" data-day="${day}" data-index="${index}" data-field="location" class="slot-input" onchange="updateSlotField(this)">
+                <button type="button" class="btn-remove-slot" onclick="removeTimeSlot('${day}', ${index})">ลบ</button>
+            </div>
+        `).join('');
+    }
+}
+
+/**
+ * Update slot field value in current schedule data
+ * @param {HTMLElement} input - Input element
+ */
+function updateSlotField(input) {
+    const day = input.getAttribute('data-day');
+    const index = parseInt(input.getAttribute('data-index'));
+    const field = input.getAttribute('data-field');
+    const value = input.value;
+
+    if (window.currentScheduleData && window.currentScheduleData[day] && window.currentScheduleData[day][index]) {
+        window.currentScheduleData[day][index][field] = value;
+    }
+}
+
+/**
+ * Save doctor schedule to storage
+ * @param {number} doctorId - Doctor ID
+ */
+function saveDoctorSchedule(doctorId) {
+    // Collect all data from inputs
+    document.querySelectorAll('.slot-input').forEach(input => {
+        updateSlotField(input);
+    });
+
+    const schedules = storage.get('doctorSchedules') || [];
+    const existingScheduleIndex = schedules.findIndex(s => s.doctorId === doctorId);
+
+    const scheduleData = {
+        id: existingScheduleIndex >= 0 ? schedules[existingScheduleIndex].id : `schedule-${Date.now()}`,
+        doctorId: doctorId,
+        weeklySchedule: window.currentScheduleData,
+        effectiveDate: existingScheduleIndex >= 0 ? schedules[existingScheduleIndex].effectiveDate : new Date().toISOString().split('T')[0],
+        createdAt: existingScheduleIndex >= 0 ? schedules[existingScheduleIndex].createdAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+
+    if (existingScheduleIndex >= 0) {
+        schedules[existingScheduleIndex] = scheduleData;
+    } else {
+        schedules.push(scheduleData);
+    }
+
+    storage.set('doctorSchedules', schedules);
+    closeModal();
+    loadDoctors();
+    alert('✅ บันทึกตารางเวลาสำเร็จ!');
+}
+
+/**
+ * View doctor schedule (read-only)
+ * @param {number} doctorId - Doctor ID
+ */
+function viewDoctorSchedule(doctorId) {
+    const doctors = storage.get('doctors') || [];
+    const doctor = doctors.find(d => d.id === doctorId);
+    const schedule = getDoctorSchedule(doctorId);
+
+    if (!doctor) {
+        alert('ไม่พบข้อมูลแพทย์');
+        return;
+    }
+
+    if (!schedule) {
+        alert('⚠️ แพทย์ท่านนี้ยังไม่มีตารางเวลา\n\nกรุณากำหนดตารางเวลาก่อน');
+        return;
+    }
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    const dayNames = {
+        monday: 'จันทร์',
+        tuesday: 'อังคาร',
+        wednesday: 'พุธ',
+        thursday: 'พฤหัสบดี',
+        friday: 'ศุกร์',
+        saturday: 'เสาร์',
+        sunday: 'อาทิตย์'
+    };
+
+    modalBody.innerHTML = `
+        <h3 style="margin: 0 0 0.5rem 0;">📅 ตารางเวลาทำงาน - ${doctor.name}</h3>
+        <p style="margin: 0 0 1.5rem 0; color: #6b7280; font-size: 0.875rem;">ตารางเวลาปัจจุบัน</p>
+
+        <div style="display: grid; gap: 1rem;">
+            ${Object.keys(dayNames).map(day => {
+                const daySchedule = schedule.weeklySchedule[day] || [];
+                return `
+                    <div style="background: ${daySchedule.length > 0 ? '#eff6ff' : '#f9fafb'}; border-radius: 8px; padding: 1rem; border: 2px solid ${daySchedule.length > 0 ? '#3b82f6' : '#e5e7eb'};">
+                        <h4 style="margin: 0 0 0.75rem 0; color: #1f2937;">${dayNames[day]}</h4>
+                        ${daySchedule.length > 0 ? `
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                ${daySchedule.map(slot => `
+                                    <div style="display: flex; gap: 1rem; padding: 0.5rem; background: white; border-radius: 4px; align-items: center;">
+                                        <span style="font-weight: 600; color: #3b82f6;">⏰ ${slot.startTime} - ${slot.endTime}</span>
+                                        ${slot.location ? `<span style="color: #6b7280;">📍 ${slot.location}</span>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : '<p style="margin: 0; color: #9ca3af; font-size: 0.875rem;">วันหยุด</p>'}
+                    </div>
+                `;
+            }).join('')}
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+            <button onclick="closeModal()" class="btn btn-secondary">ปิด</button>
+            <button onclick="closeModal(); showDoctorScheduleModal(${doctorId})" class="btn btn-primary">✏️ แก้ไขตารางเวลา</button>
+        </div>
+    `;
+
+    modal.classList.add('active');
 }
 
 // ===== Ward Management Functions =====
