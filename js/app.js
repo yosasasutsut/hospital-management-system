@@ -2535,6 +2535,70 @@ function switchProfileTab(tabName, doctorId) {
 }
 
 /**
+ * Upload doctor profile photo
+ * @param {number} doctorId - Doctor ID
+ * @param {File} file - Image file to upload
+ */
+function uploadDoctorPhoto(doctorId, file) {
+    if (!file || !file.type.startsWith('image/')) {
+        alert('กรุณาเลือกไฟล์รูปภาพ');
+        return;
+    }
+
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+        alert('ไฟล์รูปภาพต้องมีขนาดไม่เกิน 2MB');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Image = e.target.result;
+
+        // Update doctor photo
+        const doctors = storage.get('doctors') || [];
+        const doctorIndex = doctors.findIndex(d => d.id === doctorId);
+
+        if (doctorIndex !== -1) {
+            doctors[doctorIndex].photo = base64Image;
+            storage.set('doctors', doctors);
+
+            // Refresh display
+            document.getElementById('modal').classList.remove('active');
+            loadDoctors();
+
+            alert('อัพโหลดรูปโปรไฟล์สำเร็จ!');
+        }
+    };
+
+    reader.readAsDataURL(file);
+}
+
+/**
+ * Remove doctor profile photo
+ * @param {number} doctorId - Doctor ID
+ */
+function removeDoctorPhoto(doctorId) {
+    const confirmed = confirm('คุณต้องการลบรูปโปรไฟล์ใช่หรือไม่?');
+
+    if (confirmed) {
+        const doctors = storage.get('doctors') || [];
+        const doctorIndex = doctors.findIndex(d => d.id === doctorId);
+
+        if (doctorIndex !== -1) {
+            doctors[doctorIndex].photo = null;
+            storage.set('doctors', doctors);
+
+            // Refresh display
+            document.getElementById('modal').classList.remove('active');
+            loadDoctors();
+
+            alert('ลบรูปโปรไฟล์สำเร็จ!');
+        }
+    }
+}
+
+/**
  * Edit doctor information
  * @param {number} doctorId - Doctor ID
  */
