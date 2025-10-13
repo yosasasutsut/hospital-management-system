@@ -10,23 +10,27 @@
 
 ## ✨ Features
 
-### 🔹 ปัจจุบัน (Day 1)
-- ✅ Dashboard พร้อมสถิติพื้นฐาน
-- ✅ ระบบลงทะเบียนผู้ป่วย
-- ✅ ดูรายการผู้ป่วย
-- ✅ ระบบนัดหมายเบื้องต้น
-- ✅ ข้อมูลแพทย์
-- ✅ จัดการห้องพัก
-- ✅ Responsive Design (รองรับ Mobile)
+### 🔹 ปัจจุบัน (Day 1-21) - Version 2.3.0
+- ✅ **Dashboard** - สถิติแบบ real-time พร้อมกราฟ
+- ✅ **Patient Management** - ลงทะเบียน แก้ไข ค้นหา Export CSV
+- ✅ **Appointment System** - จองนัดหมาย แก้ไข ยกเลิก พร้อมการแจ้งเตือน
+- ✅ **Doctor Management** - ข้อมูลแพทย์ครบถ้วน พร้อมระบบ:
+  - 📅 **Schedule Management** (Day 17) - ตารางเวลาแบบรายสัปดาห์
+  - 🔄 **Status Management** (Day 18) - เปลี่ยนสถานะ (ออกตรวจ/ไม่ว่าง/ลาพัก)
+  - 📊 **Performance Metrics** (Day 19) - วิเคราะห์ประสิทธิภาพ
+  - 🏥 **Department Grouping** (Day 20) - จัดกลุ่มตามแผนก
+  - 🔍 **Advanced Search & Filter** (Day 21) - ค้นหาแบบรวม
+- ✅ **Ward Management System** - ระบบหอผู้ป่วย 3 ชั้น (wards → rooms → beds)
+- ✅ **Room Management** - จัดการห้องพักทุกประเภท พร้อมราคา
+- ✅ **Responsive Design** - รองรับ Desktop, Tablet, Mobile
+- ✅ **Screenshots Documentation** - 34 ภาพครอบคลุมทุกฟีเจอร์
 
-### 🔹 กำลังพัฒนา (ตาม ROADMAP.md)
-- 📅 ปฏิทินนัดหมาย
-- 💊 ระบบจัดการยา
-- 💰 ระบบเรียกเก็บเงิน
-- 📊 รายงานและการวิเคราะห์
-- 🔐 ระบบ Authentication
-- 🎨 Dark Mode
-- และอื่นๆ อีกมากมาย...
+### 🔹 กำลังพัฒนา (Week 5-9)
+- 💊 **Pharmacy & Medicine** (Week 5) - ระบบจัดการยาและสต็อก
+- 💰 **Billing & Payments** (Week 6) - ระบบการเงินและประกันสังคม
+- 📊 **Reports & Analytics** (Week 7) - รายงานและการวิเคราะห์ข้อมูล
+- 🔐 **Security & Users** (Week 8) - ระบบ Authentication และบทบาท
+- 🎨 **UI/UX Improvements** (Week 9) - Dark Mode และปรับปรุง UX
 
 ## 🚀 Quick Start
 
@@ -129,11 +133,28 @@ hospital-management-system/
 
 ## 🎨 Screenshots
 
+### 📸 Documentation (34 ภาพ)
+ระบบมี screenshot ครบทุกฟีเจอร์:
+- **Desktop**: 21 ภาพ - Dashboard, Patients, Doctors, Wards, Appointments, All Modals
+- **Tablet**: 3 ภาพ - Responsive layouts (768x1024)
+- **Mobile**: 6 ภาพ - Mobile UI (390x844)
+- **Features**: 4 ภาพ - Form validation, Search, Empty states, Modals
+
+📁 ดูภาพทั้งหมด: [`POC/`](POC/)
+
 ### Desktop View
-Dashboard แสดงสถิติต่างๆ แบบ real-time
+![Dashboard](POC/desktop/01-dashboard-overview.png)
+*Dashboard แสดงสถิติแบบ real-time พร้อมกราฟ*
+
+![Doctor Management](POC/desktop/09-doctors-list.png)
+*ระบบจัดการแพทย์พร้อมฟีเจอร์ครบถ้วน*
+
+![Ward System](POC/desktop/12-wards-list.png)
+*ระบบหอผู้ป่วยแบบ 3 ชั้น (Wards → Rooms → Beds)*
 
 ### Mobile View
-UI ปรับตัวอัตโนมัติสำหรับหน้าจอเล็ก
+![Mobile Dashboard](POC/mobile/01-mobile-dashboard.png)
+*UI ปรับตัวอัตโนมัติสำหรับหน้าจอเล็ก*
 
 ## 🤝 Contributing
 
@@ -194,7 +215,30 @@ git commit -m "docs: update README with new features"
 
 ## 📅 Development Log
 
-### Day 14 - 2025-10-12 (Latest)
+### Day 17-21 - 2025-10-13 (Latest)
+**Doctor Management Enhancement (Version 2.3.0)**
+- ✅ **Day 17**: Doctor Schedule Management - ตารางเวลาแบบรายสัปดาห์ พร้อม time slots
+- ✅ **Day 18**: Doctor Availability Status - 3 สถานะ (ออกตรวจ/ไม่ว่าง/ลาพัก) พร้อมกรอง
+- ✅ **Day 19**: Doctor Performance Metrics - วิเคราะห์ประสิทธิภาพแพทย์แบบ real-time
+- ✅ **Day 20**: Department Management - จัดกลุ่มแพทย์ตามแผนก
+- ✅ **Day 21**: Advanced Search & Filter - ค้นหาแบบรวม (ชื่อ + แผนก + สถานะ)
+- ✅ Screenshot Automation - 34 ภาพ (21 desktop + 13 responsive)
+- ✅ Testing Documentation - TESTING.md พร้อม 80+ test items
+- ✅ Bug Fix - Ward modal close issue แก้ไขแล้ว
+
+### Day 15-16 - 2025-10-12
+**Ward Management System (Version 2.1.0 - 2.2.0)**
+- ✅ Ward Management System - 3-tier hierarchy (wards → rooms → beds)
+- ✅ Ward CRUD operations with search and filter
+- ✅ Room Management within wards (3 types: general, single, double)
+- ✅ Bed Management with status tracking
+- ✅ Bed Assignment System - มอบหมายและจำหน่ายผู้ป่วย
+- ✅ Comprehensive demo data (6 wards, 13 rooms, 14 beds)
+- ✅ Enhanced Doctor Profile Modal with 4 tabs
+- ✅ Version bumped to 2.2.0
+
+### Day 14 - 2025-10-12
+**Appointment Statistics (Version 1.9.0)**
 - ✅ Comprehensive appointment statistics system
 - ✅ Statistics calculation functions (getAppointmentsByDoctor, getAppointmentsByDateRange, getAppointmentStatistics)
 - ✅ Enhanced dashboard analytics section
@@ -204,7 +248,6 @@ git commit -m "docs: update README with new features"
 - ✅ Modern gradient cards with color-coded statistics
 - ✅ Responsive grid layouts and empty states
 - ✅ JSDoc documentation for all statistics functions
-- ✅ Version bumped to 1.9.0
 
 ### Day 13 - 2025-10-12
 - ✅ Quick Edit Appointment Notes feature
@@ -336,8 +379,8 @@ This project is created for educational purposes.
 
 ## 📞 Contact
 
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
+- GitHub: [@yosasasutsut](https://github.com/yosasasutsut)
+- Email: wongwarit.b@gmail.com
 
 ---
 
