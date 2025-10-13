@@ -36,11 +36,12 @@ const storage = {
         if (!storage.get('patients')) storage.set('patients', []);
         if (!storage.get('appointments')) storage.set('appointments', []);
 
-        // Initialize sample doctors with comprehensive data
+        // Initialize sample doctors with comprehensive profile data
         if (!storage.get('doctors')) storage.set('doctors', [
             {
                 id: 1,
                 name: 'นพ.สมชาย ใจดี',
+                title: 'นายแพทย์',
                 specialty: 'อายุรแพทย์',
                 phone: '081-234-5678',
                 email: 'somchai.j@hospital.com',
@@ -49,11 +50,35 @@ const storage = {
                 education: 'แพทยศาสตร์บัณฑิต จุฬาลงกรณ์มหาวิทยาลัย',
                 licenseNumber: 'MD-2008-001234',
                 status: 'active',
-                registrationDate: new Date().toISOString().split('T')[0]
+                registrationDate: new Date().toISOString().split('T')[0],
+                // Profile extensions for Day 16
+                photo: null, // base64 string or null for default
+                photoUrl: null,
+                roomNumber: 'ห้องตรวจ 301 อาคาร 1',
+                bio: 'แพทย์ผู้เชี่ยวชาญด้านอายุรศาสตร์ มีประสบการณ์กว่า 15 ปี เชี่ยวชาญในการรักษาโรคเรื้อรัง โรคหัวใจ และโรคเบาหวาน มุ่งมั่นให้การดูแลผู้ป่วยด้วยความเอาใจใส่และใช้เทคโนโลยีการแพทย์ที่ทันสมัย',
+                languages: ['ไทย', 'English'],
+                specializations: ['โรคหัวใจ', 'โรคเบาหวาน', 'โรคความดันโลหิตสูง'],
+                certifications: [
+                    'วุฒิบัตรอายุรศาสตร์ แพทยสภา',
+                    'Fellow of the Royal College of Physicians of Thailand',
+                    'Certificate in Advanced Cardiac Life Support (ACLS)'
+                ],
+                memberships: [
+                    'ราชวิทยาลัยอายุรแพทย์แห่งประเทศไทย',
+                    'สมาคมโรคหัวใจแห่งประเทศไทย'
+                ],
+                awards: [
+                    'รางวัลแพทย์ดีเด่น ประจำปี 2565',
+                    'Best Doctor Award 2020'
+                ],
+                researchInterests: 'โรคหัวใจและหลอดเลือด, การป้องกันโรคเรื้อรัง',
+                patientsCount: 1250,
+                appointmentsCompleted: 3420
             },
             {
                 id: 2,
                 name: 'นพ.สมหญิง รักษา',
+                title: 'นายแพทย์',
                 specialty: 'ศัลยแพทย์',
                 phone: '082-345-6789',
                 email: 'somying.r@hospital.com',
@@ -62,11 +87,34 @@ const storage = {
                 education: 'แพทยศาสตร์บัณฑิต มหาวิทยาลัยมหิดล',
                 licenseNumber: 'MD-2011-005678',
                 status: 'active',
-                registrationDate: new Date().toISOString().split('T')[0]
+                registrationDate: new Date().toISOString().split('T')[0],
+                // Profile extensions for Day 16
+                photo: null,
+                photoUrl: null,
+                roomNumber: 'ห้องตรวจ 405 อาคาร 2',
+                bio: 'ศัลยแพทย์ผู้เชี่ยวชาญด้านการผ่าตัดทั่วไปและศัลยกรรมช่องท้อง มีความชำนาญในการผ่าตัดแบบส่องกล้อง (Laparoscopic Surgery) และการผ่าตัดระบบทางเดินอาหาร',
+                languages: ['ไทย', 'English', '中文'],
+                specializations: ['ศัลยกรรมช่องท้อง', 'ศัลยกรรมส่องกล้อง', 'ศัลยกรรมระบบทางเดินอาหาร'],
+                certifications: [
+                    'วุฒิบัตรศัลยศาสตร์ แพทยสภา',
+                    'Advanced Laparoscopic Surgery Training',
+                    'Fellowship in Minimally Invasive Surgery'
+                ],
+                memberships: [
+                    'ราชวิทยาลัยศัลยแพทย์แห่งประเทศไทย',
+                    'สมาคมศัลยกรรมส่องกล้องแห่งประเทศไทย'
+                ],
+                awards: [
+                    'Excellence in Surgical Innovation 2022'
+                ],
+                researchInterests: 'Minimally Invasive Surgery, Colorectal Surgery',
+                patientsCount: 890,
+                appointmentsCompleted: 2150
             },
             {
                 id: 3,
                 name: 'นพ.วิชัย เก่ง',
+                title: 'นายแพทย์',
                 specialty: 'กุมารแพทย์',
                 phone: '083-456-7890',
                 email: 'wichai.k@hospital.com',
@@ -75,7 +123,27 @@ const storage = {
                 education: 'แพทยศาสตร์บัณฑิต มหาวิทยาลัยเชียงใหม่',
                 licenseNumber: 'MD-2015-009012',
                 status: 'active',
-                registrationDate: new Date().toISOString().split('T')[0]
+                registrationDate: new Date().toISOString().split('T')[0],
+                // Profile extensions for Day 16
+                photo: null,
+                photoUrl: null,
+                roomNumber: 'ห้องตรวจ 201 อาคารเด็ก',
+                bio: 'กุมารแพทย์ผู้มีความเชี่ยวชาญในการดูแลสุขภาพเด็กและวัยรุ่น เน้นการป้องกันโรคและการพัฒนาการของเด็ก มีความเชี่ยวชาญพิเศษด้านโรคภูมิแพ้และหอบหืดในเด็ก',
+                languages: ['ไทย', 'English'],
+                specializations: ['โรคภูมิแพ้ในเด็ก', 'โรคหอบหืด', 'การเจริญเติบโตและพัฒนาการ'],
+                certifications: [
+                    'วุฒิบัตรกุมารแพทย์ แพทยสภา',
+                    'Certificate in Pediatric Allergy and Immunology',
+                    'Pediatric Advanced Life Support (PALS)'
+                ],
+                memberships: [
+                    'ราชวิทยาลัยกุมารแพทย์แห่งประเทศไทย',
+                    'สมาคมโรคภูมิแพ้และภูมิคุ้มกันวิทยาแห่งประเทศไทย'
+                ],
+                awards: [],
+                researchInterests: 'Pediatric Allergy, Childhood Asthma Prevention',
+                patientsCount: 1580,
+                appointmentsCompleted: 4200
             }
         ]);
 
