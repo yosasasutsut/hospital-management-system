@@ -241,33 +241,15 @@ async function captureDesktopScreenshots(page) {
   await page.screenshot({ path: 'POC/desktop/20-room-beds.png', fullPage: true });
   console.log('✅ 20-room-beds.png');
   await page.click('button[onclick*="closeModal"]');
-  await page.waitForTimeout(300);
-
-  // 21. Available Beds Modal
-  await page.click('#modalClose');
-  await page.waitForTimeout(500);
-  await page.click('a[href="#patients"]');
-  await page.waitForTimeout(500);
-  await page.click('button[onclick*="viewPatient"]');
   await page.waitForTimeout(500);
 
-  // Try to click assign bed button if exists
-  try {
-    await page.click('button:has-text("มอบหมายเตียง")', { timeout: 2000 });
-    await page.waitForTimeout(500);
-    await page.screenshot({ path: 'POC/desktop/21-available-beds.png', fullPage: true });
-    console.log('✅ 21-available-beds.png');
-  } catch (e) {
-    // If button doesn't exist, just show modal with evaluate
-    await page.click('#modalClose');
-    await page.waitForTimeout(300);
-    await page.evaluate(() => {
-      showAvailableBedsModal(null);
-    });
-    await page.waitForTimeout(500);
-    await page.screenshot({ path: 'POC/desktop/21-available-beds.png', fullPage: true });
-    console.log('✅ 21-available-beds.png');
-  }
+  // 21. Available Beds Modal - use direct function call
+  await page.evaluate(() => {
+    showAvailableBedsModal(null);
+  });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'POC/desktop/21-available-beds.png', fullPage: true });
+  console.log('✅ 21-available-beds.png');
 
   // Clean up - close modal
   await page.click('button[onclick*="closeModal"]');
