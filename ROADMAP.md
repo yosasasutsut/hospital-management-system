@@ -135,10 +135,63 @@
 - **Commit message**: `feat: implement complete doctor management system (Day 15)`
 
 ### Day 16: Doctor Profile Page
-- [ ] หน้าแสดงข้อมูลแพทย์แต่ละคน
-- [ ] ประวัติการศึกษา, ความเชี่ยวชาญ
-- [ ] รูปถ่าย (upload หรือใช้ placeholder)
-- **Commit message**: `feat: create doctor profile page`
+- [ ] Enhanced doctor profile page with comprehensive layout
+- [ ] Doctor profile photo management:
+  - [ ] Upload photo functionality (File input)
+  - [ ] Remove photo option
+  - [ ] Default placeholder avatar (emoji or initials)
+  - [ ] Photo preview and crop (optional)
+- [ ] Professional information section:
+  - [ ] Full name, title, and specialty
+  - [ ] License number and verification status
+  - [ ] Years of experience display
+  - [ ] Current working status badge
+  - [ ] Contact details (phone, email)
+  - [ ] Office location/room number
+- [ ] Education & Qualifications:
+  - [ ] Education history timeline
+  - [ ] Degrees and institutions
+  - [ ] Certifications and licenses
+  - [ ] Specializations list
+- [ ] About section:
+  - [ ] Biography/Introduction (rich text)
+  - [ ] Areas of expertise
+  - [ ] Languages spoken
+  - [ ] Research interests (optional)
+- [ ] Statistics & Performance:
+  - [ ] Total patients treated
+  - [ ] Total appointments
+  - [ ] Average rating (placeholder for future)
+  - [ ] Years in practice
+- [ ] Appointment history:
+  - [ ] Recent appointments with this doctor
+  - [ ] Quick stats (completed, cancelled, upcoming)
+  - [ ] Link to view full appointment history
+- [ ] Working schedule display:
+  - [ ] Weekly schedule overview
+  - [ ] Available time slots
+  - [ ] Days off indication
+- [ ] Professional details:
+  - [ ] Hospital departments affiliated
+  - [ ] Professional memberships
+  - [ ] Awards & achievements (optional)
+- [ ] Action buttons:
+  - [ ] Edit profile button
+  - [ ] Book appointment with this doctor
+  - [ ] Print profile (optional)
+  - [ ] Share profile (optional)
+- [ ] UI/UX considerations:
+  - [ ] Tabbed interface for organized information
+  - [ ] Responsive design for mobile/tablet
+  - [ ] Back button to return to doctors list
+  - [ ] Profile URL structure (/doctors/:id)
+- **Technical requirements**:
+  - Extend doctor data model with new fields
+  - Create `viewDoctorProfile(id)` function
+  - Profile image storage in localStorage (base64)
+  - Reusable profile components
+  - Print-friendly CSS styles
+- **Commit message**: `feat: create comprehensive doctor profile page (Day 16)`
 
 ### Day 17: Doctor Schedule Management
 - [ ] กำหนดตารางเวลาทำงานของแพทย์
