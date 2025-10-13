@@ -5,6 +5,202 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2025-10-13
+
+### Added
+- **Complete Hospital Ward Management System** (Ward System - 7 Commits)
+
+  **Part 1: Ward Data Structure**
+  - 3-tier hospital hierarchy: Wards → Rooms → Beds
+  - Ward data model with comprehensive fields:
+    - Ward name, code, department, type (general/special)
+    - Building and floor location
+    - Head nurse, nursing station, contact info
+    - Real-time statistics (totalBeds, occupiedBeds, availableBeds)
+    - Status tracking (active/maintenance/closed)
+  - Ward room data model:
+    - Room number, name, ward association
+    - Room type (general/single/double)
+    - Bed capacity (customizable 1-20 for general rooms)
+    - Dual pricing model (pricePerBedPerDay / pricePerRoomPerDay)
+    - Amenities array (10 options)
+    - Occupancy tracking and status
+  - Ward bed data model:
+    - Bed number, name, room/ward association
+    - 4 status types (available/occupied/maintenance/cleaning)
+    - Patient information (name, HN, admission/discharge dates)
+    - Daily rate, special care, isolation flags
+    - Clinical notes
+  - 6 sample wards with realistic hospital departments
+  - 13 sample rooms across wards
+  - 14 sample beds with mock patient data
+  - `updateWardStatistics()` function for cascade updates
+
+  **Part 2: Ward Management UI & CRUD**
+  - Complete ward management interface:
+    - Modern card-based grid display
+    - Color-coded status badges
+    - Occupancy rate visualization with progress bars
+    - Ward type indicators (หอสามัญ / หอพิเศษ)
+  - Full CRUD operations:
+    - `loadWards()` - Display wards with statistics
+    - `showAddWardModal()` - Create new ward form
+    - `addWard()` - Save ward with validation
+    - `viewWardDetails()` - Comprehensive ward modal
+    - `editWard()` - Update ward information
+    - `deleteWard()` - Remove ward with safety checks
+  - Search and filter system:
+    - Real-time search (name, code, department, building)
+    - Status filter (active/maintenance/closed)
+    - Ward type filter (general/special)
+    - Combined filter logic with result count
+  - Navigation integration with "หอผู้ป่วย" menu item
+
+  **Part 3: Room Management System**
+  - Ward room management interface:
+    - `viewWardRooms()` - Display all rooms in ward
+    - `showAddWardRoomModal()` - Create room form
+    - `addWardRoom()` - Save room with validation
+    - `editWardRoom()` - Update room (type immutable after creation)
+    - `deleteWardRoom()` - Remove room with safety checks
+  - Dynamic form behavior:
+    - Room type selection (general/single/double)
+    - Bed count field (visible only for general rooms, 1-20 beds)
+    - Price per day field (label changes by type)
+    - Amenities checkboxes (10 options)
+    - Inline JavaScript for real-time form updates
+  - Data integrity features:
+    - Unique room number validation
+    - Room type immutable after creation
+    - Minimum bed count = occupied beds
+    - Cannot delete room with patients
+    - Auto-statistics update after changes
+  - Integration: "จัดการห้อง" button in ward details
+
+  **Part 4: Bed Management System**
+  - Comprehensive bed management:
+    - `viewRoomBeds()` - Display all beds in room
+    - `showAddBedModal()` - Create bed form
+    - `addBed()` - Save bed with validation
+    - `editBed()` - Update bed with patient data
+    - `updateBed()` - Save changes with stats update
+    - `deleteBed()` - Remove bed with safety checks
+  - Smart bed number generation (room-based auto-increment)
+  - Bed status tracking (4 states)
+  - Patient information display:
+    - Patient name and HN
+    - Admission and discharge dates (Thai format)
+    - Daily rate with currency formatting
+    - Special care indicator badge (⚕️)
+    - Isolation indicator badge (🚫)
+  - Dynamic edit form:
+    - Patient fields visible only when occupied
+    - Status change capability
+    - Clinical notes section
+  - Safety features:
+    - Cannot delete occupied beds
+    - Room capacity validation
+    - Unique bed number validation
+  - Integration: "จัดการเตียง" button in room cards
+
+  **Part 5: Bed Assignment System**
+  - Patient-to-bed assignment workflow:
+    - `showAvailableBedsModal()` - View all available beds
+    - `showAssignBedForm()` - Assign bed form
+    - `assignPatientToBed()` - Complete assignment
+    - `dischargePatientFromBed()` - Discharge with stats
+  - Available beds modal features:
+    - Grid display of all available beds
+    - Ward, room, and bed information
+    - Room type and pricing display
+    - Amenities preview (top 3 + counter)
+    - Patient info banner when assigning
+  - Assignment form features:
+    - Admission date (required, defaults to today)
+    - Expected discharge date (optional)
+    - Daily rate (customizable, defaults from room)
+    - Special care checkbox (⚕️)
+    - Isolation checkbox (🚫)
+    - Clinical notes textarea
+    - Visual confirmation card (patient + bed)
+  - Discharge functionality:
+    - Length of stay calculation
+    - Confirmation dialog with summary
+    - Auto-set bed to "cleaning" status
+    - Patient data safely cleared
+  - Patient view integration:
+    - Displays assigned bed info (ward/room/bed)
+    - Admission and discharge dates
+    - Special care/isolation status
+    - "มอบหมายเตียง" button (when no bed)
+    - "ดูข้อมูลเตียง" button (when has bed)
+    - "จำหน่ายผู้ป่วย" button (when has bed)
+  - Bed view integration:
+    - "จำหน่าย" button for occupied beds
+    - Conditional action buttons (edit/delete/discharge)
+
+  **Part 6: Dashboard Statistics**
+  - Ward statistics dashboard section:
+    - 4 gradient metric cards:
+      - Total beds (purple gradient)
+      - Occupied beds (pink gradient)
+      - Available beds (blue gradient)
+      - Occupancy rate % (orange gradient)
+    - Visual occupancy progress bar with % overlay
+    - 6 detailed mini-cards:
+      - Total wards
+      - Active wards
+      - Total rooms
+      - Full rooms
+      - Beds in maintenance
+      - Beds being cleaned
+  - Quick ward list (top 5 wards):
+    - Color-coded occupancy (red ≥90%, orange ≥70%, green <70%)
+    - Click-to-navigate cards with hover effects
+    - "View all X wards" button when >5
+  - Quick action buttons:
+    - "ดูเตียงว่าง" (opens available beds modal)
+    - "จัดการหอผู้ป่วย" (navigates to wards)
+  - Real-time statistics:
+    - Auto-update on dashboard load
+    - Aggregation across entire hospital
+    - Fallback to old room system if no ward data
+
+### Changed
+- Updated version from 2.1.0 to 2.3.0
+- Enhanced `loadDashboard()` with ward statistics integration
+- Modified `viewPatient()` to show bed assignment info
+- Updated available rooms metric to use ward beds when available
+- Improved patient detail modal with bed information section
+
+### Technical
+- **Data Structure**: 3-tier hierarchy (wards/wardRooms/wardBeds)
+- **Storage**: localStorage persistence for all ward data
+- **Statistics**: Real-time cascade updates via `updateWardStatistics()`
+- **Validation**: Comprehensive data integrity checks
+- **Navigation**: Seamless integration across sections
+- **UI Pattern**: Modal-based CRUD with inline forms
+- **Safety**: Cannot delete entities with dependencies
+- **Performance**: Efficient filtering and aggregation
+- **JSDoc**: Complete documentation for all functions (35+ functions)
+- **Functions Added**:
+  - Ward Management (7 functions)
+  - Room Management (5 functions)
+  - Bed Management (6 functions)
+  - Bed Assignment (3 functions)
+  - Statistics (2 functions)
+- **HTML Additions**: Ward section, wardStatisticsSection div
+- **Commit Sequence**: 6 logical commits for clean git history
+
+### Security
+- Input validation for all form fields
+- Unique identifier validation (ward codes, room numbers, bed numbers)
+- Patient data privacy maintained in bed assignments
+- Safety checks prevent data corruption
+- Cannot bypass status restrictions
+
+---
+
 ## [2.1.0] - 2025-10-13
 
 ### Added
