@@ -3404,9 +3404,10 @@ function viewDoctor(doctorId) {
             </div>
 
             <!-- Action Buttons -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 2rem;">
+                <button onclick="closeModal(); viewDoctorPerformance(${doctor.id})" class="btn" style="width: 100%; background: #8b5cf6; color: white;">📊 สถิติ</button>
                 <button onclick="editDoctor(${doctor.id})" class="btn btn-primary" style="width: 100%;">✏️ แก้ไขข้อมูล</button>
-                <button onclick="document.getElementById('modal').classList.remove('active')" class="btn btn-secondary" style="width: 100%;">ปิด</button>
+                <button onclick="closeModal()" class="btn btn-secondary" style="width: 100%;">ปิด</button>
             </div>
         </div>
     `;
@@ -3833,6 +3834,160 @@ function filterDoctorsByStatus(status = 'all') {
         'on-leave': 'ลาพัก'
     };
     resultCount.innerHTML = `พบแพทย์${statusLabels[status]} <strong>${filteredDoctors.length}</strong> คน`;
+}
+
+// ===== Doctor Performance Metrics Functions (Day 19) =====
+
+/**
+ * View doctor performance metrics and statistics
+ * @param {number} doctorId - Doctor ID
+ */
+function viewDoctorPerformance(doctorId) {
+    const doctors = storage.get('doctors') || [];
+    const doctor = doctors.find(d => d.id === doctorId);
+    const appointments = storage.get('appointments') || [];
+
+    if (!doctor) {
+        alert('ไม่พบข้อมูลแพทย์');
+        return;
+    }
+
+    // Calculate appointment statistics
+    const doctorAppointments = appointments.filter(a => a.doctorId === doctorId);
+    const totalAppointments = doctorAppointments.length;
+    const completedAppointments = doctorAppointments.filter(a =>
+        a.status === 'confirmed' && new Date(a.date) < new Date()
+    ).length;
+    const upcomingAppointments = doctorAppointments.filter(a =>
+        a.status !== 'cancelled' && new Date(a.date) >= new Date()
+    ).length;
+    const cancelledAppointments = doctorAppointments.filter(a =>
+        a.status === 'cancelled'
+    ).length;
+
+    // Calculate this month's appointments
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const thisMonthAppointments = doctorAppointments.filter(a =>
+        new Date(a.date) >= firstDayOfMonth
+    ).length;
+
+    // Calculate completion rate
+    const completionRate = totalAppointments > 0
+        ? ((completedAppointments / totalAppointments) * 100).toFixed(1)
+        : 0;
+
+    // Calculate average patients per day (based on completed appointments)
+    const daysSinceStart = Math.ceil((now - new Date(doctor.registrationDate)) / (1000 * 60 * 60 * 24));
+    const avgPatientsPerDay = daysSinceStart > 0
+        ? (completedAppointments / daysSinceStart).toFixed(1)
+        : 0;
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    modalBody.innerHTML = `
+        <h3 style="margin: 0 0 0.5rem 0;">📊 สถิติประสิทธิภาพ - ${doctor.name}</h3>
+        <p style="margin: 0 0 1.5rem 0; color: #6b7280; font-size: 0.875rem;">${doctor.specialty}</p>
+
+        <!-- Main Stats Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">👥</div>
+                <div style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.25rem;">${doctor.patientsCount || 0}</div>
+                <div style="font-size: 0.875rem; opacity: 0.9;">ผู้ป่วยทั้งหมด</div>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
+                <div style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.25rem;">${completedAppointments}</div>
+                <div style="font-size: 0.875rem; opacity: 0.9;">นัดหมายที่เสร็จสิ้น</div>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📅</div>
+                <div style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.25rem;">${upcomingAppointments}</div>
+                <div style="font-size: 0.875rem; opacity: 0.9;">นัดหมายที่กำลังจะถึง</div>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">⏱️</div>
+                <div style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.25rem;">${doctor.experience}</div>
+                <div style="font-size: 0.875rem; opacity: 0.9;">ประสบการณ์</div>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div style="background: #f9fafb; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+            <h4 style="margin: 0 0 1rem 0; color: #1f2937;">📈 ประสิทธิภาพ</h4>
+
+            <div style="display: grid; gap: 1rem;">
+                <!-- Completion Rate -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="font-weight: 600; color: #374151;">อัตราความสำเร็จ</span>
+                        <span style="font-weight: 700; color: #10b981;">${completionRate}%</span>
+                    </div>
+                    <div style="width: 100%; height: 1rem; background: #e5e7eb; border-radius: 999px; overflow: hidden;">
+                        <div style="height: 100%; background: linear-gradient(90deg, #10b981 0%, #059669 100%); width: ${completionRate}%; transition: width 0.3s;"></div>
+                    </div>
+                </div>
+
+                <!-- Monthly Stats -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                    <div>
+                        <div style="color: #6b7280; font-size: 0.875rem;">นัดหมายเดือนนี้</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #3b82f6;">${thisMonthAppointments}</div>
+                    </div>
+                    <div>
+                        <div style="color: #6b7280; font-size: 0.875rem;">เฉลี่ยต่อวัน</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #8b5cf6;">${avgPatientsPerDay}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointment Breakdown -->
+        <div style="background: #f9fafb; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+            <h4 style="margin: 0 0 1rem 0; color: #1f2937;">📋 สรุปนัดหมาย</h4>
+
+            <div style="display: grid; gap: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: white; border-radius: 8px;">
+                    <span>นัดหมายทั้งหมด</span>
+                    <span style="font-weight: 700;">${totalAppointments}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: white; border-radius: 8px;">
+                    <span style="color: #10b981;">✅ เสร็จสิ้นแล้ว</span>
+                    <span style="font-weight: 700; color: #10b981;">${completedAppointments}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: white; border-radius: 8px;">
+                    <span style="color: #3b82f6;">📅 กำลังจะถึง</span>
+                    <span style="font-weight: 700; color: #3b82f6;">${upcomingAppointments}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: white; border-radius: 8px;">
+                    <span style="color: #ef4444;">❌ ยกเลิกแล้ว</span>
+                    <span style="font-weight: 700; color: #ef4444;">${cancelledAppointments}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating (Placeholder) -->
+        <div style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="margin: 0 0 0.25rem 0;">⭐ คะแนนความพึงพอใจ</h4>
+                    <p style="margin: 0; font-size: 0.875rem; opacity: 0.9;">ฟีเจอร์นี้จะพัฒนาในอนาคต</p>
+                </div>
+                <div style="font-size: 3rem; font-weight: 700;">-</div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+            <button onclick="closeModal()" class="btn btn-secondary">ปิด</button>
+        </div>
+    `;
+
+    modal.classList.add('active');
 }
 
 // ===== Doctor Schedule Management Functions (Day 17) =====
