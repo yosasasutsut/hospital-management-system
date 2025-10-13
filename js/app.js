@@ -2271,7 +2271,7 @@ function addDoctor() {
 }
 
 /**
- * View doctor details in a modal
+ * View comprehensive doctor profile with tabbed interface
  * @param {number} doctorId - Doctor ID
  */
 function viewDoctor(doctorId) {
@@ -2287,65 +2287,251 @@ function viewDoctor(doctorId) {
     const modalBody = document.getElementById('modalBody');
     const statusConfig = getDoctorStatusConfig(doctor.status);
 
+    // Get appointment statistics for this doctor
+    const appointments = storage.get('appointments') || [];
+    const doctorAppointments = appointments.filter(a => a.doctorId === doctor.id);
+    const completedCount = doctorAppointments.filter(a => a.status === 'confirmed' && new Date(a.date) < new Date()).length;
+    const upcomingCount = doctorAppointments.filter(a => a.status !== 'cancelled' && new Date(a.date) >= new Date()).length;
+
+    // Profile photo (placeholder if no photo)
+    const profilePhoto = doctor.photo || `
+        <div style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white;">
+            ${doctor.name.charAt(0)}
+        </div>
+    `;
+
     modalBody.innerHTML = `
-        <h3>รายละเอียดแพทย์</h3>
-        <div style="margin-top: 1.5rem;">
-            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 2rem; border-radius: 12px; color: white; margin-bottom: 1.5rem;">
-                <h2 style="margin: 0 0 0.5rem 0;">${doctor.name}</h2>
-                <div style="display: inline-block; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 999px; font-size: 0.875rem;">
-                    ${statusConfig.icon} ${statusConfig.label}
+        <style>
+            .profile-tabs {
+                display: flex;
+                gap: 1rem;
+                border-bottom: 2px solid #e5e7eb;
+                margin-bottom: 1.5rem;
+            }
+            .profile-tab {
+                padding: 0.75rem 1rem;
+                cursor: pointer;
+                border: none;
+                background: none;
+                color: #6b7280;
+                font-weight: 500;
+                border-bottom: 2px solid transparent;
+                margin-bottom: -2px;
+                transition: all 0.3s;
+            }
+            .profile-tab:hover {
+                color: #3b82f6;
+            }
+            .profile-tab.active {
+                color: #3b82f6;
+                border-bottom-color: #3b82f6;
+            }
+            .profile-tab-content {
+                display: none;
+            }
+            .profile-tab-content.active {
+                display: block;
+            }
+        </style>
+
+        <div style="max-height: 80vh; overflow-y: auto; padding-right: 1rem;">
+            <!-- Profile Header -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 12px; color: white; margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 2rem;">
+                    ${typeof doctor.photo === 'string' && doctor.photo ? `<img src="${doctor.photo}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.3);">` : profilePhoto}
+                    <div style="flex: 1;">
+                        <h2 style="margin: 0 0 0.5rem 0;">${doctor.name}</h2>
+                        <p style="margin: 0 0 0.5rem 0; font-size: 1.125rem; opacity: 0.9;">${doctor.specialty}</p>
+                        <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                            <div style="display: inline-block; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 999px; font-size: 0.875rem;">
+                                ${statusConfig.icon} ${statusConfig.label}
+                            </div>
+                            <div style="display: inline-block; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 999px; font-size: 0.875rem;">
+                                📍 ${doctor.roomNumber}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div style="display: grid; gap: 1rem;">
-                <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
-                    <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">แผนก/ความเชี่ยวชาญ</p>
-                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937;">🏥 ${doctor.specialty}</p>
-                </div>
+            <!-- Tabs Navigation -->
+            <div class="profile-tabs">
+                <button class="profile-tab active" onclick="switchProfileTab('overview', ${doctor.id})">ภาพรวม</button>
+                <button class="profile-tab" onclick="switchProfileTab('education', ${doctor.id})">การศึกษา</button>
+                <button class="profile-tab" onclick="switchProfileTab('about', ${doctor.id})">เกี่ยวกับ</button>
+                <button class="profile-tab" onclick="switchProfileTab('statistics', ${doctor.id})">สถิติ</button>
+            </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
-                        <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">เบอร์โทร</p>
-                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937;">📞 ${doctor.phone}</p>
+            <!-- Tab Content: Overview -->
+            <div id="profile-tab-overview" class="profile-tab-content active">
+                <div style="display: grid; gap: 1rem;">
+                    <!-- Contact Information -->
+                    <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px;">
+                        <h4 style="margin: 0 0 1rem 0; color: #1f2937;">📞 ข้อมูลติดต่อ</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div>
+                                <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">โทรศัพท์</p>
+                                <p style="margin: 0.25rem 0 0 0; font-weight: 600;">${doctor.phone}</p>
+                            </div>
+                            <div>
+                                <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">อีเมล</p>
+                                <p style="margin: 0.25rem 0 0 0; font-weight: 600; font-size: 0.875rem;">${doctor.email}</p>
+                            </div>
+                            <div>
+                                <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">เวลาทำงาน</p>
+                                <p style="margin: 0.25rem 0 0 0; font-weight: 600;">${doctor.workingHours}</p>
+                            </div>
+                        </div>
                     </div>
-                    <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
-                        <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">Email</p>
-                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937; font-size: 0.875rem;">📧 ${doctor.email}</p>
+
+                    <!-- Professional Info -->
+                    <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px;">
+                        <h4 style="margin: 0 0 1rem 0; color: #1f2937;">🏥 ข้อมูลวิชาชีพ</h4>
+                        <div style="display: grid; gap: 1rem;">
+                            <div>
+                                <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">ประสบการณ์</p>
+                                <p style="margin: 0.25rem 0 0 0; font-weight: 600;">${doctor.experience}</p>
+                            </div>
+                            <div>
+                                <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">เลขที่ใบอนุญาต</p>
+                                <p style="margin: 0.25rem 0 0 0; font-weight: 600;">${doctor.licenseNumber}</p>
+                            </div>
+                            <div>
+                                <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">ภาษาที่พูดได้</p>
+                                <p style="margin: 0.25rem 0 0 0; font-weight: 600;">${doctor.languages.join(', ')}</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
-                    <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">เวลาทำงาน</p>
-                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937;">⏰ ${doctor.workingHours}</p>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
-                        <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">ประสบการณ์</p>
-                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937;">📚 ${doctor.experience}</p>
+                    <!-- Specializations -->
+                    ${doctor.specializations && doctor.specializations.length > 0 ? `
+                    <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px;">
+                        <h4 style="margin: 0 0 1rem 0; color: #1f2937;">⭐ ความเชี่ยวชาญเฉพาะทาง</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                            ${doctor.specializations.map(s => `
+                                <span style="padding: 0.5rem 1rem; background: white; border: 1px solid #e5e7eb; border-radius: 999px; font-size: 0.875rem;">
+                                    ${s}
+                                </span>
+                            `).join('')}
+                        </div>
                     </div>
-                    <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
-                        <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">เลขที่ใบอนุญาต</p>
-                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937;">🎫 ${doctor.licenseNumber}</p>
-                    </div>
-                </div>
-
-                <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
-                    <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">วุฒิการศึกษา</p>
-                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937;">🎓 ${doctor.education}</p>
-                </div>
-
-                <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
-                    <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">วันที่เพิ่มข้อมูล</p>
-                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937;">📅 ${new Date(doctor.registrationDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    ` : ''}
                 </div>
             </div>
 
-            <button onclick="document.getElementById('modal').classList.remove('active')" class="btn btn-secondary" style="width: 100%; margin-top: 1.5rem;">ปิด</button>
+            <!-- Tab Content: Education -->
+            <div id="profile-tab-education" class="profile-tab-content">
+                <div style="display: grid; gap: 1rem;">
+                    <!-- Education -->
+                    <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px;">
+                        <h4 style="margin: 0 0 1rem 0; color: #1f2937;">🎓 การศึกษา</h4>
+                        <p style="margin: 0; line-height: 1.6;">${doctor.education}</p>
+                    </div>
+
+                    <!-- Certifications -->
+                    ${doctor.certifications && doctor.certifications.length > 0 ? `
+                    <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px;">
+                        <h4 style="margin: 0 0 1rem 0; color: #1f2937;">📜 ใบรับรองวิชาชีพ</h4>
+                        <ul style="margin: 0; padding-left: 1.5rem; line-height: 1.8;">
+                            ${doctor.certifications.map(c => `<li>${c}</li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+
+                    <!-- Memberships -->
+                    ${doctor.memberships && doctor.memberships.length > 0 ? `
+                    <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px;">
+                        <h4 style="margin: 0 0 1rem 0; color: #1f2937;">👥 สมาชิกภาพทางวิชาชีพ</h4>
+                        <ul style="margin: 0; padding-left: 1.5rem; line-height: 1.8;">
+                            ${doctor.memberships.map(m => `<li>${m}</li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+
+                    <!-- Awards -->
+                    ${doctor.awards && doctor.awards.length > 0 ? `
+                    <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px;">
+                        <h4 style="margin: 0 0 1rem 0; color: #1f2937;">🏆 รางวัลและความสำเร็จ</h4>
+                        <ul style="margin: 0; padding-left: 1.5rem; line-height: 1.8;">
+                            ${doctor.awards.map(a => `<li>${a}</li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+
+            <!-- Tab Content: About -->
+            <div id="profile-tab-about" class="profile-tab-content">
+                <div style="display: grid; gap: 1rem;">
+                    <!-- Biography -->
+                    <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px;">
+                        <h4 style="margin: 0 0 1rem 0; color: #1f2937;">📝 ประวัติและแนะนำตัว</h4>
+                        <p style="margin: 0; line-height: 1.8; color: #374151;">${doctor.bio}</p>
+                    </div>
+
+                    <!-- Research Interests -->
+                    ${doctor.researchInterests ? `
+                    <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px;">
+                        <h4 style="margin: 0 0 1rem 0; color: #1f2937;">🔬 ความสนใจด้านวิจัย</h4>
+                        <p style="margin: 0; line-height: 1.8; color: #374151;">${doctor.researchInterests}</p>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+
+            <!-- Tab Content: Statistics -->
+            <div id="profile-tab-statistics" class="profile-tab-content">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">👥</div>
+                        <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem;">${doctor.patientsCount}</div>
+                        <div style="font-size: 0.875rem; opacity: 0.9;">ผู้ป่วยทั้งหมด</div>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✅</div>
+                        <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem;">${doctor.appointmentsCompleted}</div>
+                        <div style="font-size: 0.875rem; opacity: 0.9;">นัดหมายที่เสร็จสิ้น</div>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📅</div>
+                        <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem;">${upcomingCount}</div>
+                        <div style="font-size: 0.875rem; opacity: 0.9;">นัดหมายที่กำลังจะถึง</div>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⏱️</div>
+                        <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem;">${doctor.experience}</div>
+                        <div style="font-size: 0.875rem; opacity: 0.9;">ประสบการณ์</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem;">
+                <button onclick="editDoctor(${doctor.id})" class="btn btn-primary" style="width: 100%;">✏️ แก้ไขข้อมูล</button>
+                <button onclick="document.getElementById('modal').classList.remove('active')" class="btn btn-secondary" style="width: 100%;">ปิด</button>
+            </div>
         </div>
     `;
 
     modal.classList.add('active');
+}
+
+/**
+ * Switch between profile tabs
+ * @param {string} tabName - Tab name to switch to
+ * @param {number} doctorId - Doctor ID (unused but kept for future use)
+ */
+function switchProfileTab(tabName, doctorId) {
+    // Remove active class from all tabs
+    document.querySelectorAll('.profile-tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.profile-tab-content').forEach(content => content.classList.remove('active'));
+
+    // Add active class to selected tab
+    event.target.classList.add('active');
+    document.getElementById(`profile-tab-${tabName}`).classList.add('active');
 }
 
 /**
