@@ -3800,7 +3800,7 @@ function showAddWardModal() {
         </form>
     `;
 
-    modal.style.display = 'flex';
+    modal.classList.add('active');
 
     // Handle form submission
     document.getElementById('addWardForm').addEventListener('submit', (e) => {
@@ -4001,7 +4001,7 @@ function viewWardDetails(wardId) {
         </div>
     `;
 
-    modal.style.display = 'flex';
+    modal.classList.add('active');
 }
 
 /**
@@ -4114,7 +4114,7 @@ function editWard(wardId) {
         </form>
     `;
 
-    modal.style.display = 'flex';
+    modal.classList.add('active');
 
     // Handle form submission
     document.getElementById('editWardForm').addEventListener('submit', (e) => {
@@ -4684,7 +4684,7 @@ function showAddWardRoomModal(wardId) {
         </script>
     `;
 
-    modal.style.display = 'flex';
+    modal.classList.add('active');
 
     // Handle form submission
     document.getElementById('addWardRoomForm').addEventListener('submit', (e) => {
@@ -4854,7 +4854,7 @@ function editWardRoom(roomId) {
         </form>
     `;
 
-    modal.style.display = 'flex';
+    modal.classList.add('active');
 
     // Handle form submission
     document.getElementById('editWardRoomForm').addEventListener('submit', (e) => {
@@ -5143,7 +5143,7 @@ function showAddBedModal(roomId) {
         addBed(roomId);
     };
 
-    modal.style.display = 'flex';
+    modal.classList.add('active');
 }
 
 /**
@@ -5336,7 +5336,7 @@ function editBed(bedId) {
         updateBed(bedId);
     };
 
-    modal.style.display = 'flex';
+    modal.classList.add('active');
 }
 
 /**
@@ -5593,7 +5593,7 @@ function showAvailableBedsModal(patientId = null) {
         </div>
     `;
 
-    modal.style.display = 'flex';
+    modal.classList.add('active');
 }
 
 /**
@@ -5695,7 +5695,7 @@ function showAssignBedForm(bedId, patientId) {
         assignPatientToBed(bedId, patientId);
     };
 
-    modal.style.display = 'flex';
+    modal.classList.add('active');
 }
 
 /**
