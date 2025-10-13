@@ -971,6 +971,11 @@ function loadDashboard() {
     const appointments = storage.get('appointments') || [];
     const doctors = storage.get('doctors') || [];
     const rooms = storage.get('rooms') || [];
+    const wards = storage.get('wards') || [];
+    const wardBeds = storage.get('wardBeds') || [];
+
+    // Update ward statistics first to ensure data is fresh
+    updateWardStatistics();
 
     // Get today's date and current time
     const today = new Date().toISOString().split('T')[0];
@@ -985,14 +990,20 @@ function loadDashboard() {
     // Count active doctors
     const activeDoctors = doctors.filter(d => d.status === 'active').length;
 
-    // Count available rooms
+    // Count available rooms (old system)
     const availableRooms = rooms.filter(r => r.status === 'available').length;
+
+    // Count available beds (new ward system)
+    const availableBeds = wardBeds.filter(b => b.status === 'available').length;
 
     // Update basic stats
     document.getElementById('todayPatients').textContent = todayPatients;
     document.getElementById('appointments').textContent = todayAppointments;
     document.getElementById('activeDoctors').textContent = activeDoctors;
-    document.getElementById('availableRooms').textContent = availableRooms;
+    document.getElementById('availableRooms').textContent = availableRooms > 0 ? availableRooms : availableBeds;
+
+    // Load ward statistics
+    loadWardStatistics();
 
     // Load appointment statistics
     loadAppointmentStatistics(appointments, now);
@@ -1033,6 +1044,152 @@ function loadRoomStatistics() {
     if (cleaningEl) cleaningEl.textContent = cleaning;
     if (maintenanceEl) maintenanceEl.textContent = maintenance;
     if (reservedEl) reservedEl.textContent = reserved;
+}
+
+/**
+ * Load and display ward statistics in dashboard
+ * Shows comprehensive bed occupancy and ward status information
+ */
+function loadWardStatistics() {
+    const wards = storage.get('wards') || [];
+    const wardBeds = storage.get('wardBeds') || [];
+    const wardRooms = storage.get('wardRooms') || [];
+
+    // Calculate overall statistics
+    const totalBeds = wardBeds.length;
+    const occupiedBeds = wardBeds.filter(b => b.status === 'occupied').length;
+    const availableBeds = wardBeds.filter(b => b.status === 'available').length;
+    const maintenanceBeds = wardBeds.filter(b => b.status === 'maintenance').length;
+    const cleaningBeds = wardBeds.filter(b => b.status === 'cleaning').length;
+
+    const occupancyRate = totalBeds > 0 ? ((occupiedBeds / totalBeds) * 100).toFixed(1) : 0;
+
+    // Count wards by status
+    const activeWards = wards.filter(w => w.status === 'active').length;
+    const maintenanceWards = wards.filter(w => w.status === 'maintenance').length;
+
+    // Count rooms by status
+    const totalRooms = wardRooms.length;
+    const fullRooms = wardRooms.filter(r => r.status === 'full').length;
+    const availableRoomsCount = wardRooms.filter(r => r.status === 'available').length;
+
+    // Create or update ward statistics section in dashboard
+    const wardStatsSection = document.getElementById('wardStatisticsSection');
+    if (wardStatsSection) {
+        wardStatsSection.innerHTML = `
+            <div style="background: white; padding: 1.5rem; border-radius: var(--border-radius); box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin: 0; color: #111827;">🏥 ระบบหอผู้ป่วย</h3>
+                    <button onclick="showSection('wards'); loadWards();" class="btn btn-primary" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                        จัดการหอผู้ป่วย
+                    </button>
+                </div>
+
+                <!-- Key Metrics -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 0.5rem; color: white;">
+                        <p style="margin: 0; font-size: 0.875rem; opacity: 0.9;">เตียงทั้งหมด</p>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 2rem; font-weight: 700;">${totalBeds}</p>
+                    </div>
+                    <div style="padding: 1rem; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 0.5rem; color: white;">
+                        <p style="margin: 0; font-size: 0.875rem; opacity: 0.9;">เตียงที่ใช้งาน</p>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 2rem; font-weight: 700;">${occupiedBeds}</p>
+                    </div>
+                    <div style="padding: 1rem; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 0.5rem; color: white;">
+                        <p style="margin: 0; font-size: 0.875rem; opacity: 0.9;">เตียงว่าง</p>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 2rem; font-weight: 700;">${availableBeds}</p>
+                    </div>
+                    <div style="padding: 1rem; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border-radius: 0.5rem; color: white;">
+                        <p style="margin: 0; font-size: 0.875rem; opacity: 0.9;">อัตราการใช้เตียง</p>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 2rem; font-weight: 700;">${occupancyRate}%</p>
+                    </div>
+                </div>
+
+                <!-- Occupancy Bar -->
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="font-size: 0.875rem; font-weight: 600; color: #374151;">การใช้งานเตียง</span>
+                        <span style="font-size: 0.875rem; color: #6b7280;">${occupiedBeds} / ${totalBeds} เตียง</span>
+                    </div>
+                    <div style="width: 100%; height: 2rem; background: #e5e7eb; border-radius: 999px; overflow: hidden; position: relative;">
+                        <div style="height: 100%; background: linear-gradient(90deg, #10b981 0%, #059669 100%); width: ${occupancyRate}%; transition: width 0.3s ease;"></div>
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 600; color: ${occupancyRate > 50 ? 'white' : '#374151'}; font-size: 0.875rem;">
+                            ${occupancyRate}%
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Statistics -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                    <div style="padding: 0.75rem; background: #f9fafb; border-radius: 0.5rem; border-left: 3px solid #3b82f6;">
+                        <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">หอผู้ป่วยทั้งหมด</p>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 1.5rem; font-weight: 700; color: #374151;">${wards.length}</p>
+                    </div>
+                    <div style="padding: 0.75rem; background: #f9fafb; border-radius: 0.5rem; border-left: 3px solid #10b981;">
+                        <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">หอผู้ป่วยใช้งาน</p>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 1.5rem; font-weight: 700; color: #374151;">${activeWards}</p>
+                    </div>
+                    <div style="padding: 0.75rem; background: #f9fafb; border-radius: 0.5rem; border-left: 3px solid #8b5cf6;">
+                        <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">ห้องทั้งหมด</p>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 1.5rem; font-weight: 700; color: #374151;">${totalRooms}</p>
+                    </div>
+                    <div style="padding: 0.75rem; background: #f9fafb; border-radius: 0.5rem; border-left: 3px solid #ef4444;">
+                        <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">ห้องเต็ม</p>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 1.5rem; font-weight: 700; color: #374151;">${fullRooms}</p>
+                    </div>
+                    <div style="padding: 0.75rem; background: #f9fafb; border-radius: 0.5rem; border-left: 3px solid #f59e0b;">
+                        <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">เตียงซ่อมบำรุง</p>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 1.5rem; font-weight: 700; color: #374151;">${maintenanceBeds}</p>
+                    </div>
+                    <div style="padding: 0.75rem; background: #f9fafb; border-radius: 0.5rem; border-left: 3px solid #06b6d4;">
+                        <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">เตียงทำความสะอาด</p>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 1.5rem; font-weight: 700; color: #374151;">${cleaningBeds}</p>
+                    </div>
+                </div>
+
+                <!-- Ward List Quick View -->
+                ${wards.length > 0 ? `
+                    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+                        <h4 style="margin: 0 0 1rem 0; color: #374151; font-size: 0.9375rem;">หอผู้ป่วย (แสดง ${Math.min(wards.length, 5)} จาก ${wards.length})</h4>
+                        <div style="display: grid; gap: 0.75rem;">
+                            ${wards.slice(0, 5).map(ward => {
+                                const occupancyPercent = ward.totalBeds > 0 ? ((ward.occupiedBeds / ward.totalBeds) * 100).toFixed(0) : 0;
+                                const occupancyColor = occupancyPercent >= 90 ? '#ef4444' : occupancyPercent >= 70 ? '#f59e0b' : '#10b981';
+
+                                return `
+                                    <div style="padding: 0.75rem; background: #f9fafb; border-radius: 0.5rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#f9fafb'" onclick="showSection('wards'); loadWards(); viewWardDetails('${ward.id}')">
+                                        <div style="flex: 1;">
+                                            <p style="margin: 0; font-weight: 600; color: #374151;">${ward.wardName}</p>
+                                            <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: #6b7280;">${ward.wardCode} | ${ward.department}</p>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <p style="margin: 0; font-weight: 600; color: ${occupancyColor};">${ward.occupiedBeds}/${ward.totalBeds}</p>
+                                            <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: #6b7280;">${occupancyPercent}% ใช้งาน</p>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        ${wards.length > 5 ? `
+                            <button onclick="showSection('wards'); loadWards();" class="btn btn-secondary" style="width: 100%; margin-top: 0.75rem; font-size: 0.875rem;">
+                                ดูทั้งหมด ${wards.length} หอผู้ป่วย
+                            </button>
+                        ` : ''}
+                    </div>
+                ` : ''}
+
+                <!-- Quick Actions -->
+                <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+                    <button onclick="showAvailableBedsModal()" class="btn btn-primary" style="flex: 1; font-size: 0.875rem;">
+                        🛏️ ดูเตียงว่าง
+                    </button>
+                    <button onclick="showSection('wards'); loadWards();" class="btn btn-secondary" style="flex: 1; font-size: 0.875rem;">
+                        📊 จัดการหอผู้ป่วย
+                    </button>
+                </div>
+            </div>
+        `;
+    }
 }
 
 /**
