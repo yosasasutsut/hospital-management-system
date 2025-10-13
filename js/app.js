@@ -2951,8 +2951,9 @@ function loadDoctors() {
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem;">
                     <button class="btn btn-secondary" onclick="viewDoctor(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem;">ดูรายละเอียด</button>
                     <button class="btn" onclick="viewDoctorSchedule(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem; background: #8b5cf6; color: white;">📅 ตารางเวลา</button>
+                    <button class="btn" onclick="toggleDoctorStatus(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem; background: ${statusConfig.color}; color: white;">🔄 สถานะ</button>
                     <button class="btn btn-primary" onclick="editDoctor(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem;">แก้ไข</button>
-                    <button class="btn" onclick="deleteDoctor(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem; background-color: #ef4444; color: white;">ลบ</button>
+                    <button class="btn" onclick="deleteDoctor(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem; background-color: #ef4444; color: white; grid-column: span 2;">ลบ</button>
                 </div>
             </div>
         `;
@@ -3642,6 +3643,196 @@ function deleteDoctor(doctorId) {
         loadDashboard();
         alert(`ลบข้อมูลแพทย์ ${doctor.name} เรียบร้อยแล้ว`);
     }
+}
+
+// ===== Doctor Availability Status Functions (Day 18) =====
+
+/**
+ * Toggle doctor availability status
+ * Cycles through: active → busy → on-leave → active
+ * @param {number} doctorId - Doctor ID
+ */
+function toggleDoctorStatus(doctorId) {
+    const doctors = storage.get('doctors') || [];
+    const doctor = doctors.find(d => d.id === doctorId);
+
+    if (!doctor) {
+        alert('ไม่พบข้อมูลแพทย์');
+        return;
+    }
+
+    // Status cycle: active → busy → on-leave → active
+    const statusCycle = {
+        'active': 'busy',
+        'busy': 'on-leave',
+        'on-leave': 'active'
+    };
+
+    const statusLabels = {
+        'active': 'ออกตรวจ',
+        'busy': 'ไม่ว่าง',
+        'on-leave': 'ลาพัก'
+    };
+
+    const currentStatus = doctor.status;
+    const newStatus = statusCycle[currentStatus] || 'active';
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    modalBody.innerHTML = `
+        <h3 style="margin: 0 0 1rem 0;">🔄 เปลี่ยนสถานะ - ${doctor.name}</h3>
+        <p style="margin: 0 0 1.5rem 0; color: #6b7280;">สถานะปัจจุบัน: <strong>${statusLabels[currentStatus]}</strong></p>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+            <button onclick="setDoctorStatus(${doctorId}, 'active')" class="btn" style="padding: 1rem; text-align: left; background: ${currentStatus === 'active' ? '#d1fae5' : 'white'}; border: 2px solid #10b981; color: #065f46;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">✅</span>
+                    <div>
+                        <div style="font-weight: 600;">ออกตรวจ</div>
+                        <div style="font-size: 0.875rem; color: #6b7280;">พร้อมรับผู้ป่วย</div>
+                    </div>
+                </div>
+            </button>
+
+            <button onclick="setDoctorStatus(${doctorId}, 'busy')" class="btn" style="padding: 1rem; text-align: left; background: ${currentStatus === 'busy' ? '#fee2e2' : 'white'}; border: 2px solid #ef4444; color: #991b1b;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">⏱️</span>
+                    <div>
+                        <div style="font-weight: 600;">ไม่ว่าง</div>
+                        <div style="font-size: 0.875rem; color: #6b7280;">กำลังทำงาน / ผ่าตัด</div>
+                    </div>
+                </div>
+            </button>
+
+            <button onclick="setDoctorStatus(${doctorId}, 'on-leave')" class="btn" style="padding: 1rem; text-align: left; background: ${currentStatus === 'on-leave' ? '#fef3c7' : 'white'}; border: 2px solid #f59e0b; color: #92400e;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">🏖️</span>
+                    <div>
+                        <div style="font-weight: 600;">ลาพัก</div>
+                        <div style="font-size: 0.875rem; color: #6b7280;">หยุดพัก / ลาป่วย</div>
+                    </div>
+                </div>
+            </button>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+            <button onclick="closeModal()" class="btn btn-secondary">ยกเลิก</button>
+        </div>
+    `;
+
+    modal.classList.add('active');
+}
+
+/**
+ * Set doctor status and close modal
+ * @param {number} doctorId - Doctor ID
+ * @param {string} newStatus - New status (active, busy, on-leave)
+ */
+function setDoctorStatus(doctorId, newStatus) {
+    const doctors = storage.get('doctors') || [];
+    const doctorIndex = doctors.findIndex(d => d.id === doctorId);
+
+    if (doctorIndex !== -1) {
+        const oldStatus = doctors[doctorIndex].status;
+        doctors[doctorIndex].status = newStatus;
+        storage.set('doctors', doctors);
+
+        closeModal();
+        loadDoctors();
+        loadDashboard();
+
+        const statusLabels = {
+            'active': 'ออกตรวจ',
+            'busy': 'ไม่ว่าง',
+            'on-leave': 'ลาพัก'
+        };
+
+        alert(`✅ เปลี่ยนสถานะเป็น "${statusLabels[newStatus]}" เรียบร้อยแล้ว`);
+    }
+}
+
+/**
+ * Filter doctors by status
+ * @param {string} status - Status filter (all, active, busy, on-leave)
+ */
+function filterDoctorsByStatus(status = 'all') {
+    const doctors = storage.get('doctors') || [];
+    let filteredDoctors = doctors;
+
+    if (status !== 'all') {
+        filteredDoctors = doctors.filter(d => d.status === status);
+    }
+
+    const grid = document.getElementById('doctorsGrid');
+    const resultCount = document.getElementById('doctorResultCount');
+
+    if (filteredDoctors.length === 0) {
+        grid.innerHTML = `
+            <div style="text-align: center; padding: 3rem 1rem; color: #6b7280; grid-column: 1 / -1;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">👨‍⚕️</div>
+                <h3 style="margin: 0 0 0.5rem 0; color: #374151;">ไม่พบแพทย์</h3>
+                <p style="margin: 0;">ไม่มีแพทย์ที่ตรงกับเงื่อนไขที่เลือก</p>
+            </div>
+        `;
+        resultCount.innerHTML = '';
+        return;
+    }
+
+    // Display filtered doctors
+    grid.innerHTML = filteredDoctors.map(doctor => {
+        const statusConfig = getDoctorStatusConfig(doctor.status);
+        return `
+            <div class="doctor-card" style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid ${statusConfig.color};">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div>
+                        <h3 style="margin: 0 0 0.5rem 0; color: #1f2937; font-size: 1.25rem;">${doctor.name}</h3>
+                        <div style="display: inline-block; padding: 0.25rem 0.75rem; background: ${statusConfig.bgColor}; color: ${statusConfig.textColor}; border-radius: 999px; font-size: 0.75rem; font-weight: 600;">
+                            ${statusConfig.icon} ${statusConfig.label}
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem; color: #4b5563;">
+                    <p style="margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600; min-width: 80px;">🏥 แผนก:</span>
+                        <span>${doctor.specialty}</span>
+                    </p>
+                    <p style="margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600; min-width: 80px;">📞 โทร:</span>
+                        <span>${doctor.phone}</span>
+                    </p>
+                    <p style="margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600; min-width: 80px;">📧 Email:</span>
+                        <span style="font-size: 0.875rem;">${doctor.email}</span>
+                    </p>
+                    <p style="margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600; min-width: 80px;">⏰ เวลา:</span>
+                        <span style="font-size: 0.875rem;">${doctor.workingHours}</span>
+                    </p>
+                    <p style="margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600; min-width: 80px;">📚 ประสบการณ์:</span>
+                        <span>${doctor.experience}</span>
+                    </p>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem;">
+                    <button class="btn btn-secondary" onclick="viewDoctor(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem;">ดูรายละเอียด</button>
+                    <button class="btn" onclick="viewDoctorSchedule(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem; background: #8b5cf6; color: white;">📅 ตารางเวลา</button>
+                    <button class="btn" onclick="toggleDoctorStatus(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem; background: ${statusConfig.color}; color: white;">🔄 สถานะ</button>
+                    <button class="btn btn-primary" onclick="editDoctor(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem;">แก้ไข</button>
+                    <button class="btn" onclick="deleteDoctor(${doctor.id})" style="padding: 0.5rem; font-size: 0.875rem; background-color: #ef4444; color: white; grid-column: span 2;">ลบ</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Update result count
+    const statusLabels = {
+        'all': 'ทั้งหมด',
+        'active': 'ออกตรวจ',
+        'busy': 'ไม่ว่าง',
+        'on-leave': 'ลาพัก'
+    };
+    resultCount.innerHTML = `พบแพทย์${statusLabels[status]} <strong>${filteredDoctors.length}</strong> คน`;
 }
 
 // ===== Doctor Schedule Management Functions (Day 17) =====
