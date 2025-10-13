@@ -2202,6 +2202,236 @@ function addDoctor() {
     alert(`เพิ่มข้อมูลแพทย์ ${newDoctor.name} เรียบร้อยแล้ว!`);
 }
 
+/**
+ * View doctor details in a modal
+ * @param {number} doctorId - Doctor ID
+ */
+function viewDoctor(doctorId) {
+    const doctors = storage.get('doctors') || [];
+    const doctor = doctors.find(d => d.id === doctorId);
+
+    if (!doctor) {
+        alert('ไม่พบข้อมูลแพทย์');
+        return;
+    }
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+    const statusConfig = getDoctorStatusConfig(doctor.status);
+
+    modalBody.innerHTML = `
+        <h3>รายละเอียดแพทย์</h3>
+        <div style="margin-top: 1.5rem;">
+            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 2rem; border-radius: 12px; color: white; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0 0 0.5rem 0;">${doctor.name}</h2>
+                <div style="display: inline-block; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 999px; font-size: 0.875rem;">
+                    ${statusConfig.icon} ${statusConfig.label}
+                </div>
+            </div>
+
+            <div style="display: grid; gap: 1rem;">
+                <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
+                    <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">แผนก/ความเชี่ยวชาญ</p>
+                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937;">🏥 ${doctor.specialty}</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
+                        <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">เบอร์โทร</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937;">📞 ${doctor.phone}</p>
+                    </div>
+                    <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
+                        <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">Email</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937; font-size: 0.875rem;">📧 ${doctor.email}</p>
+                    </div>
+                </div>
+
+                <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
+                    <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">เวลาทำงาน</p>
+                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937;">⏰ ${doctor.workingHours}</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
+                        <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">ประสบการณ์</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937;">📚 ${doctor.experience}</p>
+                    </div>
+                    <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
+                        <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">เลขที่ใบอนุญาต</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937;">🎫 ${doctor.licenseNumber}</p>
+                    </div>
+                </div>
+
+                <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
+                    <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">วุฒิการศึกษา</p>
+                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937;">🎓 ${doctor.education}</p>
+                </div>
+
+                <div style="padding: 1rem; background: #f9fafb; border-radius: 8px;">
+                    <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">วันที่เพิ่มข้อมูล</p>
+                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #1f2937;">📅 ${new Date(doctor.registrationDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                </div>
+            </div>
+
+            <button onclick="document.getElementById('modal').classList.remove('active')" class="btn btn-secondary" style="width: 100%; margin-top: 1.5rem;">ปิด</button>
+        </div>
+    `;
+
+    modal.classList.add('active');
+}
+
+/**
+ * Edit doctor information
+ * @param {number} doctorId - Doctor ID
+ */
+function editDoctor(doctorId) {
+    const doctors = storage.get('doctors') || [];
+    const doctor = doctors.find(d => d.id === doctorId);
+
+    if (!doctor) {
+        alert('ไม่พบข้อมูลแพทย์');
+        return;
+    }
+
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+
+    modalBody.innerHTML = `
+        <h3>แก้ไขข้อมูลแพทย์</h3>
+        <form id="editDoctorForm" style="margin-top: 1rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ชื่อ-นามสกุล <span style="color: red;">*</span></label>
+                    <input type="text" id="editDoctorName" required value="${doctor.name}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">แผนก <span style="color: red;">*</span></label>
+                    <select id="editDoctorSpecialty" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        <option value="อายุรแพทย์" ${doctor.specialty === 'อายุรแพทย์' ? 'selected' : ''}>อายุรแพทย์</option>
+                        <option value="ศัลยแพทย์" ${doctor.specialty === 'ศัลยแพทย์' ? 'selected' : ''}>ศัลยแพทย์</option>
+                        <option value="กุมารแพทย์" ${doctor.specialty === 'กุมารแพทย์' ? 'selected' : ''}>กุมารแพทย์</option>
+                        <option value="สูติ-นรีเวชแพทย์" ${doctor.specialty === 'สูติ-นรีเวชแพทย์' ? 'selected' : ''}>สูติ-นรีเวชแพทย์</option>
+                        <option value="ออร์โธปิดิกส์" ${doctor.specialty === 'ออร์โธปิดิกส์' ? 'selected' : ''}>ออร์โธปิดิกส์</option>
+                        <option value="จักษุแพทย์" ${doctor.specialty === 'จักษุแพทย์' ? 'selected' : ''}>จักษุแพทย์</option>
+                        <option value="โสต ศอ นาสิก" ${doctor.specialty === 'โสต ศอ นาสิก' ? 'selected' : ''}>โสต ศอ นาสิก</option>
+                        <option value="รังสีแพทย์" ${doctor.specialty === 'รังสีแพทย์' ? 'selected' : ''}>รังสีแพทย์</option>
+                        <option value="ทันตแพทย์" ${doctor.specialty === 'ทันตแพทย์' ? 'selected' : ''}>ทันตแพทย์</option>
+                        <option value="จิตแพทย์" ${doctor.specialty === 'จิตแพทย์' ? 'selected' : ''}>จิตแพทย์</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">เบอร์โทร <span style="color: red;">*</span></label>
+                    <input type="tel" id="editDoctorPhone" required value="${doctor.phone}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Email <span style="color: red;">*</span></label>
+                    <input type="email" id="editDoctorEmail" required value="${doctor.email}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">เวลาทำงาน <span style="color: red;">*</span></label>
+                <input type="text" id="editDoctorWorkingHours" required value="${doctor.workingHours}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ประสบการณ์</label>
+                    <input type="text" id="editDoctorExperience" value="${doctor.experience}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">เลขที่ใบอนุญาต</label>
+                    <input type="text" id="editDoctorLicenseNumber" value="${doctor.licenseNumber}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">วุฒิการศึกษา</label>
+                <textarea id="editDoctorEducation" rows="2" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: inherit;">${doctor.education}</textarea>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">สถานะ <span style="color: red;">*</span></label>
+                <select id="editDoctorStatus" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="active" ${doctor.status === 'active' ? 'selected' : ''}>ออกตรวจ</option>
+                    <option value="on-leave" ${doctor.status === 'on-leave' ? 'selected' : ''}>ลาพัก</option>
+                    <option value="busy" ${doctor.status === 'busy' ? 'selected' : ''}>ไม่ว่าง</option>
+                </select>
+            </div>
+            <div id="formError" style="color: red; margin-bottom: 1rem; display: none;"></div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">บันทึกการเปลี่ยนแปลง</button>
+        </form>
+    `;
+
+    modal.classList.add('active');
+
+    // Handle form submission
+    document.getElementById('editDoctorForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        // Validation
+        const formError = document.getElementById('formError');
+        const phone = document.getElementById('editDoctorPhone').value;
+        const email = document.getElementById('editDoctorEmail').value;
+
+        if (!/^[0-9]{9,10}$/.test(phone)) {
+            formError.textContent = 'เบอร์โทรศัพท์ไม่ถูกต้อง';
+            formError.style.display = 'block';
+            return;
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            formError.textContent = 'รูปแบบอีเมลไม่ถูกต้อง';
+            formError.style.display = 'block';
+            return;
+        }
+
+        // Update doctor data
+        const doctorIndex = doctors.findIndex(d => d.id === doctorId);
+        doctors[doctorIndex] = {
+            ...doctors[doctorIndex],
+            name: document.getElementById('editDoctorName').value,
+            specialty: document.getElementById('editDoctorSpecialty').value,
+            phone: phone,
+            email: email,
+            workingHours: document.getElementById('editDoctorWorkingHours').value,
+            experience: document.getElementById('editDoctorExperience').value || '-',
+            education: document.getElementById('editDoctorEducation').value || '-',
+            licenseNumber: document.getElementById('editDoctorLicenseNumber').value || '-',
+            status: document.getElementById('editDoctorStatus').value
+        };
+
+        storage.set('doctors', doctors);
+        modal.classList.remove('active');
+        loadDoctors();
+        loadDashboard();
+        alert('อัพเดทข้อมูลแพทย์เรียบร้อยแล้ว!');
+    });
+}
+
+/**
+ * Delete doctor with confirmation
+ * @param {number} doctorId - Doctor ID
+ */
+function deleteDoctor(doctorId) {
+    const doctors = storage.get('doctors') || [];
+    const doctor = doctors.find(d => d.id === doctorId);
+
+    if (!doctor) {
+        alert('ไม่พบข้อมูลแพทย์');
+        return;
+    }
+
+    // Confirmation dialog
+    const confirmed = confirm(`คุณต้องการลบข้อมูลแพทย์ "${doctor.name}" ใช่หรือไม่?\n\nการดำเนินการนี้ไม่สามารถย้อนกลับได้`);
+
+    if (confirmed) {
+        const updatedDoctors = doctors.filter(d => d.id !== doctorId);
+        storage.set('doctors', updatedDoctors);
+        loadDoctors();
+        loadDashboard();
+        alert(`ลบข้อมูลแพทย์ ${doctor.name} เรียบร้อยแล้ว`);
+    }
+}
+
 // ===== Rooms Functions =====
 /**
  * Get status configuration with colors and Thai labels
