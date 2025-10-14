@@ -868,6 +868,326 @@ const storage = {
             // สำหรับ Commit 1 จะเพิ่มข้อมูลตัวอย่างพอสมควรก่อน
         ]);
 
+        // ===== Medicine Database (Day 29) =====
+        // Initialize medicines with comprehensive data
+        if (!storage.get('medicines')) storage.set('medicines', [
+            {
+                id: 'med-001',
+                medicineCode: 'PARA-500',
+                name: 'Paracetamol 500mg',
+                genericName: 'Paracetamol',
+                type: 'tablet',
+                typeName: 'ยาเม็ด',
+                category: 'ยาแก้ปวดลดไข้',
+                price: 2.50,
+                quantity: 5000,
+                minStock: 1000,
+                unit: 'เม็ด',
+                manufacturer: 'บริษัท ยาไทย จำกัด',
+                expiryDate: '2026-12-31',
+                description: 'ยาแก้ปวดและลดไข้ชนิดไม่ระคายกระเพาะอาหาร',
+                dosage: 'ผู้ใหญ่: รับประทาน 1-2 เม็ด ทุก 4-6 ชั่วโมง',
+                sideEffects: 'หากใช้ในขนาดสูงอาจมีผลต่อตับ',
+                storageCondition: 'เก็บในที่แห้ง อุณหภูมิไม่เกิน 30°C',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'med-002',
+                medicineCode: 'AMOX-500',
+                name: 'Amoxicillin 500mg',
+                genericName: 'Amoxicillin',
+                type: 'capsule',
+                typeName: 'ยาแคปซูล',
+                category: 'ยาปฏิชีวนะ',
+                price: 8.00,
+                quantity: 3000,
+                minStock: 800,
+                unit: 'แคปซูล',
+                manufacturer: 'GPO - องค์การเภสัชกรรม',
+                expiryDate: '2026-06-30',
+                description: 'ยาปฏิชีวนะกลุ่ม Penicillin สำหรับรักษาการติดเชื้อแบคทีเรีย',
+                dosage: 'ผู้ใหญ่: 500mg ทุก 8 ชั่วโมง เป็นเวลา 7-10 วัน',
+                sideEffects: 'อาจมีอาการท้องเสีย แพ้ง่ายในผู้ที่แพ้ Penicillin',
+                storageCondition: 'เก็บในที่แห้ง อุณหภูมิห้อง ห่างจากแสงแดด',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'med-003',
+                medicineCode: 'IBUP-400',
+                name: 'Ibuprofen 400mg',
+                genericName: 'Ibuprofen',
+                type: 'tablet',
+                typeName: 'ยาเม็ด',
+                category: 'ยาแก้ปวดลดอักเสบ',
+                price: 3.50,
+                quantity: 4500,
+                minStock: 1000,
+                unit: 'เม็ด',
+                manufacturer: 'Siam Pharmaceutical',
+                expiryDate: '2027-03-31',
+                description: 'ยาแก้ปวด ลดการอักเสบ และลดไข้',
+                dosage: 'ผู้ใหญ่: 200-400mg ทุก 4-6 ชั่วโมง หลังอาหาร',
+                sideEffects: 'อาจระคายกระเพาะอาหาร ควรรับประทานหลังอาหาร',
+                storageCondition: 'เก็บในที่แห้ง อุณหภูมิไม่เกิน 30°C',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'med-004',
+                medicineCode: 'AMLOD-5',
+                name: 'Amlodipine 5mg',
+                genericName: 'Amlodipine',
+                type: 'tablet',
+                typeName: 'ยาเม็ด',
+                category: 'ยาลดความดันโลหิต',
+                price: 5.00,
+                quantity: 2500,
+                minStock: 500,
+                unit: 'เม็ด',
+                manufacturer: 'GPO - องค์การเภสัชกรรม',
+                expiryDate: '2026-09-30',
+                description: 'ยาลดความดันโลหิตกลุ่ม Calcium Channel Blocker',
+                dosage: 'ผู้ใหญ่: 5-10mg วันละครั้ง',
+                sideEffects: 'อาจมีอาการบวมที่ข้อเท้า ปวดศีรษะ',
+                storageCondition: 'เก็บในอุณหภูมิห้อง ห่างจากความชื้น',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'med-005',
+                medicineCode: 'METF-500',
+                name: 'Metformin 500mg',
+                genericName: 'Metformin HCl',
+                type: 'tablet',
+                typeName: 'ยาเม็ด',
+                category: 'ยาเบาหวาน',
+                price: 2.00,
+                quantity: 6000,
+                minStock: 1500,
+                unit: 'เม็ด',
+                manufacturer: 'บริษัท เบอร์ลินฟาร์มาซูติคอลอินดัสตรี',
+                expiryDate: '2027-01-31',
+                description: 'ยารักษาเบาหวานชนิดรับประทาน ควบคุมระดับน้ำตาลในเลือด',
+                dosage: 'ผู้ใหญ่: 500-1000mg วันละ 2-3 ครั้ง หลังอาหาร',
+                sideEffects: 'อาจมีอาการท้องเสีย คลื่นไส้ ในช่วงแรกของการรักษา',
+                storageCondition: 'เก็บในที่แห้ง อุณหภูมิห้อง',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'med-006',
+                medicineCode: 'CEPHA-500',
+                name: 'Cephalexin 500mg',
+                genericName: 'Cephalexin',
+                type: 'capsule',
+                typeName: 'ยาแคปซูล',
+                category: 'ยาปฏิชีวนะ',
+                price: 12.00,
+                quantity: 2000,
+                minStock: 500,
+                unit: 'แคปซูล',
+                manufacturer: 'T.O. Pharma',
+                expiryDate: '2026-08-31',
+                description: 'ยาปฏิชีวนะกลุ่ม Cephalosporin รุ่นที่ 1',
+                dosage: 'ผู้ใหญ่: 500mg ทุก 6-12 ชั่วโมง',
+                sideEffects: 'อาจมีอาการท้องเสีย คลื่นไส้',
+                storageCondition: 'เก็บในที่แห้ง หลีกเลี่ยงความชื้น',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'med-007',
+                medicineCode: 'COUGH-SYR',
+                name: 'Cough Syrup',
+                genericName: 'Dextromethorphan + Guaifenesin',
+                type: 'syrup',
+                typeName: 'ยาน้ำ',
+                category: 'ยาแก้ไอ',
+                price: 45.00,
+                quantity: 800,
+                minStock: 200,
+                unit: 'ขวด',
+                manufacturer: 'Pharmaland',
+                expiryDate: '2025-12-31',
+                description: 'ยาแก้ไอชนิดน้ำ ช่วยระงับไอและละลายเสมหะ',
+                dosage: 'ผู้ใหญ่: 10ml ทุก 4-6 ชั่วโมง, เด็ก: 5ml ทุก 6 ชั่วโมง',
+                sideEffects: 'อาจง่วงนอน ไม่ควรขับขี่ยานพาหนะ',
+                storageCondition: 'เก็บในตู้เย็น หลังเปิดใช้ภายใน 30 วัน',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'med-008',
+                medicineCode: 'SALBU-INH',
+                name: 'Salbutamol Inhaler',
+                genericName: 'Salbutamol',
+                type: 'inhaler',
+                typeName: 'ยาสูดพ่น',
+                category: 'ยาขยายหลอดลม',
+                price: 180.00,
+                quantity: 150,
+                minStock: 50,
+                unit: 'กระป๋อง',
+                manufacturer: 'AstraZeneca',
+                expiryDate: '2026-10-31',
+                description: 'ยาขยายหลอดลมสำหรับรักษาโรคหอบหืด',
+                dosage: 'พ่น 1-2 พัฟ ทุก 4-6 ชั่วโมงตามต้องการ',
+                sideEffects: 'อาจมีอาการสั่น หัวใจเต้นเร็ว',
+                storageCondition: 'เก็บในที่แห้ง อุณหภูมิห้อง ห่างจากความร้อน',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'med-009',
+                medicineCode: 'HYDRO-CRM',
+                name: 'Hydrocortisone Cream 1%',
+                genericName: 'Hydrocortisone',
+                type: 'cream',
+                typeName: 'ครีม/ขี้ผึ้ง',
+                category: 'ยาทาแก้อักเสบผิวหนัง',
+                price: 65.00,
+                quantity: 400,
+                minStock: 100,
+                unit: 'หลอด',
+                manufacturer: 'Dermapharm',
+                expiryDate: '2026-07-31',
+                description: 'ครีมสเตียรอยด์สำหรับทาแก้อาการคันและอักเสบของผิวหนัง',
+                dosage: 'ทาบาง ๆ บริเวณที่เป็น วันละ 2-3 ครั้ง',
+                sideEffects: 'ไม่ควรใช้ติดต่อกันเกิน 2 สัปดาห์',
+                storageCondition: 'เก็บในที่เย็น หลีกเลี่ยงแสงแดด',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'med-010',
+                medicineCode: 'INSULIN-INJ',
+                name: 'Insulin Injection (Rapid)',
+                genericName: 'Insulin Aspart',
+                type: 'injection',
+                typeName: 'ยาฉีด',
+                category: 'อินซูลินชนิดออกฤทธิ์เร็ว',
+                price: 450.00,
+                quantity: 200,
+                minStock: 50,
+                unit: 'ขวด',
+                manufacturer: 'Novo Nordisk',
+                expiryDate: '2025-11-30',
+                description: 'อินซูลินชนิดออกฤทธิ์เร็วสำหรับควบคุมระดับน้ำตาลหลังอาหาร',
+                dosage: 'ฉีดใต้ผิวหนัง ก่อนอาหาร 5-10 นาที ขนาดตามแพทย์สั่ง',
+                sideEffects: 'อาจมีอาการน้ำตาลต่ำ แพ้บริเวณที่ฉีด',
+                storageCondition: 'เก็บในตู้เย็น 2-8°C ห้ามแช่แข็ง',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'med-011',
+                medicineCode: 'LORAT-10',
+                name: 'Loratadine 10mg',
+                genericName: 'Loratadine',
+                type: 'tablet',
+                typeName: 'ยาเม็ด',
+                category: 'ยาแก้แพ้',
+                price: 4.00,
+                quantity: 3500,
+                minStock: 800,
+                unit: 'เม็ด',
+                manufacturer: 'Bangkok Lab',
+                expiryDate: '2027-02-28',
+                description: 'ยาแก้แพ้ชนิดไม่ง่วง สำหรับคัดจมูก น้ำมูกไหล ผื่นคัน',
+                dosage: 'ผู้ใหญ่และเด็กมากกว่า 12 ปี: รับประทาน 10mg วันละครั้ง',
+                sideEffects: 'อาจมีปวดศีรษะ ปากแห้ง',
+                storageCondition: 'เก็บในที่แห้ง อุณหภูมิห้อง',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'med-012',
+                medicineCode: 'VITC-1000',
+                name: 'Vitamin C 1000mg',
+                genericName: 'Ascorbic Acid',
+                type: 'tablet',
+                typeName: 'ยาเม็ด',
+                category: 'วิตามินเสริม',
+                price: 3.00,
+                quantity: 8000,
+                minStock: 2000,
+                unit: 'เม็ด',
+                manufacturer: 'Health Plus',
+                expiryDate: '2027-06-30',
+                description: 'วิตามินซีสำหรับเสริมภูมิคุ้มกัน ต้านอนุมูลอิสระ',
+                dosage: 'รับประทานวันละ 1 เม็ด หลังอาหาร',
+                sideEffects: 'ขนาดสูงอาจท้องเสีย',
+                storageCondition: 'เก็บในที่แห้ง หลีกเลี่ยงความชื้น',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'med-013',
+                medicineCode: 'OMEP-20',
+                name: 'Omeprazole 20mg',
+                genericName: 'Omeprazole',
+                type: 'capsule',
+                typeName: 'ยาแคปซูล',
+                category: 'ยาลดกรด',
+                price: 6.50,
+                quantity: 2800,
+                minStock: 600,
+                unit: 'แคปซูล',
+                manufacturer: 'GPO - องค์การเภสัชกรรม',
+                expiryDate: '2026-12-31',
+                description: 'ยาลดการหลั่งกรดในกระเพาะอาหาร รักษาแผลในกระเพาะ',
+                dosage: 'รับประทาน 20mg วันละครั้ง ก่อนอาหารเช้า 30 นาที',
+                sideEffects: 'อาจมีอาการปวดท้อง คลื่นไส้',
+                storageCondition: 'เก็บในที่แห้ง อุณหภูมิห้อง',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'med-014',
+                medicineCode: 'EYE-DROP',
+                name: 'Artificial Tears Eye Drops',
+                genericName: 'Hydroxypropyl Methylcellulose',
+                type: 'drops',
+                typeName: 'ยาหยอด',
+                category: 'ยาหยอดตา',
+                price: 85.00,
+                quantity: 350,
+                minStock: 100,
+                unit: 'ขวด',
+                manufacturer: 'Eyecare Solutions',
+                expiryDate: '2026-05-31',
+                description: 'น้ำตาเทียมสำหรับบรรเทาอาการตาแห้ง',
+                dosage: 'หยอด 1-2 หยด ในตาที่มีอาการ 3-4 ครั้งต่อวัน',
+                sideEffects: 'อาจมีอาการระคายเคืองชั่วคราว',
+                storageCondition: 'เก็บในอุณหภูมิห้อง ใช้ภายใน 30 วันหลังเปิด',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'med-015',
+                medicineCode: 'ASPIRIN-100',
+                name: 'Aspirin 100mg (Enteric Coated)',
+                genericName: 'Acetylsalicylic Acid',
+                type: 'tablet',
+                typeName: 'ยาเม็ด',
+                category: 'ยาป้องกันโรคหัวใจ',
+                price: 1.50,
+                quantity: 10000,
+                minStock: 2000,
+                unit: 'เม็ด',
+                manufacturer: 'Bayer Thailand',
+                expiryDate: '2027-04-30',
+                description: 'ยาแอสไพรินชนิดเคลือบลำไส้ ป้องกันโรคหัวใจและหลอดเลือด',
+                dosage: 'รับประทาน 100mg วันละครั้ง หลังอาหาร',
+                sideEffects: 'ห้ามใช้ในผู้ที่แพ้แอสไพริน หรือมีแผลในกระเพาะ',
+                storageCondition: 'เก็บในที่แห้ง อุณหภูมิห้อง',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            }
+        ]);
+
         // Initialize doctor schedules (Day 17)
         if (!storage.get('doctorSchedules')) storage.set('doctorSchedules', [
             {
@@ -1054,6 +1374,9 @@ function showSection(sectionId) {
                 break;
             case 'rooms':
                 loadRooms();
+                break;
+            case 'pharmacy':
+                loadMedicines();
                 break;
         }
     }
@@ -7703,6 +8026,761 @@ function clearFilters() {
     loadPatients();
 }
 
+// ===== Pharmacy & Medicine Management Functions (Day 29) =====
+
+/**
+ * Load and display all medicines
+ * Retrieves medicines from storage and renders them in a grid layout
+ */
+function loadMedicines() {
+    const medicines = storage.get('medicines') || [];
+    const grid = document.getElementById('medicinesGrid');
+
+    if (!grid) return;
+
+    if (medicines.length === 0) {
+        grid.innerHTML = '<p class="no-data">ยังไม่มีข้อมูลยา</p>';
+        return;
+    }
+
+    // Sort medicines by name
+    medicines.sort((a, b) => a.name.localeCompare(b.name));
+
+    grid.innerHTML = medicines.map(med => {
+        const stockStatus = getMedicineStockStatus(med);
+        const statusBadge = `
+            <span style="
+                display: inline-block;
+                padding: 0.25rem 0.75rem;
+                border-radius: 999px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                background: ${stockStatus.bgColor};
+                color: ${stockStatus.color};
+            ">${stockStatus.text}</span>
+        `;
+
+        // Check if near expiry (within 6 months)
+        const expiryDate = new Date(med.expiryDate);
+        const sixMonthsFromNow = new Date();
+        sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+        const nearExpiry = expiryDate <= sixMonthsFromNow;
+
+        return `
+            <div style="
+                background: white;
+                border-radius: var(--border-radius);
+                padding: 1.5rem;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                transition: transform 0.2s, box-shadow 0.2s;
+                cursor: pointer;
+            " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'"
+               onclick="viewMedicineDetails('${med.id}')">
+
+                <!-- Header with medicine code and stock status -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                    <div>
+                        <div style="font-size: 0.75rem; color: #6b7280; font-weight: 600;">${med.medicineCode}</div>
+                        <h3 style="margin: 0.25rem 0 0 0; font-size: 1.1rem; color: var(--primary-color);">${med.name}</h3>
+                    </div>
+                    ${stockStatus.badge}
+                </div>
+
+                <!-- Medicine details -->
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem; color: #4b5563;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-weight: 600;">ชนิด:</span>
+                        <span style="background: #f3f4f6; padding: 0.125rem 0.5rem; border-radius: 0.25rem;">${med.typeName}</span>
+                    </div>
+                    <div><span style="font-weight: 600;">หมวดหมู่:</span> ${med.category}</div>
+                    <div><span style="font-weight: 600;">ผู้ผลิต:</span> ${med.manufacturer}</div>
+                </div>
+
+                <!-- Stock info -->
+                <div style="
+                    margin-top: 1rem;
+                    padding-top: 1rem;
+                    border-top: 1px solid #e5e7eb;
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 0.75rem;
+                ">
+                    <div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">คงเหลือ</div>
+                        <div style="font-size: 1.25rem; font-weight: 700; color: ${stockStatus.numberColor};">
+                            ${med.quantity.toLocaleString()} ${med.unit}
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">ราคา</div>
+                        <div style="font-size: 1.25rem; font-weight: 700; color: var(--primary-color);">
+                            ฿${med.price.toFixed(2)}
+                        </div>
+                    </div>
+                </div>
+
+                ${nearExpiry ? `
+                    <div style="
+                        margin-top: 0.75rem;
+                        padding: 0.5rem;
+                        background: #fef3c7;
+                        border-left: 3px solid #f59e0b;
+                        border-radius: 0.25rem;
+                        font-size: 0.75rem;
+                        color: #92400e;
+                    ">
+                        ⚠️ ใกล้หมดอายุ: ${new Date(med.expiryDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </div>
+                ` : ''}
+
+                <!-- Action buttons -->
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button class="btn btn-secondary" onclick="event.stopPropagation(); editMedicine('${med.id}')" style="flex: 1; font-size: 0.875rem; padding: 0.5rem;">
+                        ✏️ แก้ไข
+                    </button>
+                    <button class="btn" onclick="event.stopPropagation(); deleteMedicine('${med.id}')" style="flex: 1; background: #ef4444; color: white; font-size: 0.875rem; padding: 0.5rem;">
+                        🗑️ ลบ
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Update result count
+    const resultCount = document.getElementById('medicineResultCount');
+    if (resultCount) {
+        resultCount.textContent = `พบ ${medicines.length} รายการ`;
+    }
+}
+
+/**
+ * Get stock status configuration for a medicine
+ * @param {Object} medicine - Medicine object
+ * @returns {Object} Status configuration with colors and text
+ */
+function getMedicineStockStatus(medicine) {
+    const stockPercentage = (medicine.quantity / (medicine.minStock * 2)) * 100;
+
+    if (medicine.quantity === 0) {
+        return {
+            text: 'หมดสต็อก',
+            badge: '<span style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600;">หมดสต็อก</span>',
+            bgColor: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+            color: '#991b1b',
+            numberColor: '#ef4444'
+        };
+    } else if (medicine.quantity <= medicine.minStock) {
+        return {
+            text: 'สต็อกต่ำ',
+            badge: '<span style="background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600;">⚠️ สต็อกต่ำ</span>',
+            bgColor: 'linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%)',
+            color: '#92400e',
+            numberColor: '#f59e0b'
+        };
+    } else {
+        return {
+            text: 'มีสต็อก',
+            badge: '<span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600;">✓ มีสต็อก</span>',
+            bgColor: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
+            color: '#065f46',
+            numberColor: '#10b981'
+        };
+    }
+}
+
+/**
+ * View medicine details in a modal
+ * @param {string} medicineId - Medicine ID to display
+ */
+function viewMedicineDetails(medicineId) {
+    const medicines = storage.get('medicines') || [];
+    const medicine = medicines.find(m => m.id === medicineId);
+
+    if (!medicine) {
+        alert('ไม่พบข้อมูลยา');
+        return;
+    }
+
+    const stockStatus = getMedicineStockStatus(medicine);
+    const expiryDate = new Date(medicine.expiryDate);
+    const now = new Date();
+    const daysToExpiry = Math.floor((expiryDate - now) / (1000 * 60 * 60 * 24));
+
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <h2 style="margin-bottom: 1.5rem; color: var(--primary-color);">รายละเอียดยา</h2>
+
+        <div style="display: grid; gap: 1.5rem;">
+            <!-- Basic Info -->
+            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 1.5rem; border-radius: var(--border-radius);">
+                <div style="font-size: 0.875rem; opacity: 0.9;">${medicine.medicineCode}</div>
+                <h3 style="margin: 0.5rem 0; font-size: 1.5rem;">${medicine.name}</h3>
+                <div style="font-size: 0.875rem; opacity: 0.9;">${medicine.genericName}</div>
+                <div style="margin-top: 1rem;">
+                    ${stockStatus.badge}
+                </div>
+            </div>
+
+            <!-- Stock and Price Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                <div style="background: #f9fafb; padding: 1rem; border-radius: var(--border-radius); border-left: 4px solid ${stockStatus.numberColor};">
+                    <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">จำนวนคงเหลือ</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: ${stockStatus.numberColor};">${medicine.quantity.toLocaleString()} ${medicine.unit}</div>
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: var(--border-radius); border-left: 4px solid #6b7280;">
+                    <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">สต็อกขั้นต่ำ</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: #6b7280;">${medicine.minStock.toLocaleString()} ${medicine.unit}</div>
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: var(--border-radius); border-left: 4px solid var(--primary-color);">
+                    <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">ราคา</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">฿${medicine.price.toFixed(2)}</div>
+                </div>
+            </div>
+
+            <!-- Details Grid -->
+            <div style="display: grid; gap: 1rem;">
+                <div>
+                    <strong style="color: #374151;">ประเภท:</strong>
+                    <span style="margin-left: 0.5rem; background: #dbeafe; color: #1e40af; padding: 0.25rem 0.75rem; border-radius: 0.25rem; font-size: 0.875rem;">
+                        ${medicine.typeName}
+                    </span>
+                </div>
+                <div><strong style="color: #374151;">หมวดหมู่:</strong> ${medicine.category}</div>
+                <div><strong style="color: #374151;">ผู้ผลิต:</strong> ${medicine.manufacturer}</div>
+                <div>
+                    <strong style="color: #374151;">วันหมดอายุ:</strong>
+                    <span style="color: ${daysToExpiry < 180 ? '#f59e0b' : '#10b981'};">
+                        ${expiryDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        (อีก ${daysToExpiry} วัน)
+                    </span>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div style="background: #f9fafb; padding: 1rem; border-radius: var(--border-radius);">
+                <strong style="color: #374151; display: block; margin-bottom: 0.5rem;">คำอธิบาย:</strong>
+                <p style="margin: 0; color: #6b7280; line-height: 1.6;">${medicine.description}</p>
+            </div>
+
+            <!-- Dosage -->
+            <div style="background: #dbeafe; padding: 1rem; border-radius: var(--border-radius); border-left: 4px solid #3b82f6;">
+                <strong style="color: #1e40af; display: block; margin-bottom: 0.5rem;">💊 ขนาดการใช้:</strong>
+                <p style="margin: 0; color: #1e3a8a;">${medicine.dosage}</p>
+            </div>
+
+            <!-- Side Effects -->
+            <div style="background: #fee2e2; padding: 1rem; border-radius: var(--border-radius); border-left: 4px solid #ef4444;">
+                <strong style="color: #991b1b; display: block; margin-bottom: 0.5rem;">⚠️ ผลข้างเคียง:</strong>
+                <p style="margin: 0; color: #7f1d1d;">${medicine.sideEffects}</p>
+            </div>
+
+            <!-- Storage Condition -->
+            <div style="background: #f3f4f6; padding: 1rem; border-radius: var(--border-radius);">
+                <strong style="color: #374151; display: block; margin-bottom: 0.5rem;">🌡️ การเก็บรักษา:</strong>
+                <p style="margin: 0; color: #6b7280;">${medicine.storageCondition}</p>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+            <button class="btn btn-primary" onclick="editMedicine('${medicine.id}')" style="flex: 1;">แก้ไข</button>
+            <button class="btn btn-secondary" onclick="closeModal()" style="flex: 1;">ปิด</button>
+        </div>
+    `;
+
+    openModal();
+}
+
+/**
+ * Show modal to add new medicine
+ */
+function showAddMedicineModal() {
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <h2 style="margin-bottom: 1.5rem; color: var(--primary-color);">เพิ่มยาใหม่</h2>
+        <form id="addMedicineForm" onsubmit="event.preventDefault(); addMedicine();">
+            <div style="display: grid; gap: 1rem;">
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>ชื่อยา *</label>
+                        <input type="text" id="medicineName" required>
+                    </div>
+                    <div>
+                        <label>รหัสยา *</label>
+                        <input type="text" id="medicineCode" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label>ชื่อสามัญ (Generic Name)</label>
+                    <input type="text" id="medicineGenericName">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>ประเภทยา *</label>
+                        <select id="medicineType" required>
+                            <option value="">เลือกประเภท</option>
+                            <option value="tablet">ยาเม็ด</option>
+                            <option value="capsule">ยาแคปซูล</option>
+                            <option value="syrup">ยาน้ำ</option>
+                            <option value="injection">ยาฉีด</option>
+                            <option value="cream">ครีม/ขี้ผึ้ง</option>
+                            <option value="inhaler">ยาสูดพ่น</option>
+                            <option value="drops">ยาหยอด</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>หมวดหมู่ *</label>
+                        <input type="text" id="medicineCategory" required placeholder="เช่น ยาแก้ปวด, ยาปฏิชีวนะ">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>ราคา (บาท) *</label>
+                        <input type="number" id="medicinePrice" step="0.01" required min="0">
+                    </div>
+                    <div>
+                        <label>จำนวนคงเหลือ *</label>
+                        <input type="number" id="medicineQuantity" required min="0">
+                    </div>
+                    <div>
+                        <label>สต็อกขั้นต่ำ *</label>
+                        <input type="number" id="medicineMinStock" required min="0">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>หน่วย *</label>
+                        <input type="text" id="medicineUnit" required placeholder="เช่น เม็ด, แคปซูล, ขวด">
+                    </div>
+                    <div>
+                        <label>วันหมดอายุ *</label>
+                        <input type="date" id="medicineExpiry" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label>ผู้ผลิต</label>
+                    <input type="text" id="medicineManufacturer">
+                </div>
+
+                <div>
+                    <label>คำอธิบาย</label>
+                    <textarea id="medicineDescription" rows="2"></textarea>
+                </div>
+
+                <div>
+                    <label>ขนาดการใช้</label>
+                    <textarea id="medicineDosage" rows="2"></textarea>
+                </div>
+
+                <div>
+                    <label>ผลข้างเคียง</label>
+                    <textarea id="medicineSideEffects" rows="2"></textarea>
+                </div>
+
+                <div>
+                    <label>การเก็บรักษา</label>
+                    <textarea id="medicineStorage" rows="2"></textarea>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">บันทึก</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()" style="flex: 1;">ยกเลิก</button>
+            </div>
+        </form>
+    `;
+    openModal();
+}
+
+/**
+ * Add new medicine to storage
+ */
+function addMedicine() {
+    const medicines = storage.get('medicines') || [];
+
+    const typeMap = {
+        'tablet': 'ยาเม็ด',
+        'capsule': 'ยาแคปซูล',
+        'syrup': 'ยาน้ำ',
+        'injection': 'ยาฉีด',
+        'cream': 'ครีม/ขี้ผึ้ง',
+        'inhaler': 'ยาสูดพ่น',
+        'drops': 'ยาหยอด'
+    };
+
+    const newMedicine = {
+        id: 'med-' + Date.now(),
+        medicineCode: document.getElementById('medicineCode').value.trim(),
+        name: document.getElementById('medicineName').value.trim(),
+        genericName: document.getElementById('medicineGenericName').value.trim() || '-',
+        type: document.getElementById('medicineType').value,
+        typeName: typeMap[document.getElementById('medicineType').value],
+        category: document.getElementById('medicineCategory').value.trim(),
+        price: parseFloat(document.getElementById('medicinePrice').value),
+        quantity: parseInt(document.getElementById('medicineQuantity').value),
+        minStock: parseInt(document.getElementById('medicineMinStock').value),
+        unit: document.getElementById('medicineUnit').value.trim(),
+        manufacturer: document.getElementById('medicineManufacturer').value.trim() || '-',
+        expiryDate: document.getElementById('medicineExpiry').value,
+        description: document.getElementById('medicineDescription').value.trim() || '-',
+        dosage: document.getElementById('medicineDosage').value.trim() || '-',
+        sideEffects: document.getElementById('medicineSideEffects').value.trim() || '-',
+        storageCondition: document.getElementById('medicineStorage').value.trim() || '-',
+        status: 'active',
+        createdAt: new Date().toISOString()
+    };
+
+    medicines.push(newMedicine);
+    storage.set('medicines', medicines);
+
+    alert('เพิ่มยาสำเร็จ');
+    closeModal();
+    loadMedicines();
+}
+
+/**
+ * Edit medicine
+ * @param {string} medicineId - Medicine ID to edit
+ */
+function editMedicine(medicineId) {
+    const medicines = storage.get('medicines') || [];
+    const medicine = medicines.find(m => m.id === medicineId);
+
+    if (!medicine) {
+        alert('ไม่พบข้อมูลยา');
+        return;
+    }
+
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <h2 style="margin-bottom: 1.5rem; color: var(--primary-color);">แก้ไขข้อมูลยา</h2>
+        <form id="editMedicineForm" onsubmit="event.preventDefault(); updateMedicine('${medicineId}');">
+            <div style="display: grid; gap: 1rem;">
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>ชื่อยา *</label>
+                        <input type="text" id="medicineName" value="${medicine.name}" required>
+                    </div>
+                    <div>
+                        <label>รหัสยา *</label>
+                        <input type="text" id="medicineCode" value="${medicine.medicineCode}" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label>ชื่อสามัญ (Generic Name)</label>
+                    <input type="text" id="medicineGenericName" value="${medicine.genericName}">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>ประเภทยา *</label>
+                        <select id="medicineType" required>
+                            <option value="tablet" ${medicine.type === 'tablet' ? 'selected' : ''}>ยาเม็ด</option>
+                            <option value="capsule" ${medicine.type === 'capsule' ? 'selected' : ''}>ยาแคปซูล</option>
+                            <option value="syrup" ${medicine.type === 'syrup' ? 'selected' : ''}>ยาน้ำ</option>
+                            <option value="injection" ${medicine.type === 'injection' ? 'selected' : ''}>ยาฉีด</option>
+                            <option value="cream" ${medicine.type === 'cream' ? 'selected' : ''}>ครีม/ขี้ผึ้ง</option>
+                            <option value="inhaler" ${medicine.type === 'inhaler' ? 'selected' : ''}>ยาสูดพ่น</option>
+                            <option value="drops" ${medicine.type === 'drops' ? 'selected' : ''}>ยาหยอด</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>หมวดหมู่ *</label>
+                        <input type="text" id="medicineCategory" value="${medicine.category}" required>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>ราคา (บาท) *</label>
+                        <input type="number" id="medicinePrice" step="0.01" value="${medicine.price}" required min="0">
+                    </div>
+                    <div>
+                        <label>จำนวนคงเหลือ *</label>
+                        <input type="number" id="medicineQuantity" value="${medicine.quantity}" required min="0">
+                    </div>
+                    <div>
+                        <label>สต็อกขั้นต่ำ *</label>
+                        <input type="number" id="medicineMinStock" value="${medicine.minStock}" required min="0">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label>หน่วย *</label>
+                        <input type="text" id="medicineUnit" value="${medicine.unit}" required>
+                    </div>
+                    <div>
+                        <label>วันหมดอายุ *</label>
+                        <input type="date" id="medicineExpiry" value="${medicine.expiryDate}" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label>ผู้ผลิต</label>
+                    <input type="text" id="medicineManufacturer" value="${medicine.manufacturer}">
+                </div>
+
+                <div>
+                    <label>คำอธิบาย</label>
+                    <textarea id="medicineDescription" rows="2">${medicine.description}</textarea>
+                </div>
+
+                <div>
+                    <label>ขนาดการใช้</label>
+                    <textarea id="medicineDosage" rows="2">${medicine.dosage}</textarea>
+                </div>
+
+                <div>
+                    <label>ผลข้างเคียง</label>
+                    <textarea id="medicineSideEffects" rows="2">${medicine.sideEffects}</textarea>
+                </div>
+
+                <div>
+                    <label>การเก็บรักษา</label>
+                    <textarea id="medicineStorage" rows="2">${medicine.storageCondition}</textarea>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">บันทึก</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()" style="flex: 1;">ยกเลิก</button>
+            </div>
+        </form>
+    `;
+    openModal();
+}
+
+/**
+ * Update medicine data
+ * @param {string} medicineId - Medicine ID to update
+ */
+function updateMedicine(medicineId) {
+    const medicines = storage.get('medicines') || [];
+    const index = medicines.findIndex(m => m.id === medicineId);
+
+    if (index === -1) {
+        alert('ไม่พบข้อมูลยา');
+        return;
+    }
+
+    const typeMap = {
+        'tablet': 'ยาเม็ด',
+        'capsule': 'ยาแคปซูล',
+        'syrup': 'ยาน้ำ',
+        'injection': 'ยาฉีด',
+        'cream': 'ครีม/ขี้ผึ้ง',
+        'inhaler': 'ยาสูดพ่น',
+        'drops': 'ยาหยอด'
+    };
+
+    medicines[index] = {
+        ...medicines[index],
+        medicineCode: document.getElementById('medicineCode').value.trim(),
+        name: document.getElementById('medicineName').value.trim(),
+        genericName: document.getElementById('medicineGenericName').value.trim() || '-',
+        type: document.getElementById('medicineType').value,
+        typeName: typeMap[document.getElementById('medicineType').value],
+        category: document.getElementById('medicineCategory').value.trim(),
+        price: parseFloat(document.getElementById('medicinePrice').value),
+        quantity: parseInt(document.getElementById('medicineQuantity').value),
+        minStock: parseInt(document.getElementById('medicineMinStock').value),
+        unit: document.getElementById('medicineUnit').value.trim(),
+        manufacturer: document.getElementById('medicineManufacturer').value.trim() || '-',
+        expiryDate: document.getElementById('medicineExpiry').value,
+        description: document.getElementById('medicineDescription').value.trim() || '-',
+        dosage: document.getElementById('medicineDosage').value.trim() || '-',
+        sideEffects: document.getElementById('medicineSideEffects').value.trim() || '-',
+        storageCondition: document.getElementById('medicineStorage').value.trim() || '-'
+    };
+
+    storage.set('medicines', medicines);
+
+    alert('อัพเดทข้อมูลยาสำเร็จ');
+    closeModal();
+    loadMedicines();
+}
+
+/**
+ * Delete medicine
+ * @param {string} medicineId - Medicine ID to delete
+ */
+function deleteMedicine(medicineId) {
+    const medicines = storage.get('medicines') || [];
+    const medicine = medicines.find(m => m.id === medicineId);
+
+    if (!medicine) {
+        alert('ไม่พบข้อมูลยา');
+        return;
+    }
+
+    if (confirm(`ต้องการลบยา "${medicine.name}" ใช่หรือไม่?`)) {
+        const filtered = medicines.filter(m => m.id !== medicineId);
+        storage.set('medicines', filtered);
+
+        alert('ลบยาสำเร็จ');
+        loadMedicines();
+    }
+}
+
+/**
+ * Apply filters to medicine list
+ */
+function applyMedicineFilters() {
+    const searchTerm = (document.getElementById('medicineSearch')?.value || '').toLowerCase();
+    const typeFilter = document.getElementById('medicineTypeFilter')?.value || '';
+    const stockFilter = document.getElementById('medicineStockFilter')?.value || '';
+
+    let medicines = storage.get('medicines') || [];
+
+    // Apply search
+    if (searchTerm) {
+        medicines = medicines.filter(med =>
+            med.name.toLowerCase().includes(searchTerm) ||
+            med.medicineCode.toLowerCase().includes(searchTerm) ||
+            med.category.toLowerCase().includes(searchTerm) ||
+            med.manufacturer.toLowerCase().includes(searchTerm)
+        );
+    }
+
+    // Apply type filter
+    if (typeFilter) {
+        medicines = medicines.filter(med => med.type === typeFilter);
+    }
+
+    // Apply stock filter
+    if (stockFilter) {
+        medicines = medicines.filter(med => {
+            if (stockFilter === 'out-of-stock') return med.quantity === 0;
+            if (stockFilter === 'low-stock') return med.quantity > 0 && med.quantity <= med.minStock;
+            if (stockFilter === 'in-stock') return med.quantity > med.minStock;
+            return true;
+        });
+    }
+
+    // Render filtered medicines
+    const grid = document.getElementById('medicinesGrid');
+    if (!grid) return;
+
+    if (medicines.length === 0) {
+        grid.innerHTML = '<p class="no-data">ไม่พบยาตามเงื่อนไขที่กรอง</p>';
+    } else {
+        // Sort and render
+        medicines.sort((a, b) => a.name.localeCompare(b.name));
+
+        grid.innerHTML = medicines.map(med => {
+            const stockStatus = getMedicineStockStatus(med);
+            const expiryDate = new Date(med.expiryDate);
+            const sixMonthsFromNow = new Date();
+            sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+            const nearExpiry = expiryDate <= sixMonthsFromNow;
+
+            return `
+                <div style="
+                    background: white;
+                    border-radius: var(--border-radius);
+                    padding: 1.5rem;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    transition: transform 0.2s, box-shadow 0.2s;
+                    cursor: pointer;
+                " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'"
+                   onclick="viewMedicineDetails('${med.id}')">
+
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                        <div>
+                            <div style="font-size: 0.75rem; color: #6b7280; font-weight: 600;">${med.medicineCode}</div>
+                            <h3 style="margin: 0.25rem 0 0 0; font-size: 1.1rem; color: var(--primary-color);">${med.name}</h3>
+                        </div>
+                        ${stockStatus.badge}
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem; color: #4b5563;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-weight: 600;">ชนิด:</span>
+                            <span style="background: #f3f4f6; padding: 0.125rem 0.5rem; border-radius: 0.25rem;">${med.typeName}</span>
+                        </div>
+                        <div><span style="font-weight: 600;">หมวดหมู่:</span> ${med.category}</div>
+                        <div><span style="font-weight: 600;">ผู้ผลิต:</span> ${med.manufacturer}</div>
+                    </div>
+
+                    <div style="
+                        margin-top: 1rem;
+                        padding-top: 1rem;
+                        border-top: 1px solid #e5e7eb;
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 0.75rem;
+                    ">
+                        <div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">คงเหลือ</div>
+                            <div style="font-size: 1.25rem; font-weight: 700; color: ${stockStatus.numberColor};">
+                                ${med.quantity.toLocaleString()} ${med.unit}
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: #6b7280;">ราคา</div>
+                            <div style="font-size: 1.25rem; font-weight: 700; color: var(--primary-color);">
+                                ฿${med.price.toFixed(2)}
+                            </div>
+                        </div>
+                    </div>
+
+                    ${nearExpiry ? `
+                        <div style="
+                            margin-top: 0.75rem;
+                            padding: 0.5rem;
+                            background: #fef3c7;
+                            border-left: 3px solid #f59e0b;
+                            border-radius: 0.25rem;
+                            font-size: 0.75rem;
+                            color: #92400e;
+                        ">
+                            ⚠️ ใกล้หมดอายุ: ${new Date(med.expiryDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </div>
+                    ` : ''}
+
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                        <button class="btn btn-secondary" onclick="event.stopPropagation(); editMedicine('${med.id}')" style="flex: 1; font-size: 0.875rem; padding: 0.5rem;">
+                            ✏️ แก้ไข
+                        </button>
+                        <button class="btn" onclick="event.stopPropagation(); deleteMedicine('${med.id}')" style="flex: 1; background: #ef4444; color: white; font-size: 0.875rem; padding: 0.5rem;">
+                            🗑️ ลบ
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Update result count
+    const resultCount = document.getElementById('medicineResultCount');
+    if (resultCount) {
+        resultCount.textContent = `พบ ${medicines.length} รายการ`;
+    }
+}
+
+/**
+ * Clear medicine filters
+ */
+function clearMedicineFilters() {
+    const searchBox = document.getElementById('medicineSearch');
+    const typeFilter = document.getElementById('medicineTypeFilter');
+    const stockFilter = document.getElementById('medicineStockFilter');
+
+    if (searchBox) searchBox.value = '';
+    if (typeFilter) typeFilter.value = '';
+    if (stockFilter) stockFilter.value = '';
+
+    loadMedicines();
+}
+
 // Add event listener for search box
 const searchBox = document.getElementById('patientSearch');
 if (searchBox) {
@@ -8124,6 +9202,32 @@ if (appointmentTimeFilter) {
 const clearAppointmentFilterBtn = document.getElementById('clearAppointmentFilterBtn');
 if (clearAppointmentFilterBtn) {
     clearAppointmentFilterBtn.addEventListener('click', clearAppointmentFilters);
+}
+
+// Add event listeners for medicine/pharmacy management
+const addMedicineBtn = document.getElementById('addMedicineBtn');
+if (addMedicineBtn) {
+    addMedicineBtn.addEventListener('click', showAddMedicineModal);
+}
+
+const medicineSearchBox = document.getElementById('medicineSearch');
+if (medicineSearchBox) {
+    medicineSearchBox.addEventListener('input', applyMedicineFilters);
+}
+
+const medicineTypeFilter = document.getElementById('medicineTypeFilter');
+if (medicineTypeFilter) {
+    medicineTypeFilter.addEventListener('change', applyMedicineFilters);
+}
+
+const medicineStockFilter = document.getElementById('medicineStockFilter');
+if (medicineStockFilter) {
+    medicineStockFilter.addEventListener('change', applyMedicineFilters);
+}
+
+const clearMedicineFilterBtn = document.getElementById('clearMedicineFilterBtn');
+if (clearMedicineFilterBtn) {
+    clearMedicineFilterBtn.addEventListener('click', clearMedicineFilters);
 }
 
 // ===== Initialize on page load =====

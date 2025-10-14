@@ -56,6 +56,7 @@
                     <li><a href="#doctors" class="nav-link">แพทย์</a></li>
                     <li><a href="#wards" class="nav-link">หอผู้ป่วย</a></li>
                     <li><a href="#rooms" class="nav-link">ห้องพัก</a></li>
+                    <li><a href="#pharmacy" class="nav-link">คลังยา</a></li>
                 </ul>
             </nav>
         </div>
@@ -499,6 +500,52 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </section>
+
+            <!-- Pharmacy Section -->
+            <section id="pharmacy" class="section">
+                <h2>จัดการคลังยา</h2>
+                <div class="section-header" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;">
+                    <button class="btn btn-primary" id="addMedicineBtn">+ เพิ่มยาใหม่</button>
+                    <input type="search" class="search-box" id="medicineSearch" placeholder="ค้นหายา (ชื่อยา, ประเภท)..." style="flex: 1; min-width: 250px;">
+                </div>
+
+                <!-- Filter Section -->
+                <div class="filter-section" style="background: var(--light-color); padding: 1rem; border-radius: var(--border-radius); margin-bottom: 1rem;">
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <label style="font-weight: 600;">กรองตามประเภท:</label>
+                        <select id="medicineTypeFilter" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); min-width: 180px;">
+                            <option value="">ทั้งหมด</option>
+                            <option value="tablet">ยาเม็ด</option>
+                            <option value="capsule">ยาแคปซูล</option>
+                            <option value="syrup">ยาน้ำ</option>
+                            <option value="injection">ยาฉีด</option>
+                            <option value="cream">ครีม/ขี้ผึ้ง</option>
+                            <option value="inhaler">ยาสูดพ่น</option>
+                            <option value="drops">ยาหยอด</option>
+                        </select>
+
+                        <label style="font-weight: 600;">กรองตามสถานะ:</label>
+                        <select id="medicineStockFilter" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); min-width: 150px;">
+                            <option value="">ทั้งหมด</option>
+                            <option value="in-stock">มีสต็อก</option>
+                            <option value="low-stock">สต็อกต่ำ</option>
+                            <option value="out-of-stock">หมดสต็อก</option>
+                        </select>
+
+                        <button class="btn btn-secondary" id="clearMedicineFilterBtn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">ล้างตัวกรอง</button>
+                    </div>
+                </div>
+
+                <!-- Result Count -->
+                <div id="medicineResultCount" style="margin-bottom: 1rem; color: #6b7280; font-size: 0.875rem;">
+                    <!-- Result count will be displayed here -->
+                </div>
+
+                <!-- Medicines Grid -->
+                <div class="medicines-grid" id="medicinesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+                    <p class="no-data">กำลังโหลดข้อมูล...</p>
                 </div>
             </section>
         </div>
