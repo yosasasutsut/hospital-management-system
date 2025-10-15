@@ -5,6 +5,98 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2025-10-15
+
+### Added
+- **Medicine Stock Management System** (Day 30)
+
+  **Part 1: Stock Transaction System**
+  - Stock transaction data model with complete tracking:
+    - Transaction ID, medicine info, type (in/out)
+    - Quantity, unit, balance before/after
+    - Reference number, performed by, timestamp
+  - `recordStockTransaction()` - Record medicine in/out transactions
+  - `showStockTransactionModal()` - Interactive stock in/out modal
+  - `submitStockTransaction()` - Process and validate transactions
+  - Real-time stock validation (prevent negative stock)
+  - Transaction reference tracking
+  - User attribution for audit trail
+
+  **Part 2: Transaction History Display**
+  - `getMedicineTransactionHistory()` - Retrieve medicine-specific history
+  - `showTransactionHistory()` - Comprehensive history modal
+  - Transaction list features:
+    - Chronological order (newest first)
+    - Color-coded transaction types (green=in, red=out)
+    - Balance before/after display
+    - Reference number tracking
+    - Performer information
+    - Thai date/time formatting
+  - Transaction summary statistics:
+    - Total receive count
+    - Total dispense count
+    - Visual stat cards
+
+  **Part 3: Low Stock Alert Dashboard**
+  - `getLowStockMedicines()` - Filter and sort low/out of stock medicines
+  - `loadLowStockAlert()` - Dashboard section with alerts
+  - Alert statistics cards:
+    - Out of stock count (red gradient, urgent)
+    - Low stock count (orange gradient, warning)
+    - Total alerts count (blue gradient)
+  - Low stock medicines table:
+    - Status badges (out of stock / low stock)
+    - Medicine code and name
+    - Current vs minimum stock display
+    - Quick "Receive Medicine" action button
+    - Responsive design with hover effects
+  - Empty state display when stock is healthy
+  - Quick navigation to pharmacy section
+  - Integration with dashboard auto-load
+
+  **Part 4: UI Enhancements**
+  - Medicine details modal updated:
+    - 📥 Receive medicine button (green)
+    - 📤 Dispense medicine button (red)
+    - 📊 Transaction history button
+    - 2x2 grid button layout
+  - Stock transaction modals:
+    - Medicine info card with current stock
+    - Quantity input with validation
+    - Reference/note field
+    - Performer field (defaults to Admin)
+    - Color-coded by transaction type
+  - Dashboard integration:
+    - Low stock section above patient statistics
+    - Real-time alert updates
+    - Sortable tables with sticky headers
+
+  **Part 5: Data Storage**
+  - Initialize `medicineTransactions` in localStorage
+  - Persistent transaction history
+  - Automatic stock quantity updates
+  - Data integrity validation
+
+### Changed
+- Updated version from 2.3.0 to 2.4.0
+- Enhanced `loadDashboard()` to include low stock alerts
+- Modified `viewMedicineDetails()` with stock management buttons
+- Improved medicine workflow with transaction tracking
+
+### Technical
+- **Data Structure**: medicineTransactions array in localStorage
+- **Functions Added**: 7 new functions (Day 30)
+  - Stock Management (3): recordStockTransaction, showStockTransactionModal, submitStockTransaction
+  - History Tracking (2): getMedicineTransactionHistory, showTransactionHistory
+  - Dashboard Alerts (2): getLowStockMedicines, loadLowStockAlert
+- **UI Pattern**: Modal-based transaction entry
+- **Validation**: Stock quantity checks, negative stock prevention
+- **Audit Trail**: Full transaction history with timestamps and performers
+- **JSDoc**: Complete documentation for all functions
+- **Integration**: Seamless dashboard and medicine detail integration
+
+---
+
 ## [2.3.0] - 2025-10-13
 
 ### Added
