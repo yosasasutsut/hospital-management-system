@@ -57,6 +57,7 @@
                     <li><a href="#wards" class="nav-link">หอผู้ป่วย</a></li>
                     <li><a href="#rooms" class="nav-link">ห้องพัก</a></li>
                     <li><a href="#pharmacy" class="nav-link">คลังยา</a></li>
+                    <li><a href="#medical-records" class="nav-link">ประวัติการรักษา</a></li>
                 </ul>
             </nav>
         </div>
@@ -500,6 +501,45 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </section>
+
+            <!-- Medical Records Section -->
+            <section id="medical-records" class="section">
+                <h2>ประวัติการรักษา (Medical Records)</h2>
+                <div class="section-header" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;">
+                    <button class="btn btn-primary" id="addMedicalRecordBtn">+ เพิ่มบันทึกการรักษา</button>
+                    <input type="search" class="search-box" id="medicalRecordSearch" placeholder="ค้นหาบันทึกการรักษา (HN, ชื่อผู้ป่วย, แพทย์)..." style="flex: 1; min-width: 250px;">
+                </div>
+
+                <!-- Filter Section -->
+                <div class="filter-section" style="background: var(--light-color); padding: 1rem; border-radius: var(--border-radius); margin-bottom: 1rem;">
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <label style="font-weight: 600;">กรองตามผู้ป่วย:</label>
+                        <select id="patientFilterMR" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); min-width: 200px;">
+                            <option value="">ทั้งหมด</option>
+                        </select>
+
+                        <label style="font-weight: 600;">กรองตามแพทย์:</label>
+                        <select id="doctorFilterMR" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); min-width: 200px;">
+                            <option value="">ทั้งหมด</option>
+                        </select>
+
+                        <label style="font-weight: 600;">กรองตามวันที่:</label>
+                        <input type="date" id="dateFilterMR" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+
+                        <button class="btn btn-secondary" id="clearMRFilterBtn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">ล้างตัวกรอง</button>
+                    </div>
+                </div>
+
+                <!-- Result Count -->
+                <div id="medicalRecordResultCount" style="margin-bottom: 1rem; color: #6b7280; font-size: 0.875rem;">
+                    <!-- Result count will be displayed here -->
+                </div>
+
+                <!-- Medical Records List -->
+                <div class="medical-records-list" id="medicalRecordsList" style="display: grid; gap: 1.5rem;">
+                    <p class="no-data">ยังไม่มีบันทึกการรักษา</p>
                 </div>
             </section>
 

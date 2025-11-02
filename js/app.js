@@ -35,6 +35,7 @@ const storage = {
     init: () => {
         if (!storage.get('patients')) storage.set('patients', []);
         if (!storage.get('appointments')) storage.set('appointments', []);
+        if (!storage.get('medicalRecords')) storage.set('medicalRecords', []);
 
         // Initialize sample doctors with comprehensive profile data
         if (!storage.get('doctors')) storage.set('doctors', [
@@ -1381,6 +1382,9 @@ function showSection(sectionId) {
                 break;
             case 'pharmacy':
                 loadMedicines();
+                break;
+            case 'medical-records':
+                loadMedicalRecords();
                 break;
         }
     }
@@ -9684,6 +9688,458 @@ if (medicineStockFilter) {
 const clearMedicineFilterBtn = document.getElementById('clearMedicineFilterBtn');
 if (clearMedicineFilterBtn) {
     clearMedicineFilterBtn.addEventListener('click', clearMedicineFilters);
+}
+
+// ========================================
+// MEDICAL RECORDS MANAGEMENT (Day 31)
+// ========================================
+
+/**
+ * Load and display medical records
+ */
+function loadMedicalRecords() {
+    const medicalRecords = storage.get('medicalRecords') || [];
+    const patients = storage.get('patients') || [];
+    const doctors = storage.get('doctors') || [];
+
+    // Populate patient filter
+    const patientFilter = document.getElementById('patientFilterMR');
+    if (patientFilter) {
+        patientFilter.innerHTML = '<option value="">ทั้งหมด</option>';
+        patients.forEach(patient => {
+            const option = document.createElement('option');
+            option.value = patient.id;
+            option.textContent = `${patient.name} (HN: ${patient.hn})`;
+            patientFilter.appendChild(option);
+        });
+    }
+
+    // Populate doctor filter
+    const doctorFilter = document.getElementById('doctorFilterMR');
+    if (doctorFilter) {
+        doctorFilter.innerHTML = '<option value="">ทั้งหมด</option>';
+        doctors.forEach(doctor => {
+            const option = document.createElement('option');
+            option.value = doctor.id;
+            option.textContent = `${doctor.name} (${doctor.specialty})`;
+            doctorFilter.appendChild(option);
+        });
+    }
+
+    applyMRFilters();
+}
+
+/**
+ * Apply medical records filters
+ */
+function applyMRFilters() {
+    const medicalRecords = storage.get('medicalRecords') || [];
+    const patients = storage.get('patients') || [];
+    const doctors = storage.get('doctors') || [];
+
+    const searchTerm = document.getElementById('medicalRecordSearch')?.value.toLowerCase() || '';
+    const patientId = document.getElementById('patientFilterMR')?.value || '';
+    const doctorId = document.getElementById('doctorFilterMR')?.value || '';
+    const dateFilter = document.getElementById('dateFilterMR')?.value || '';
+
+    let filtered = medicalRecords.filter(record => {
+        // Patient filter
+        if (patientId && record.patientId !== parseInt(patientId)) return false;
+
+        // Doctor filter
+        if (doctorId && record.doctorId !== parseInt(doctorId)) return false;
+
+        // Date filter
+        if (dateFilter && record.visitDate !== dateFilter) return false;
+
+        // Search term
+        if (searchTerm) {
+            const patient = patients.find(p => p.id === record.patientId);
+            const doctor = doctors.find(d => d.id === record.doctorId);
+
+            const searchableText = [
+                patient?.name || '',
+                patient?.hn || '',
+                doctor?.name || '',
+                record.chiefComplaint || '',
+                record.diagnosis || ''
+            ].join(' ').toLowerCase();
+
+            if (!searchableText.includes(searchTerm)) return false;
+        }
+
+        return true;
+    });
+
+    // Sort by date (newest first)
+    filtered.sort((a, b) => {
+        const dateA = new Date(a.visitDate + ' ' + (a.visitTime || '00:00'));
+        const dateB = new Date(b.visitDate + ' ' + (b.visitTime || '00:00'));
+        return dateB - dateA;
+    });
+
+    renderMedicalRecords(filtered);
+
+    // Update result count
+    const resultCount = document.getElementById('medicalRecordResultCount');
+    if (resultCount) {
+        resultCount.textContent = `แสดง ${filtered.length} รายการจากทั้งหมด ${medicalRecords.length} รายการ`;
+    }
+}
+
+/**
+ * Render medical records list
+ */
+function renderMedicalRecords(records) {
+    const container = document.getElementById('medicalRecordsList');
+    if (!container) return;
+
+    if (records.length === 0) {
+        container.innerHTML = '<p class="no-data">ไม่พบบันทึกการรักษาที่ตรงกับเงื่อนไข</p>';
+        return;
+    }
+
+    const patients = storage.get('patients') || [];
+    const doctors = storage.get('doctors') || [];
+
+    container.innerHTML = records.map(record => {
+        const patient = patients.find(p => p.id === record.patientId);
+        const doctor = doctors.find(d => d.id === record.doctorId);
+
+        return `
+            <div class="medical-record-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid var(--primary-color);">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div>
+                        <h3 style="margin: 0 0 0.5rem 0; color: var(--primary-color);">
+                            📋 Visit #${record.id} - ${new Date(record.visitDate).toLocaleDateString('th-TH')}
+                        </h3>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">
+                            เวลา: ${record.visitTime || 'ไม่ระบุ'}
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-secondary" onclick="viewMedicalRecord(${record.id})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                            👁️ ดูรายละเอียด
+                        </button>
+                        <button class="btn" onclick="deleteMedicalRecord(${record.id})" style="background-color: #ef4444; color: white; padding: 0.5rem 1rem; font-size: 0.875rem;">
+                            🗑️ ลบ
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">👤 ผู้ป่วย</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600;">${patient?.name || 'ไม่พบข้อมูล'}</p>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">HN: ${patient?.hn || '-'}</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">👨‍⚕️ แพทย์ผู้ตรวจ</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 600;">${doctor?.name || 'ไม่พบข้อมูล'}</p>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">${doctor?.specialty || '-'}</p>
+                    </div>
+                </div>
+
+                <div style="background: #f9fafb; padding: 1rem; border-radius: var(--border-radius); margin-bottom: 1rem;">
+                    <p style="margin: 0; color: #6b7280; font-size: 0.875rem; margin-bottom: 0.5rem;">🔍 อาการสำคัญ (Chief Complaint)</p>
+                    <p style="margin: 0; font-weight: 500;">${record.chiefComplaint || '-'}</p>
+                </div>
+
+                <div style="background: #fef3c7; padding: 1rem; border-radius: var(--border-radius);">
+                    <p style="margin: 0; color: #92400e; font-size: 0.875rem; margin-bottom: 0.5rem;">💊 การวินิจฉัย (Diagnosis)</p>
+                    <p style="margin: 0; font-weight: 500; color: #92400e;">${record.diagnosis || '-'}</p>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+/**
+ * Show add medical record modal
+ */
+function showAddMedicalRecordModal() {
+    const patients = storage.get('patients') || [];
+    const doctors = storage.get('doctors') || [];
+
+    if (patients.length === 0) {
+        alert('กรุณาเพิ่มข้อมูลผู้ป่วยก่อน');
+        return;
+    }
+
+    if (doctors.length === 0) {
+        alert('กรุณาเพิ่มข้อมูลแพทย์ก่อน');
+        return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date().toTimeString().slice(0, 5);
+
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <h2 style="margin-top: 0;">เพิ่มบันทึกการรักษาใหม่</h2>
+        <form id="medicalRecordForm" style="display: grid; gap: 1rem;">
+            <div class="form-group">
+                <label>ผู้ป่วย *</label>
+                <select id="recordPatientId" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="">เลือกผู้ป่วย</option>
+                    ${patients.map(p => `<option value="${p.id}">${p.name} (HN: ${p.hn})</option>`).join('')}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>แพทย์ผู้ตรวจ *</label>
+                <select id="recordDoctorId" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="">เลือกแพทย์</option>
+                    ${doctors.filter(d => d.status === 'active').map(d => `<option value="${d.id}">${d.name} (${d.specialty})</option>`).join('')}
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>วันที่ตรวจ *</label>
+                    <input type="date" id="recordVisitDate" required value="${today}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+
+                <div class="form-group">
+                    <label>เวลา</label>
+                    <input type="time" id="recordVisitTime" value="${now}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>อาการสำคัญ (Chief Complaint) *</label>
+                <textarea id="recordChiefComplaint" required rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); resize: vertical;" placeholder="อาการที่ผู้ป่วยมาพบแพทย์..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>ประวัติอาการปัจจุบัน (Present Illness)</label>
+                <textarea id="recordPresentIllness" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); resize: vertical;" placeholder="รายละเอียดอาการ..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>การตรวจร่างกาย (Physical Examination)</label>
+                <textarea id="recordPhysicalExam" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); resize: vertical;" placeholder="ผลการตรวจร่างกาย..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>การวินิจฉัย (Diagnosis) *</label>
+                <textarea id="recordDiagnosis" required rows="2" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); resize: vertical;" placeholder="โรคหรือภาวะที่วินิจฉัย..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>การรักษา (Treatment)</label>
+                <textarea id="recordTreatment" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); resize: vertical;" placeholder="แผนการรักษา ยาที่สั่ง คำแนะนำ..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>หมายเหตุ</label>
+                <textarea id="recordNotes" rows="2" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); resize: vertical;" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary">💾 บันทึก</button>
+            </div>
+        </form>
+    `;
+
+    document.getElementById('medicalRecordForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        saveMedicalRecord();
+    });
+
+    openModal();
+}
+
+/**
+ * Save medical record
+ */
+function saveMedicalRecord() {
+    const medicalRecords = storage.get('medicalRecords') || [];
+
+    const newRecord = {
+        id: medicalRecords.length > 0 ? Math.max(...medicalRecords.map(r => r.id)) + 1 : 1,
+        patientId: parseInt(document.getElementById('recordPatientId').value),
+        doctorId: parseInt(document.getElementById('recordDoctorId').value),
+        visitDate: document.getElementById('recordVisitDate').value,
+        visitTime: document.getElementById('recordVisitTime').value,
+        chiefComplaint: document.getElementById('recordChiefComplaint').value,
+        presentIllness: document.getElementById('recordPresentIllness').value,
+        physicalExam: document.getElementById('recordPhysicalExam').value,
+        diagnosis: document.getElementById('recordDiagnosis').value,
+        treatment: document.getElementById('recordTreatment').value,
+        notes: document.getElementById('recordNotes').value,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+
+    medicalRecords.push(newRecord);
+    storage.set('medicalRecords', medicalRecords);
+
+    closeModal();
+    loadMedicalRecords();
+
+    // Show success message
+    alert('✅ บันทึกข้อมูลการรักษาเรียบร้อยแล้ว');
+}
+
+/**
+ * View medical record details
+ */
+function viewMedicalRecord(id) {
+    const medicalRecords = storage.get('medicalRecords') || [];
+    const patients = storage.get('patients') || [];
+    const doctors = storage.get('doctors') || [];
+
+    const record = medicalRecords.find(r => r.id === id);
+    if (!record) {
+        alert('ไม่พบข้อมูลบันทึกการรักษา');
+        return;
+    }
+
+    const patient = patients.find(p => p.id === record.patientId);
+    const doctor = doctors.find(d => d.id === record.doctorId);
+
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <h2 style="margin-top: 0;">📋 รายละเอียดบันทึกการรักษา #${record.id}</h2>
+
+        <div style="background: #f9fafb; padding: 1.5rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                <div>
+                    <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">👤 ผู้ป่วย</p>
+                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; font-size: 1.125rem;">${patient?.name || 'ไม่พบข้อมูล'}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #6b7280;">HN: ${patient?.hn || '-'}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #6b7280;">อายุ: ${patient?.age || '-'} ปี</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #6b7280;">เพศ: ${patient?.gender || '-'}</p>
+                </div>
+
+                <div>
+                    <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">👨‍⚕️ แพทย์ผู้ตรวจ</p>
+                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; font-size: 1.125rem;">${doctor?.name || 'ไม่พบข้อมูล'}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #6b7280;">${doctor?.specialty || '-'}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #6b7280;">📞 ${doctor?.phone || '-'}</p>
+                </div>
+
+                <div>
+                    <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">📅 วันที่ / เวลาตรวจ</p>
+                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; font-size: 1.125rem;">${new Date(record.visitDate).toLocaleDateString('th-TH')}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #6b7280;">⏰ ${record.visitTime || 'ไม่ระบุเวลา'}</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; gap: 1.5rem;">
+            <div style="background: white; padding: 1rem; border: 1px solid #e5e7eb; border-radius: var(--border-radius);">
+                <h3 style="margin: 0 0 0.5rem 0; color: var(--primary-color);">🔍 อาการสำคัญ (Chief Complaint)</h3>
+                <p style="margin: 0; white-space: pre-wrap;">${record.chiefComplaint || '-'}</p>
+            </div>
+
+            ${record.presentIllness ? `
+            <div style="background: white; padding: 1rem; border: 1px solid #e5e7eb; border-radius: var(--border-radius);">
+                <h3 style="margin: 0 0 0.5rem 0; color: var(--primary-color);">📝 ประวัติอาการปัจจุบัน (Present Illness)</h3>
+                <p style="margin: 0; white-space: pre-wrap;">${record.presentIllness}</p>
+            </div>
+            ` : ''}
+
+            ${record.physicalExam ? `
+            <div style="background: white; padding: 1rem; border: 1px solid #e5e7eb; border-radius: var(--border-radius);">
+                <h3 style="margin: 0 0 0.5rem 0; color: var(--primary-color);">🩺 การตรวจร่างกาย (Physical Examination)</h3>
+                <p style="margin: 0; white-space: pre-wrap;">${record.physicalExam}</p>
+            </div>
+            ` : ''}
+
+            <div style="background: #fef3c7; padding: 1rem; border: 2px solid #fbbf24; border-radius: var(--border-radius);">
+                <h3 style="margin: 0 0 0.5rem 0; color: #92400e;">💊 การวินิจฉัย (Diagnosis)</h3>
+                <p style="margin: 0; white-space: pre-wrap; font-weight: 600; color: #92400e;">${record.diagnosis || '-'}</p>
+            </div>
+
+            ${record.treatment ? `
+            <div style="background: #dbeafe; padding: 1rem; border: 1px solid #3b82f6; border-radius: var(--border-radius);">
+                <h3 style="margin: 0 0 0.5rem 0; color: #1e40af;">💉 การรักษา (Treatment)</h3>
+                <p style="margin: 0; white-space: pre-wrap;">${record.treatment}</p>
+            </div>
+            ` : ''}
+
+            ${record.notes ? `
+            <div style="background: white; padding: 1rem; border: 1px solid #e5e7eb; border-radius: var(--border-radius);">
+                <h3 style="margin: 0 0 0.5rem 0; color: #6b7280;">📌 หมายเหตุ</h3>
+                <p style="margin: 0; white-space: pre-wrap; color: #6b7280;">${record.notes}</p>
+            </div>
+            ` : ''}
+        </div>
+
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0; color: #9ca3af; font-size: 0.875rem;">
+                📝 สร้างเมื่อ: ${new Date(record.createdAt).toLocaleString('th-TH')}<br>
+                🔄 แก้ไขล่าสุด: ${new Date(record.updatedAt).toLocaleString('th-TH')}
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+            <button class="btn btn-secondary" onclick="closeModal()">ปิด</button>
+        </div>
+    `;
+
+    openModal();
+}
+
+/**
+ * Delete medical record
+ */
+function deleteMedicalRecord(id) {
+    if (!confirm('⚠️ คุณแน่ใจหรือไม่ที่จะลบบันทึกการรักษานี้?\n\nการลบจะไม่สามารถย้อนกลับได้')) {
+        return;
+    }
+
+    let medicalRecords = storage.get('medicalRecords') || [];
+    medicalRecords = medicalRecords.filter(r => r.id !== id);
+    storage.set('medicalRecords', medicalRecords);
+
+    loadMedicalRecords();
+    alert('✅ ลบบันทึกการรักษาเรียบร้อยแล้ว');
+}
+
+/**
+ * Clear medical records filters
+ */
+function clearMRFilters() {
+    document.getElementById('medicalRecordSearch').value = '';
+    document.getElementById('patientFilterMR').value = '';
+    document.getElementById('doctorFilterMR').value = '';
+    document.getElementById('dateFilterMR').value = '';
+    applyMRFilters();
+}
+
+// Add event listeners for medical records
+const addMedicalRecordBtn = document.getElementById('addMedicalRecordBtn');
+if (addMedicalRecordBtn) {
+    addMedicalRecordBtn.addEventListener('click', showAddMedicalRecordModal);
+}
+
+const medicalRecordSearch = document.getElementById('medicalRecordSearch');
+if (medicalRecordSearch) {
+    medicalRecordSearch.addEventListener('input', applyMRFilters);
+}
+
+const patientFilterMR = document.getElementById('patientFilterMR');
+if (patientFilterMR) {
+    patientFilterMR.addEventListener('change', applyMRFilters);
+}
+
+const doctorFilterMR = document.getElementById('doctorFilterMR');
+if (doctorFilterMR) {
+    doctorFilterMR.addEventListener('change', applyMRFilters);
+}
+
+const dateFilterMR = document.getElementById('dateFilterMR');
+if (dateFilterMR) {
+    dateFilterMR.addEventListener('change', applyMRFilters);
+}
+
+const clearMRFilterBtn = document.getElementById('clearMRFilterBtn');
+if (clearMRFilterBtn) {
+    clearMRFilterBtn.addEventListener('click', clearMRFilters);
 }
 
 // ===== Initialize on page load =====
