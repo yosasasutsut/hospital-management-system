@@ -2068,15 +2068,71 @@ function loadPatients() {
             <td>${patient.age}</td>
             <td>${patient.phone}</td>
             <td>
-                <button class="btn btn-secondary" onclick="viewPatient('${patient.hn}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; margin-right: 0.25rem;">ดู</button>
-                <button class="btn btn-primary" onclick="editPatient('${patient.hn}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; margin-right: 0.25rem;">แก้ไข</button>
-                <button class="btn" onclick="deletePatient('${patient.hn}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; background-color: #ef4444; color: white;">ลบ</button>
+                <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" onclick="viewPatient('${patient.hn}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem;">👁️ ดู</button>
+                    <button class="btn btn-primary" onclick="editPatient('${patient.hn}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem;">✏️ แก้ไข</button>
+                    <button class="btn" onclick="viewPatientMedicalRecords(${patient.id})" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; background-color: #3b82f6; color: white;" title="ดูประวัติการรักษา">📋</button>
+                    <button class="btn" onclick="viewPatientVitalSigns(${patient.id})" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; background-color: #10b981; color: white;" title="ดูสัญญาณชีพ">🩺</button>
+                    <button class="btn" onclick="deletePatient('${patient.hn}')" style="padding: 0.4rem 0.8rem; font-size: 0.875rem; background-color: #ef4444; color: white;">🗑️</button>
+                </div>
             </td>
         </tr>
     `).join('');
 
     // Display result count
     updateResultCount(patients.length, patients.length);
+}
+
+/**
+ * View patient medical records (Day 33 enhancement)
+ * Switches to medical records section and filters by patient
+ */
+function viewPatientMedicalRecords(patientId) {
+    // Switch to medical records section
+    showSection('medical-records');
+
+    // Update active nav link
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#medical-records') {
+            link.classList.add('active');
+        }
+    });
+
+    // Set the patient filter
+    setTimeout(() => {
+        const patientFilter = document.getElementById('patientFilterMR');
+        if (patientFilter) {
+            patientFilter.value = patientId;
+            applyMRFilters();
+        }
+    }, 100);
+}
+
+/**
+ * View patient vital signs (Day 33 enhancement)
+ * Switches to vital signs section and filters by patient
+ */
+function viewPatientVitalSigns(patientId) {
+    // Switch to vital signs section
+    showSection('vital-signs');
+
+    // Update active nav link
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#vital-signs') {
+            link.classList.add('active');
+        }
+    });
+
+    // Set the patient filter
+    setTimeout(() => {
+        const patientFilter = document.getElementById('patientFilterVS');
+        if (patientFilter) {
+            patientFilter.value = patientId;
+            applyVSFilters();
+        }
+    }, 100);
 }
 
 // Add patient button
