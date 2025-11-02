@@ -1406,6 +1406,10 @@ function loadDashboard() {
     const rooms = storage.get('rooms') || [];
     const wards = storage.get('wards') || [];
     const wardBeds = storage.get('wardBeds') || [];
+    const medicalRecords = storage.get('medicalRecords') || [];
+    const vitalSigns = storage.get('vitalSigns') || [];
+    const labResults = storage.get('labResults') || [];
+    const medicines = storage.get('medicines') || [];
 
     // Update ward statistics first to ensure data is fresh
     updateWardStatistics();
@@ -1414,8 +1418,8 @@ function loadDashboard() {
     const today = new Date().toISOString().split('T')[0];
     const now = new Date();
 
-    // Count today's patients
-    const todayPatients = patients.filter(p => p.registrationDate === today).length;
+    // Count total patients (changed from today's patients)
+    const totalPatients = patients.length;
 
     // Count today's appointments
     const todayAppointments = appointments.filter(a => a.date === today).length;
@@ -1429,11 +1433,31 @@ function loadDashboard() {
     // Count available beds (new ward system)
     const availableBeds = wardBeds.filter(b => b.status === 'available').length;
 
+    // Count new data (Day 34)
+    const totalMedicalRecords = medicalRecords.length;
+    const totalVitalSigns = vitalSigns.length;
+    const totalLabResults = labResults.length;
+    const totalMedicines = medicines.length;
+
     // Update basic stats
-    document.getElementById('todayPatients').textContent = todayPatients;
+    document.getElementById('todayPatients').textContent = totalPatients;
     document.getElementById('appointments').textContent = todayAppointments;
     document.getElementById('activeDoctors').textContent = activeDoctors;
     document.getElementById('availableRooms').textContent = availableRooms > 0 ? availableRooms : availableBeds;
+
+    // Update new stats (Day 34)
+    if (document.getElementById('totalMedicalRecords')) {
+        document.getElementById('totalMedicalRecords').textContent = totalMedicalRecords;
+    }
+    if (document.getElementById('totalVitalSigns')) {
+        document.getElementById('totalVitalSigns').textContent = totalVitalSigns;
+    }
+    if (document.getElementById('totalLabResults')) {
+        document.getElementById('totalLabResults').textContent = totalLabResults;
+    }
+    if (document.getElementById('totalMedicines')) {
+        document.getElementById('totalMedicines').textContent = totalMedicines;
+    }
 
     // Load ward statistics
     loadWardStatistics();
