@@ -37,6 +37,7 @@ const storage = {
         if (!storage.get('appointments')) storage.set('appointments', []);
         if (!storage.get('medicalRecords')) storage.set('medicalRecords', []);
         if (!storage.get('vitalSigns')) storage.set('vitalSigns', []);
+        if (!storage.get('labResults')) storage.set('labResults', []);
 
         // Initialize sample doctors with comprehensive profile data
         if (!storage.get('doctors')) storage.set('doctors', [
@@ -1389,6 +1390,9 @@ function showSection(sectionId) {
                 break;
             case 'vital-signs':
                 loadVitalSigns();
+                break;
+            case 'lab-results':
+                loadLabResults();
                 break;
         }
     }
@@ -10774,6 +10778,564 @@ if (dateFilterVS) {
 const clearVSFilterBtn = document.getElementById('clearVSFilterBtn');
 if (clearVSFilterBtn) {
     clearVSFilterBtn.addEventListener('click', clearVSFilters);
+}
+
+// ========================================
+// LAB RESULTS MANAGEMENT (Day 34)
+// ========================================
+
+/**
+ * Lab test templates with normal ranges
+ */
+const labTestTemplates = {
+    cbc: {
+        name: 'CBC - Complete Blood Count',
+        tests: [
+            { name: 'WBC (White Blood Cells)', unit: 'cells/µL', normalRange: '4,000-11,000' },
+            { name: 'RBC (Red Blood Cells)', unit: 'million cells/µL', normalRange: 'M: 4.5-5.5, F: 4.0-5.0' },
+            { name: 'Hemoglobin (Hb)', unit: 'g/dL', normalRange: 'M: 13-17, F: 12-15' },
+            { name: 'Hematocrit (Hct)', unit: '%', normalRange: 'M: 40-50, F: 36-44' },
+            { name: 'Platelet Count', unit: 'cells/µL', normalRange: '150,000-400,000' }
+        ]
+    },
+    lipid: {
+        name: 'Lipid Profile',
+        tests: [
+            { name: 'Total Cholesterol', unit: 'mg/dL', normalRange: '< 200' },
+            { name: 'LDL Cholesterol', unit: 'mg/dL', normalRange: '< 100' },
+            { name: 'HDL Cholesterol', unit: 'mg/dL', normalRange: 'M: > 40, F: > 50' },
+            { name: 'Triglycerides', unit: 'mg/dL', normalRange: '< 150' }
+        ]
+    },
+    liver: {
+        name: 'Liver Function Test',
+        tests: [
+            { name: 'ALT (SGPT)', unit: 'U/L', normalRange: '7-56' },
+            { name: 'AST (SGOT)', unit: 'U/L', normalRange: '10-40' },
+            { name: 'Alkaline Phosphatase', unit: 'U/L', normalRange: '44-147' },
+            { name: 'Total Bilirubin', unit: 'mg/dL', normalRange: '0.1-1.2' },
+            { name: 'Albumin', unit: 'g/dL', normalRange: '3.5-5.5' }
+        ]
+    },
+    kidney: {
+        name: 'Kidney Function Test',
+        tests: [
+            { name: 'BUN (Blood Urea Nitrogen)', unit: 'mg/dL', normalRange: '7-20' },
+            { name: 'Creatinine', unit: 'mg/dL', normalRange: 'M: 0.7-1.3, F: 0.6-1.1' },
+            { name: 'eGFR', unit: 'mL/min/1.73m²', normalRange: '> 60' },
+            { name: 'Uric Acid', unit: 'mg/dL', normalRange: 'M: 3.5-7.2, F: 2.6-6.0' }
+        ]
+    },
+    glucose: {
+        name: 'Blood Glucose Test',
+        tests: [
+            { name: 'Fasting Blood Sugar (FBS)', unit: 'mg/dL', normalRange: '70-100' },
+            { name: 'HbA1c', unit: '%', normalRange: '< 5.7' },
+            { name: '2hr Postprandial Glucose', unit: 'mg/dL', normalRange: '< 140' }
+        ]
+    },
+    thyroid: {
+        name: 'Thyroid Function Test',
+        tests: [
+            { name: 'TSH', unit: 'mIU/L', normalRange: '0.4-4.0' },
+            { name: 'Free T4', unit: 'ng/dL', normalRange: '0.8-1.8' },
+            { name: 'Free T3', unit: 'pg/mL', normalRange: '2.3-4.2' }
+        ]
+    },
+    urine: {
+        name: 'Urinalysis',
+        tests: [
+            { name: 'Color', unit: '', normalRange: 'Yellow/Amber' },
+            { name: 'pH', unit: '', normalRange: '4.5-8.0' },
+            { name: 'Specific Gravity', unit: '', normalRange: '1.005-1.030' },
+            { name: 'Protein', unit: '', normalRange: 'Negative' },
+            { name: 'Glucose', unit: '', normalRange: 'Negative' },
+            { name: 'WBC', unit: 'cells/HPF', normalRange: '0-5' },
+            { name: 'RBC', unit: 'cells/HPF', normalRange: '0-2' }
+        ]
+    }
+};
+
+/**
+ * Load and display lab results
+ */
+function loadLabResults() {
+    const labResults = storage.get('labResults') || [];
+    const patients = storage.get('patients') || [];
+
+    // Populate patient filter
+    const patientFilter = document.getElementById('patientFilterLab');
+    if (patientFilter) {
+        patientFilter.innerHTML = '<option value="">ทั้งหมด</option>';
+        patients.forEach(patient => {
+            const option = document.createElement('option');
+            option.value = patient.id;
+            option.textContent = `${patient.name} (HN: ${patient.hn})`;
+            patientFilter.appendChild(option);
+        });
+    }
+
+    applyLabFilters();
+}
+
+/**
+ * Apply lab results filters
+ */
+function applyLabFilters() {
+    const labResults = storage.get('labResults') || [];
+    const patients = storage.get('patients') || [];
+
+    const searchTerm = document.getElementById('labResultSearch')?.value.toLowerCase() || '';
+    const patientId = document.getElementById('patientFilterLab')?.value || '';
+    const labType = document.getElementById('labTypeFilter')?.value || '';
+    const dateFilter = document.getElementById('dateFilterLab')?.value || '';
+
+    let filtered = labResults.filter(lab => {
+        // Patient filter
+        if (patientId && lab.patientId !== parseInt(patientId)) return false;
+
+        // Lab type filter
+        if (labType && lab.labType !== labType) return false;
+
+        // Date filter
+        if (dateFilter && lab.testDate !== dateFilter) return false;
+
+        // Search term
+        if (searchTerm) {
+            const patient = patients.find(p => p.id === lab.patientId);
+            const searchableText = [
+                patient?.name || '',
+                patient?.hn || '',
+                lab.labTypeName || ''
+            ].join(' ').toLowerCase();
+
+            if (!searchableText.includes(searchTerm)) return false;
+        }
+
+        return true;
+    });
+
+    // Sort by date (newest first)
+    filtered.sort((a, b) => {
+        const dateA = new Date(a.testDate);
+        const dateB = new Date(b.testDate);
+        return dateB - dateA;
+    });
+
+    renderLabResults(filtered);
+
+    // Update result count
+    const resultCount = document.getElementById('labResultResultCount');
+    if (resultCount) {
+        resultCount.textContent = `แสดง ${filtered.length} รายการจากทั้งหมด ${labResults.length} รายการ`;
+    }
+}
+
+/**
+ * Render lab results list
+ */
+function renderLabResults(records) {
+    const container = document.getElementById('labResultsList');
+    if (!container) return;
+
+    if (records.length === 0) {
+        container.innerHTML = '<p class="no-data">ไม่พบผลตรวจทางห้องปฏิบัติการที่ตรงกับเงื่อนไข</p>';
+        return;
+    }
+
+    const patients = storage.get('patients') || [];
+
+    container.innerHTML = records.map(lab => {
+        const patient = patients.find(p => p.id === lab.patientId);
+
+        // Count abnormal results
+        const abnormalCount = lab.results.filter(r => r.isAbnormal).length;
+
+        return `
+            <div class="lab-result-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid ${abnormalCount > 0 ? '#ef4444' : '#10b981'};">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div>
+                        <h3 style="margin: 0 0 0.5rem 0; color: ${abnormalCount > 0 ? '#ef4444' : '#10b981'};">
+                            🧪 ${lab.labTypeName}
+                        </h3>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">
+                            👤 ${patient?.name || 'ไม่พบข้อมูล'} (HN: ${patient?.hn || '-'})
+                        </p>
+                        <p style="margin: 0.25rem 0 0 0; color: #6b7280; font-size: 0.875rem;">
+                            📅 ${new Date(lab.testDate).toLocaleDateString('th-TH')}
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        ${abnormalCount > 0 ? `
+                        <span style="background: #fee2e2; color: #dc2626; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600;">
+                            ⚠️ ${abnormalCount} ผิดปกติ
+                        </span>
+                        ` : `
+                        <span style="background: #dcfce7; color: #16a34a; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600;">
+                            ✓ ปกติ
+                        </span>
+                        `}
+                        <button class="btn btn-secondary" onclick="viewLabResult(${lab.id})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                            👁️ ดูรายละเอียด
+                        </button>
+                        <button class="btn" onclick="deleteLabResult(${lab.id})" style="background-color: #ef4444; color: white; padding: 0.5rem 1rem; font-size: 0.875rem;">
+                            🗑️ ลบ
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem;">
+                    ${lab.results.slice(0, 4).map(result => `
+                        <div style="background: ${result.isAbnormal ? '#fef2f2' : '#f9fafb'}; padding: 0.75rem; border-radius: var(--border-radius); border-left: 3px solid ${result.isAbnormal ? '#ef4444' : '#10b981'};">
+                            <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">${result.testName}</p>
+                            <p style="margin: 0.25rem 0; font-weight: 700; font-size: 1.125rem; color: ${result.isAbnormal ? '#ef4444' : '#374151'};">
+                                ${result.value} ${result.unit || ''}
+                            </p>
+                            <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">ปกติ: ${result.normalRange}</p>
+                        </div>
+                    `).join('')}
+                    ${lab.results.length > 4 ? `
+                        <div style="background: #f9fafb; padding: 0.75rem; border-radius: var(--border-radius); display: flex; align-items: center; justify-content: center; color: #6b7280;">
+                            <p style="margin: 0; font-weight: 600;">+${lab.results.length - 4} รายการ</p>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+/**
+ * Show add lab result modal
+ */
+function showAddLabResultModal() {
+    const patients = storage.get('patients') || [];
+
+    if (patients.length === 0) {
+        alert('กรุณาเพิ่มข้อมูลผู้ป่วยก่อน');
+        return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <h2 style="margin-top: 0;">เพิ่มผลตรวจทางห้องปฏิบัติการ</h2>
+        <form id="labResultForm" style="display: grid; gap: 1rem;">
+            <div class="form-group">
+                <label>ผู้ป่วย *</label>
+                <select id="labPatientId" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="">เลือกผู้ป่วย</option>
+                    ${patients.map(p => `<option value="${p.id}">${p.name} (HN: ${p.hn})</option>`).join('')}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>ประเภทการตรวจ *</label>
+                <select id="labType" required onchange="loadLabTestTemplate()" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="">เลือกประเภทการตรวจ</option>
+                    <option value="cbc">CBC - Complete Blood Count</option>
+                    <option value="lipid">Lipid Profile - ไขมันในเลือด</option>
+                    <option value="liver">Liver Function - การทำงานของตับ</option>
+                    <option value="kidney">Kidney Function - การทำงานของไต</option>
+                    <option value="glucose">Blood Glucose - น้ำตาลในเลือด</option>
+                    <option value="thyroid">Thyroid Function - ต่อมไทรอยด์</option>
+                    <option value="urine">Urinalysis - การตรวจปัสสาวะ</option>
+                    <option value="other">อื่นๆ</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>วันที่ตรวจ *</label>
+                <input type="date" id="labTestDate" required value="${today}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+            </div>
+
+            <div id="labTestsContainer" style="display: none;">
+                <h3 style="margin: 1rem 0 0.5rem 0; color: var(--primary-color);">ผลการตรวจ</h3>
+                <div id="labTestsList" style="display: grid; gap: 1rem;">
+                    <!-- Test items will be inserted here -->
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>หมายเหตุ</label>
+                <textarea id="labNotes" rows="2" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); resize: vertical;" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary">💾 บันทึก</button>
+            </div>
+        </form>
+    `;
+
+    document.getElementById('labResultForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        saveLabResult();
+    });
+
+    openModal();
+}
+
+/**
+ * Load lab test template based on selected type
+ */
+function loadLabTestTemplate() {
+    const labType = document.getElementById('labType').value;
+    const container = document.getElementById('labTestsContainer');
+    const testsList = document.getElementById('labTestsList');
+
+    if (!labType || labType === 'other') {
+        container.style.display = 'none';
+        return;
+    }
+
+    const template = labTestTemplates[labType];
+    if (!template) return;
+
+    container.style.display = 'block';
+
+    testsList.innerHTML = template.tests.map((test, index) => `
+        <div style="background: #f9fafb; padding: 1rem; border-radius: var(--border-radius);">
+            <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">${test.name}</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <input type="text"
+                           id="labValue_${index}"
+                           placeholder="ค่าที่ตรวจได้"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: #6b7280;">หน่วย: ${test.unit || '-'}</p>
+                </div>
+                <div>
+                    <input type="text"
+                           value="${test.normalRange}"
+                           readonly
+                           style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); background: #f3f4f6;">
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: #6b7280;">ค่าปกติ</p>
+                </div>
+            </div>
+            <label style="display: flex; align-items: center; margin-top: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="labAbnormal_${index}" style="margin-right: 0.5rem;">
+                <span style="font-size: 0.875rem; color: #ef4444;">ผลผิดปกติ</span>
+            </label>
+            <input type="hidden" id="labTestName_${index}" value="${test.name}">
+            <input type="hidden" id="labUnit_${index}" value="${test.unit || ''}">
+            <input type="hidden" id="labNormalRange_${index}" value="${test.normalRange}">
+        </div>
+    `).join('');
+}
+
+/**
+ * Save lab result
+ */
+function saveLabResult() {
+    const labResults = storage.get('labResults') || [];
+    const labType = document.getElementById('labType').value;
+
+    if (labType === 'other') {
+        alert('กรุณาเลือกประเภทการตรวจที่ไม่ใช่ "อื่นๆ" หรือติดต่อผู้ดูแลระบบเพื่อเพิ่มประเภทการตรวจใหม่');
+        return;
+    }
+
+    const template = labTestTemplates[labType];
+    const results = [];
+
+    // Collect all test results
+    template.tests.forEach((test, index) => {
+        const value = document.getElementById(`labValue_${index}`)?.value;
+        if (value) {
+            results.push({
+                testName: test.name,
+                value: value,
+                unit: test.unit || '',
+                normalRange: test.normalRange,
+                isAbnormal: document.getElementById(`labAbnormal_${index}`)?.checked || false
+            });
+        }
+    });
+
+    if (results.length === 0) {
+        alert('กรุณากรอกผลการตรวจอย่างน้อย 1 รายการ');
+        return;
+    }
+
+    const newLabResult = {
+        id: labResults.length > 0 ? Math.max(...labResults.map(l => l.id)) + 1 : 1,
+        patientId: parseInt(document.getElementById('labPatientId').value),
+        labType: labType,
+        labTypeName: template.name,
+        testDate: document.getElementById('labTestDate').value,
+        results: results,
+        notes: document.getElementById('labNotes').value,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+
+    labResults.push(newLabResult);
+    storage.set('labResults', labResults);
+
+    closeModal();
+    loadLabResults();
+
+    alert('✅ บันทึกผลการตรวจเรียบร้อยแล้ว');
+}
+
+/**
+ * View lab result details
+ */
+function viewLabResult(id) {
+    const labResults = storage.get('labResults') || [];
+    const patients = storage.get('patients') || [];
+
+    const lab = labResults.find(l => l.id === id);
+    if (!lab) {
+        alert('ไม่พบข้อมูลผลตรวจ');
+        return;
+    }
+
+    const patient = patients.find(p => p.id === lab.patientId);
+    const abnormalCount = lab.results.filter(r => r.isAbnormal).length;
+
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <h2 style="margin-top: 0;">🧪 ${lab.labTypeName}</h2>
+
+        <div style="background: #f9fafb; padding: 1.5rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                <div>
+                    <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">👤 ผู้ป่วย</p>
+                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; font-size: 1.125rem;">${patient?.name || 'ไม่พบข้อมูล'}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #6b7280;">HN: ${patient?.hn || '-'}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #6b7280;">อายุ: ${patient?.age || '-'} ปี</p>
+                </div>
+
+                <div>
+                    <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">📅 วันที่ตรวจ</p>
+                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; font-size: 1.125rem;">${new Date(lab.testDate).toLocaleDateString('th-TH')}</p>
+                </div>
+
+                <div>
+                    <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">📊 สถานะ</p>
+                    ${abnormalCount > 0 ? `
+                    <p style="margin: 0.25rem 0 0 0; font-weight: 700; font-size: 1.125rem; color: #ef4444;">
+                        ⚠️ พบค่าผิดปกติ ${abnormalCount} รายการ
+                    </p>
+                    ` : `
+                    <p style="margin: 0.25rem 0 0 0; font-weight: 700; font-size: 1.125rem; color: #10b981;">
+                        ✓ ทุกค่าอยู่ในเกณฑ์ปกติ
+                    </p>
+                    `}
+                </div>
+            </div>
+        </div>
+
+        <h3 style="margin: 1rem 0 1rem 0;">ผลการตรวจ</h3>
+        <div style="display: grid; gap: 1rem;">
+            ${lab.results.map(result => `
+                <div style="background: ${result.isAbnormal ? '#fef2f2' : 'white'}; padding: 1rem; border: 1px solid ${result.isAbnormal ? '#fca5a5' : '#e5e7eb'}; border-radius: var(--border-radius); border-left: 4px solid ${result.isAbnormal ? '#ef4444' : '#10b981'};">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: ${result.isAbnormal ? '#dc2626' : '#374151'};">
+                                ${result.testName}
+                                ${result.isAbnormal ? '<span style="background: #ef4444; color: white; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.75rem; margin-left: 0.5rem;">ผิดปกติ</span>' : ''}
+                            </h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
+                                <div>
+                                    <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">ค่าที่ตรวจได้</p>
+                                    <p style="margin: 0.25rem 0 0 0; font-weight: 700; font-size: 1.5rem; color: ${result.isAbnormal ? '#ef4444' : '#374151'};">
+                                        ${result.value} <span style="font-size: 1rem; font-weight: 400; color: #6b7280;">${result.unit}</span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">ค่าปกติ</p>
+                                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; color: #6b7280;">
+                                        ${result.normalRange} ${result.unit}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+
+        ${lab.notes ? `
+        <div style="background: white; padding: 1rem; border: 1px solid #e5e7eb; border-radius: var(--border-radius); margin-top: 1.5rem;">
+            <h3 style="margin: 0 0 0.5rem 0; color: #6b7280;">📝 หมายเหตุ</h3>
+            <p style="margin: 0; white-space: pre-wrap; color: #374151;">${lab.notes}</p>
+        </div>
+        ` : ''}
+
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0; color: #9ca3af; font-size: 0.875rem;">
+                📝 บันทึกเมื่อ: ${new Date(lab.createdAt).toLocaleString('th-TH')}
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+            <button class="btn btn-secondary" onclick="closeModal()">ปิด</button>
+        </div>
+    `;
+
+    openModal();
+}
+
+/**
+ * Delete lab result
+ */
+function deleteLabResult(id) {
+    if (!confirm('⚠️ คุณแน่ใจหรือไม่ที่จะลบผลตรวจนี้?\n\nการลบจะไม่สามารถย้อนกลับได้')) {
+        return;
+    }
+
+    let labResults = storage.get('labResults') || [];
+    labResults = labResults.filter(l => l.id !== id);
+    storage.set('labResults', labResults);
+
+    loadLabResults();
+    alert('✅ ลบผลตรวจเรียบร้อยแล้ว');
+}
+
+/**
+ * Clear lab results filters
+ */
+function clearLabFilters() {
+    document.getElementById('labResultSearch').value = '';
+    document.getElementById('patientFilterLab').value = '';
+    document.getElementById('labTypeFilter').value = '';
+    document.getElementById('dateFilterLab').value = '';
+    applyLabFilters();
+}
+
+// Add event listeners for lab results
+const addLabResultBtn = document.getElementById('addLabResultBtn');
+if (addLabResultBtn) {
+    addLabResultBtn.addEventListener('click', showAddLabResultModal);
+}
+
+const labResultSearch = document.getElementById('labResultSearch');
+if (labResultSearch) {
+    labResultSearch.addEventListener('input', applyLabFilters);
+}
+
+const patientFilterLab = document.getElementById('patientFilterLab');
+if (patientFilterLab) {
+    patientFilterLab.addEventListener('change', applyLabFilters);
+}
+
+const labTypeFilter = document.getElementById('labTypeFilter');
+if (labTypeFilter) {
+    labTypeFilter.addEventListener('change', applyLabFilters);
+}
+
+const dateFilterLab = document.getElementById('dateFilterLab');
+if (dateFilterLab) {
+    dateFilterLab.addEventListener('change', applyLabFilters);
+}
+
+const clearLabFilterBtn = document.getElementById('clearLabFilterBtn');
+if (clearLabFilterBtn) {
+    clearLabFilterBtn.addEventListener('click', clearLabFilters);
 }
 
 // ===== Initialize on page load =====

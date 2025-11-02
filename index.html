@@ -59,6 +59,7 @@
                     <li><a href="#pharmacy" class="nav-link">คลังยา</a></li>
                     <li><a href="#medical-records" class="nav-link">ประวัติการรักษา</a></li>
                     <li><a href="#vital-signs" class="nav-link">สัญญาณชีพ</a></li>
+                    <li><a href="#lab-results" class="nav-link">ผลแลป</a></li>
                 </ul>
             </nav>
         </div>
@@ -575,6 +576,53 @@
                 <!-- Vital Signs List -->
                 <div class="vital-signs-list" id="vitalSignsList" style="display: grid; gap: 1.5rem;">
                     <p class="no-data">ยังไม่มีข้อมูลสัญญาณชีพ</p>
+                </div>
+            </section>
+
+            <!-- Lab Results Section -->
+            <section id="lab-results" class="section">
+                <h2>🧪 ผลตรวจทางห้องปฏิบัติการ (Lab Results)</h2>
+                <div class="section-header" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;">
+                    <button class="btn btn-primary" id="addLabResultBtn">+ เพิ่มผลแลป</button>
+                    <input type="search" class="search-box" id="labResultSearch" placeholder="ค้นหาผู้ป่วย (HN, ชื่อ)..." style="flex: 1; min-width: 250px;">
+                </div>
+
+                <!-- Filter Section -->
+                <div class="filter-section" style="background: var(--light-color); padding: 1rem; border-radius: var(--border-radius); margin-bottom: 1rem;">
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <label style="font-weight: 600;">กรองตามผู้ป่วย:</label>
+                        <select id="patientFilterLab" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); min-width: 200px;">
+                            <option value="">ทั้งหมด</option>
+                        </select>
+
+                        <label style="font-weight: 600;">กรองตามประเภทการตรวจ:</label>
+                        <select id="labTypeFilter" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); min-width: 180px;">
+                            <option value="">ทั้งหมด</option>
+                            <option value="cbc">CBC - ตรวจนับเม็ดเลือด</option>
+                            <option value="lipid">Lipid Profile - ไขมันในเลือด</option>
+                            <option value="liver">Liver Function - ตับ</option>
+                            <option value="kidney">Kidney Function - ไต</option>
+                            <option value="glucose">Blood Glucose - น้ำตาล</option>
+                            <option value="thyroid">Thyroid Function - ต่อมไทรอยด์</option>
+                            <option value="urine">Urinalysis - ปัสสาวะ</option>
+                            <option value="other">อื่นๆ</option>
+                        </select>
+
+                        <label style="font-weight: 600;">กรองตามวันที่:</label>
+                        <input type="date" id="dateFilterLab" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+
+                        <button class="btn btn-secondary" id="clearLabFilterBtn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">ล้างตัวกรอง</button>
+                    </div>
+                </div>
+
+                <!-- Result Count -->
+                <div id="labResultResultCount" style="margin-bottom: 1rem; color: #6b7280; font-size: 0.875rem;">
+                    <!-- Result count will be displayed here -->
+                </div>
+
+                <!-- Lab Results List -->
+                <div class="lab-results-list" id="labResultsList" style="display: grid; gap: 1.5rem;">
+                    <p class="no-data">ยังไม่มีผลตรวจทางห้องปฏิบัติการ</p>
                 </div>
             </section>
 
