@@ -58,6 +58,7 @@
                     <li><a href="#rooms" class="nav-link">ห้องพัก</a></li>
                     <li><a href="#pharmacy" class="nav-link">คลังยา</a></li>
                     <li><a href="#medical-records" class="nav-link">ประวัติการรักษา</a></li>
+                    <li><a href="#vital-signs" class="nav-link">สัญญาณชีพ</a></li>
                 </ul>
             </nav>
         </div>
@@ -540,6 +541,40 @@
                 <!-- Medical Records List -->
                 <div class="medical-records-list" id="medicalRecordsList" style="display: grid; gap: 1.5rem;">
                     <p class="no-data">ยังไม่มีบันทึกการรักษา</p>
+                </div>
+            </section>
+
+            <!-- Vital Signs Section -->
+            <section id="vital-signs" class="section">
+                <h2>🩺 บันทึกสัญญาณชีพ (Vital Signs)</h2>
+                <div class="section-header" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;">
+                    <button class="btn btn-primary" id="addVitalSignBtn">+ บันทึกค่าสัญญาณชีพ</button>
+                    <input type="search" class="search-box" id="vitalSignSearch" placeholder="ค้นหาผู้ป่วย (HN, ชื่อ)..." style="flex: 1; min-width: 250px;">
+                </div>
+
+                <!-- Filter Section -->
+                <div class="filter-section" style="background: var(--light-color); padding: 1rem; border-radius: var(--border-radius); margin-bottom: 1rem;">
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <label style="font-weight: 600;">กรองตามผู้ป่วย:</label>
+                        <select id="patientFilterVS" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); min-width: 200px;">
+                            <option value="">ทั้งหมด</option>
+                        </select>
+
+                        <label style="font-weight: 600;">กรองตามวันที่:</label>
+                        <input type="date" id="dateFilterVS" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+
+                        <button class="btn btn-secondary" id="clearVSFilterBtn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">ล้างตัวกรอง</button>
+                    </div>
+                </div>
+
+                <!-- Result Count -->
+                <div id="vitalSignResultCount" style="margin-bottom: 1rem; color: #6b7280; font-size: 0.875rem;">
+                    <!-- Result count will be displayed here -->
+                </div>
+
+                <!-- Vital Signs List -->
+                <div class="vital-signs-list" id="vitalSignsList" style="display: grid; gap: 1.5rem;">
+                    <p class="no-data">ยังไม่มีข้อมูลสัญญาณชีพ</p>
                 </div>
             </section>
 

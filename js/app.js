@@ -36,6 +36,7 @@ const storage = {
         if (!storage.get('patients')) storage.set('patients', []);
         if (!storage.get('appointments')) storage.set('appointments', []);
         if (!storage.get('medicalRecords')) storage.set('medicalRecords', []);
+        if (!storage.get('vitalSigns')) storage.set('vitalSigns', []);
 
         // Initialize sample doctors with comprehensive profile data
         if (!storage.get('doctors')) storage.set('doctors', [
@@ -1385,6 +1386,9 @@ function showSection(sectionId) {
                 break;
             case 'medical-records':
                 loadMedicalRecords();
+                break;
+            case 'vital-signs':
+                loadVitalSigns();
                 break;
         }
     }
@@ -10140,6 +10144,580 @@ if (dateFilterMR) {
 const clearMRFilterBtn = document.getElementById('clearMRFilterBtn');
 if (clearMRFilterBtn) {
     clearMRFilterBtn.addEventListener('click', clearMRFilters);
+}
+
+// ========================================
+// VITAL SIGNS MONITORING (Day 32)
+// ========================================
+
+/**
+ * Load and display vital signs
+ */
+function loadVitalSigns() {
+    const vitalSigns = storage.get('vitalSigns') || [];
+    const patients = storage.get('patients') || [];
+
+    // Populate patient filter
+    const patientFilter = document.getElementById('patientFilterVS');
+    if (patientFilter) {
+        patientFilter.innerHTML = '<option value="">ทั้งหมด</option>';
+        patients.forEach(patient => {
+            const option = document.createElement('option');
+            option.value = patient.id;
+            option.textContent = `${patient.name} (HN: ${patient.hn})`;
+            patientFilter.appendChild(option);
+        });
+    }
+
+    applyVSFilters();
+}
+
+/**
+ * Apply vital signs filters
+ */
+function applyVSFilters() {
+    const vitalSigns = storage.get('vitalSigns') || [];
+    const patients = storage.get('patients') || [];
+
+    const searchTerm = document.getElementById('vitalSignSearch')?.value.toLowerCase() || '';
+    const patientId = document.getElementById('patientFilterVS')?.value || '';
+    const dateFilter = document.getElementById('dateFilterVS')?.value || '';
+
+    let filtered = vitalSigns.filter(vs => {
+        // Patient filter
+        if (patientId && vs.patientId !== parseInt(patientId)) return false;
+
+        // Date filter
+        if (dateFilter && vs.recordDate !== dateFilter) return false;
+
+        // Search term
+        if (searchTerm) {
+            const patient = patients.find(p => p.id === vs.patientId);
+            const searchableText = [
+                patient?.name || '',
+                patient?.hn || ''
+            ].join(' ').toLowerCase();
+
+            if (!searchableText.includes(searchTerm)) return false;
+        }
+
+        return true;
+    });
+
+    // Sort by date and time (newest first)
+    filtered.sort((a, b) => {
+        const dateA = new Date(a.recordDate + ' ' + (a.recordTime || '00:00'));
+        const dateB = new Date(b.recordDate + ' ' + (b.recordTime || '00:00'));
+        return dateB - dateA;
+    });
+
+    renderVitalSigns(filtered);
+
+    // Update result count
+    const resultCount = document.getElementById('vitalSignResultCount');
+    if (resultCount) {
+        resultCount.textContent = `แสดง ${filtered.length} รายการจากทั้งหมด ${vitalSigns.length} รายการ`;
+    }
+}
+
+/**
+ * Render vital signs list
+ */
+function renderVitalSigns(records) {
+    const container = document.getElementById('vitalSignsList');
+    if (!container) return;
+
+    if (records.length === 0) {
+        container.innerHTML = '<p class="no-data">ไม่พบข้อมูลสัญญาณชีพที่ตรงกับเงื่อนไข</p>';
+        return;
+    }
+
+    const patients = storage.get('patients') || [];
+
+    container.innerHTML = records.map(vs => {
+        const patient = patients.find(p => p.id === vs.patientId);
+
+        // Calculate BMI if height and weight available
+        let bmi = null;
+        if (vs.weight && vs.height) {
+            const heightM = vs.height / 100;
+            bmi = (vs.weight / (heightM * heightM)).toFixed(1);
+        }
+
+        // Determine BMI status
+        let bmiStatus = '';
+        let bmiColor = '';
+        if (bmi) {
+            if (bmi < 18.5) {
+                bmiStatus = 'น้ำหนักต่ำกว่าเกณฑ์';
+                bmiColor = '#3b82f6';
+            } else if (bmi < 23) {
+                bmiStatus = 'สมส่วน';
+                bmiColor = '#10b981';
+            } else if (bmi < 25) {
+                bmiStatus = 'น้ำหนักเกิน';
+                bmiColor = '#f59e0b';
+            } else if (bmi < 30) {
+                bmiStatus = 'อ้วนระดับ 1';
+                bmiColor = '#f97316';
+            } else {
+                bmiStatus = 'อ้วนระดับ 2';
+                bmiColor = '#ef4444';
+            }
+        }
+
+        return `
+            <div class="vital-sign-card" style="background: white; padding: 1.5rem; border-radius: var(--border-radius); box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #10b981;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div>
+                        <h3 style="margin: 0 0 0.5rem 0; color: #10b981;">
+                            🩺 ${patient?.name || 'ไม่พบข้อมูล'} (HN: ${patient?.hn || '-'})
+                        </h3>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">
+                            📅 ${new Date(vs.recordDate).toLocaleDateString('th-TH')} เวลา ${vs.recordTime || 'ไม่ระบุ'}
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-secondary" onclick="viewVitalSign(${vs.id})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                            👁️ ดูรายละเอียด
+                        </button>
+                        <button class="btn" onclick="deleteVitalSign(${vs.id})" style="background-color: #ef4444; color: white; padding: 0.5rem 1rem; font-size: 0.875rem;">
+                            🗑️ ลบ
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                    ${vs.bloodPressureSys && vs.bloodPressureDia ? `
+                    <div style="background: #fef2f2; padding: 0.75rem; border-radius: var(--border-radius); border-left: 3px solid #ef4444;">
+                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">💉 ความดันโลหิต</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 700; font-size: 1.25rem; color: #ef4444;">${vs.bloodPressureSys}/${vs.bloodPressureDia}</p>
+                        <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">mmHg</p>
+                    </div>
+                    ` : ''}
+
+                    ${vs.heartRate ? `
+                    <div style="background: #fef3c7; padding: 0.75rem; border-radius: var(--border-radius); border-left: 3px solid #f59e0b;">
+                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">❤️ อัตราการเต้นหัวใจ</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 700; font-size: 1.25rem; color: #f59e0b;">${vs.heartRate}</p>
+                        <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">bpm</p>
+                    </div>
+                    ` : ''}
+
+                    ${vs.temperature ? `
+                    <div style="background: #fee2e2; padding: 0.75rem; border-radius: var(--border-radius); border-left: 3px solid #dc2626;">
+                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">🌡️ อุณหภูมิ</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 700; font-size: 1.25rem; color: #dc2626;">${vs.temperature}</p>
+                        <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">°C</p>
+                    </div>
+                    ` : ''}
+
+                    ${vs.respiratoryRate ? `
+                    <div style="background: #dbeafe; padding: 0.75rem; border-radius: var(--border-radius); border-left: 3px solid #3b82f6;">
+                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">💨 อัตราการหายใจ</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 700; font-size: 1.25rem; color: #3b82f6;">${vs.respiratoryRate}</p>
+                        <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">breaths/min</p>
+                    </div>
+                    ` : ''}
+
+                    ${vs.oxygenSaturation ? `
+                    <div style="background: #dbeafe; padding: 0.75rem; border-radius: var(--border-radius); border-left: 3px solid #2563eb;">
+                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">🫁 SpO2</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 700; font-size: 1.25rem; color: #2563eb;">${vs.oxygenSaturation}</p>
+                        <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">%</p>
+                    </div>
+                    ` : ''}
+
+                    ${vs.weight ? `
+                    <div style="background: #f3e8ff; padding: 0.75rem; border-radius: var(--border-radius); border-left: 3px solid #8b5cf6;">
+                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">⚖️ น้ำหนัก</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 700; font-size: 1.25rem; color: #8b5cf6;">${vs.weight}</p>
+                        <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">kg</p>
+                    </div>
+                    ` : ''}
+
+                    ${vs.height ? `
+                    <div style="background: #f0fdfa; padding: 0.75rem; border-radius: var(--border-radius); border-left: 3px solid #14b8a6;">
+                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">📏 ส่วนสูง</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 700; font-size: 1.25rem; color: #14b8a6;">${vs.height}</p>
+                        <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">cm</p>
+                    </div>
+                    ` : ''}
+
+                    ${bmi ? `
+                    <div style="background: #f0fdf4; padding: 0.75rem; border-radius: var(--border-radius); border-left: 3px solid ${bmiColor};">
+                        <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">📊 BMI</p>
+                        <p style="margin: 0.25rem 0 0 0; font-weight: 700; font-size: 1.25rem; color: ${bmiColor};">${bmi}</p>
+                        <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">${bmiStatus}</p>
+                    </div>
+                    ` : ''}
+                </div>
+
+                ${vs.notes ? `
+                <div style="margin-top: 1rem; padding: 0.75rem; background: #f9fafb; border-radius: var(--border-radius);">
+                    <p style="margin: 0; color: #6b7280; font-size: 0.75rem;">📝 หมายเหตุ:</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #374151;">${vs.notes}</p>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+/**
+ * Show add vital sign modal
+ */
+function showAddVitalSignModal() {
+    const patients = storage.get('patients') || [];
+
+    if (patients.length === 0) {
+        alert('กรุณาเพิ่มข้อมูลผู้ป่วยก่อน');
+        return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date().toTimeString().slice(0, 5);
+
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <h2 style="margin-top: 0;">บันทึกค่าสัญญาณชีพ</h2>
+        <form id="vitalSignForm" style="display: grid; gap: 1rem;">
+            <div class="form-group">
+                <label>ผู้ป่วย *</label>
+                <select id="vsPatientId" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    <option value="">เลือกผู้ป่วย</option>
+                    ${patients.map(p => `<option value="${p.id}">${p.name} (HN: ${p.hn})</option>`).join('')}
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>วันที่บันทึก *</label>
+                    <input type="date" id="vsRecordDate" required value="${today}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+
+                <div class="form-group">
+                    <label>เวลา</label>
+                    <input type="time" id="vsRecordTime" value="${now}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                </div>
+            </div>
+
+            <div style="background: #f9fafb; padding: 1rem; border-radius: var(--border-radius); display: grid; gap: 1rem;">
+                <h3 style="margin: 0; font-size: 1rem; color: var(--primary-color);">💉 ความดันโลหิต (Blood Pressure)</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Systolic (ค่าบน)</label>
+                        <input type="number" id="vsBloodPressureSys" min="0" max="300" step="1" placeholder="120" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    </div>
+                    <div class="form-group">
+                        <label>Diastolic (ค่าล่าง)</label>
+                        <input type="number" id="vsBloodPressureDia" min="0" max="200" step="1" placeholder="80" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                <div class="form-group">
+                    <label>❤️ อัตราการเต้นของหัวใจ (Heart Rate)</label>
+                    <div style="position: relative;">
+                        <input type="number" id="vsHeartRate" min="0" max="300" step="1" placeholder="72" style="width: 100%; padding: 0.75rem; padding-right: 3rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        <span style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 0.875rem;">bpm</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>🌡️ อุณหภูมิร่างกาย (Temperature)</label>
+                    <div style="position: relative;">
+                        <input type="number" id="vsTemperature" min="30" max="45" step="0.1" placeholder="36.5" style="width: 100%; padding: 0.75rem; padding-right: 3rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        <span style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 0.875rem;">°C</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>💨 อัตราการหายใจ (Respiratory Rate)</label>
+                    <div style="position: relative;">
+                        <input type="number" id="vsRespiratoryRate" min="0" max="60" step="1" placeholder="16" style="width: 100%; padding: 0.75rem; padding-right: 5.5rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        <span style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 0.875rem;">/min</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>🫁 ออกซิเจนในเลือด (SpO2)</label>
+                    <div style="position: relative;">
+                        <input type="number" id="vsOxygenSaturation" min="0" max="100" step="1" placeholder="98" style="width: 100%; padding: 0.75rem; padding-right: 3rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        <span style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 0.875rem;">%</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>⚖️ น้ำหนัก (Weight)</label>
+                    <div style="position: relative;">
+                        <input type="number" id="vsWeight" min="0" max="500" step="0.1" placeholder="65" style="width: 100%; padding: 0.75rem; padding-right: 3rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        <span style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 0.875rem;">kg</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📏 ส่วนสูง (Height)</label>
+                    <div style="position: relative;">
+                        <input type="number" id="vsHeight" min="0" max="300" step="0.1" placeholder="170" style="width: 100%; padding: 0.75rem; padding-right: 3rem; border: 1px solid var(--border-color); border-radius: var(--border-radius);">
+                        <span style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 0.875rem;">cm</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📝 หมายเหตุ</label>
+                <textarea id="vsNotes" rows="2" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); resize: vertical;" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary">💾 บันทึก</button>
+            </div>
+        </form>
+    `;
+
+    document.getElementById('vitalSignForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        saveVitalSign();
+    });
+
+    openModal();
+}
+
+/**
+ * Save vital sign
+ */
+function saveVitalSign() {
+    const vitalSigns = storage.get('vitalSigns') || [];
+
+    const newVS = {
+        id: vitalSigns.length > 0 ? Math.max(...vitalSigns.map(v => v.id)) + 1 : 1,
+        patientId: parseInt(document.getElementById('vsPatientId').value),
+        recordDate: document.getElementById('vsRecordDate').value,
+        recordTime: document.getElementById('vsRecordTime').value,
+        bloodPressureSys: parseFloat(document.getElementById('vsBloodPressureSys').value) || null,
+        bloodPressureDia: parseFloat(document.getElementById('vsBloodPressureDia').value) || null,
+        heartRate: parseFloat(document.getElementById('vsHeartRate').value) || null,
+        temperature: parseFloat(document.getElementById('vsTemperature').value) || null,
+        respiratoryRate: parseFloat(document.getElementById('vsRespiratoryRate').value) || null,
+        oxygenSaturation: parseFloat(document.getElementById('vsOxygenSaturation').value) || null,
+        weight: parseFloat(document.getElementById('vsWeight').value) || null,
+        height: parseFloat(document.getElementById('vsHeight').value) || null,
+        notes: document.getElementById('vsNotes').value,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+
+    vitalSigns.push(newVS);
+    storage.set('vitalSigns', vitalSigns);
+
+    closeModal();
+    loadVitalSigns();
+
+    alert('✅ บันทึกข้อมูลสัญญาณชีพเรียบร้อยแล้ว');
+}
+
+/**
+ * View vital sign details
+ */
+function viewVitalSign(id) {
+    const vitalSigns = storage.get('vitalSigns') || [];
+    const patients = storage.get('patients') || [];
+
+    const vs = vitalSigns.find(v => v.id === id);
+    if (!vs) {
+        alert('ไม่พบข้อมูลสัญญาณชีพ');
+        return;
+    }
+
+    const patient = patients.find(p => p.id === vs.patientId);
+
+    // Calculate BMI
+    let bmi = null;
+    let bmiStatus = '';
+    let bmiColor = '';
+    if (vs.weight && vs.height) {
+        const heightM = vs.height / 100;
+        bmi = (vs.weight / (heightM * heightM)).toFixed(1);
+
+        if (bmi < 18.5) {
+            bmiStatus = 'น้ำหนักต่ำกว่าเกณฑ์';
+            bmiColor = '#3b82f6';
+        } else if (bmi < 23) {
+            bmiStatus = 'สมส่วน';
+            bmiColor = '#10b981';
+        } else if (bmi < 25) {
+            bmiStatus = 'น้ำหนักเกิน';
+            bmiColor = '#f59e0b';
+        } else if (bmi < 30) {
+            bmiStatus = 'อ้วนระดับ 1';
+            bmiColor = '#f97316';
+        } else {
+            bmiStatus = 'อ้วนระดับ 2';
+            bmiColor = '#ef4444';
+        }
+    }
+
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <h2 style="margin-top: 0;">🩺 รายละเอียดสัญญาณชีพ #${vs.id}</h2>
+
+        <div style="background: #f9fafb; padding: 1.5rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                <div>
+                    <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">👤 ผู้ป่วย</p>
+                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; font-size: 1.125rem;">${patient?.name || 'ไม่พบข้อมูล'}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #6b7280;">HN: ${patient?.hn || '-'}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #6b7280;">อายุ: ${patient?.age || '-'} ปี</p>
+                </div>
+
+                <div>
+                    <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">📅 วันที่ / เวลาบันทึก</p>
+                    <p style="margin: 0.25rem 0 0 0; font-weight: 600; font-size: 1.125rem;">${new Date(vs.recordDate).toLocaleDateString('th-TH')}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: #6b7280;">⏰ ${vs.recordTime || 'ไม่ระบุเวลา'}</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+            ${vs.bloodPressureSys && vs.bloodPressureDia ? `
+            <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); padding: 1.5rem; border-radius: var(--border-radius); border-left: 4px solid #ef4444;">
+                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">💉 ความดันโลหิต</p>
+                <p style="margin: 0.5rem 0 0 0; font-weight: 700; font-size: 2rem; color: #ef4444;">${vs.bloodPressureSys}/${vs.bloodPressureDia}</p>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #6b7280;">mmHg</p>
+            </div>
+            ` : ''}
+
+            ${vs.heartRate ? `
+            <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1.5rem; border-radius: var(--border-radius); border-left: 4px solid #f59e0b;">
+                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">❤️ อัตราการเต้นหัวใจ</p>
+                <p style="margin: 0.5rem 0 0 0; font-weight: 700; font-size: 2rem; color: #f59e0b;">${vs.heartRate}</p>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #6b7280;">beats/min</p>
+            </div>
+            ` : ''}
+
+            ${vs.temperature ? `
+            <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); padding: 1.5rem; border-radius: var(--border-radius); border-left: 4px solid #dc2626;">
+                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">🌡️ อุณหภูมิร่างกาย</p>
+                <p style="margin: 0.5rem 0 0 0; font-weight: 700; font-size: 2rem; color: #dc2626;">${vs.temperature}</p>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #6b7280;">°C</p>
+            </div>
+            ` : ''}
+
+            ${vs.respiratoryRate ? `
+            <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 1.5rem; border-radius: var(--border-radius); border-left: 4px solid #3b82f6;">
+                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">💨 อัตราการหายใจ</p>
+                <p style="margin: 0.5rem 0 0 0; font-weight: 700; font-size: 2rem; color: #3b82f6;">${vs.respiratoryRate}</p>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #6b7280;">breaths/min</p>
+            </div>
+            ` : ''}
+
+            ${vs.oxygenSaturation ? `
+            <div style="background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); padding: 1.5rem; border-radius: var(--border-radius); border-left: 4px solid #2563eb;">
+                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">🫁 ออกซิเจนในเลือด</p>
+                <p style="margin: 0.5rem 0 0 0; font-weight: 700; font-size: 2rem; color: #2563eb;">${vs.oxygenSaturation}</p>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #6b7280;">%</p>
+            </div>
+            ` : ''}
+
+            ${vs.weight ? `
+            <div style="background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); padding: 1.5rem; border-radius: var(--border-radius); border-left: 4px solid #8b5cf6;">
+                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">⚖️ น้ำหนัก</p>
+                <p style="margin: 0.5rem 0 0 0; font-weight: 700; font-size: 2rem; color: #8b5cf6;">${vs.weight}</p>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #6b7280;">kg</p>
+            </div>
+            ` : ''}
+
+            ${vs.height ? `
+            <div style="background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); padding: 1.5rem; border-radius: var(--border-radius); border-left: 4px solid #14b8a6;">
+                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">📏 ส่วนสูง</p>
+                <p style="margin: 0.5rem 0 0 0; font-weight: 700; font-size: 2rem; color: #14b8a6;">${vs.height}</p>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #6b7280;">cm</p>
+            </div>
+            ` : ''}
+
+            ${bmi ? `
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1.5rem; border-radius: var(--border-radius); border-left: 4px solid ${bmiColor};">
+                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">📊 BMI (ดัชนีมวลกาย)</p>
+                <p style="margin: 0.5rem 0 0 0; font-weight: 700; font-size: 2rem; color: ${bmiColor};">${bmi}</p>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; font-weight: 600; color: ${bmiColor};">${bmiStatus}</p>
+            </div>
+            ` : ''}
+        </div>
+
+        ${vs.notes ? `
+        <div style="background: white; padding: 1rem; border: 1px solid #e5e7eb; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+            <h3 style="margin: 0 0 0.5rem 0; color: #6b7280;">📝 หมายเหตุ</h3>
+            <p style="margin: 0; white-space: pre-wrap; color: #374151;">${vs.notes}</p>
+        </div>
+        ` : ''}
+
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0; color: #9ca3af; font-size: 0.875rem;">
+                📝 บันทึกเมื่อ: ${new Date(vs.createdAt).toLocaleString('th-TH')}
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+            <button class="btn btn-secondary" onclick="closeModal()">ปิด</button>
+        </div>
+    `;
+
+    openModal();
+}
+
+/**
+ * Delete vital sign
+ */
+function deleteVitalSign(id) {
+    if (!confirm('⚠️ คุณแน่ใจหรือไม่ที่จะลบข้อมูลสัญญาณชีพนี้?\n\nการลบจะไม่สามารถย้อนกลับได้')) {
+        return;
+    }
+
+    let vitalSigns = storage.get('vitalSigns') || [];
+    vitalSigns = vitalSigns.filter(v => v.id !== id);
+    storage.set('vitalSigns', vitalSigns);
+
+    loadVitalSigns();
+    alert('✅ ลบข้อมูลสัญญาณชีพเรียบร้อยแล้ว');
+}
+
+/**
+ * Clear vital signs filters
+ */
+function clearVSFilters() {
+    document.getElementById('vitalSignSearch').value = '';
+    document.getElementById('patientFilterVS').value = '';
+    document.getElementById('dateFilterVS').value = '';
+    applyVSFilters();
+}
+
+// Add event listeners for vital signs
+const addVitalSignBtn = document.getElementById('addVitalSignBtn');
+if (addVitalSignBtn) {
+    addVitalSignBtn.addEventListener('click', showAddVitalSignModal);
+}
+
+const vitalSignSearch = document.getElementById('vitalSignSearch');
+if (vitalSignSearch) {
+    vitalSignSearch.addEventListener('input', applyVSFilters);
+}
+
+const patientFilterVS = document.getElementById('patientFilterVS');
+if (patientFilterVS) {
+    patientFilterVS.addEventListener('change', applyVSFilters);
+}
+
+const dateFilterVS = document.getElementById('dateFilterVS');
+if (dateFilterVS) {
+    dateFilterVS.addEventListener('change', applyVSFilters);
+}
+
+const clearVSFilterBtn = document.getElementById('clearVSFilterBtn');
+if (clearVSFilterBtn) {
+    clearVSFilterBtn.addEventListener('click', clearVSFilters);
 }
 
 // ===== Initialize on page load =====
